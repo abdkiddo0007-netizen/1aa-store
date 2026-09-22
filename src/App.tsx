@@ -14,7 +14,6 @@ import {
   Search, 
   ShoppingBag, 
   CheckCircle2, 
-  AlertCircle, 
   Layers, 
   Tag, 
   Percent, 
@@ -93,8 +92,8 @@ export default function OneAAStore() {
     const volumeDiscount = isB2BVolumeEligible ? subtotal * 0.05 : 0;
     const finalAmount = subtotal - volumeDiscount;
     const totalSavings = marketValue - finalAmount;
-    const minOrderReached = finalAmount >= 500;
-    const deficit = Math.max(0, 500 - finalAmount);
+    const minOrderReached = true;
+    const deficit = 0;
 
     return {
       units,
@@ -230,8 +229,8 @@ export default function OneAAStore() {
 
             <div className="flex items-center gap-3">
               <span className="text-brand-orange font-medium flex items-center gap-1">
-                <AlertCircle className="w-3 h-3" />
-                Strict MOV Floor: ₹500
+                <CheckCircle2 className="w-3 h-3 text-emerald-400" />
+                No Minimum Order Required
               </span>
               <span className="text-white/20">•</span>
               <span className="flex items-center gap-1 text-slate-300">
@@ -386,7 +385,7 @@ export default function OneAAStore() {
                     Insured Dispatch
                   </div>
                   <div className="text-[11px] text-slate-400">
-                    BlueDart & Delhivery surface delivery unlocks at strict ₹500 floor.
+                    Safe BlueDart & Delhivery surface delivery for any quantity with zero minimums.
                   </div>
                 </div>
 
@@ -394,36 +393,28 @@ export default function OneAAStore() {
 
             </div>
 
-            {/* APPLE DYNAMIC MILESTONE ISLAND (MOV ₹500 & Bulk Rebate) */}
+            {/* APPLE DYNAMIC MILESTONE ISLAND (Wholesale Volume Rebate) */}
             <div className="max-w-4xl mx-auto apple-glass rounded-3xl p-6 sm:p-7 space-y-4 border border-white/[0.08] shadow-apple-card">
               
               <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
                 <div className="flex items-center gap-3">
                   <div className={`w-10 h-10 rounded-2xl flex items-center justify-center ${
-                    metrics.minOrderReached 
+                    metrics.units > 0 
                       ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30' 
                       : 'bg-brand-orange/15 text-brand-orange border border-brand-orange/30'
                   }`}>
-                    <AlertCircle className="w-5 h-5" />
+                    <ShieldCheck className="w-5 h-5" />
                   </div>
                   
                   <div>
                     <div className="text-sm font-bold text-white flex items-center gap-2">
-                      <span>Dispatch Floor (MOV ₹500)</span>
-                      {metrics.minOrderReached ? (
-                        <span className="text-[10px] px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 font-mono font-bold">
-                          Threshold Met
-                        </span>
-                      ) : (
-                        <span className="text-[10px] px-2.5 py-0.5 rounded-full bg-brand-orange/20 text-brand-orange font-mono font-bold">
-                          ₹{metrics.deficit} Deficit
-                        </span>
-                      )}
+                      <span>Direct Factory Dispatch</span>
+                      <span className="text-[10px] px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 font-mono font-bold">
+                        No Minimum Order
+                      </span>
                     </div>
                     <div className="text-xs text-slate-400 mt-0.5">
-                      {metrics.minOrderReached
-                        ? 'Order qualified for insured nationwide dispatch from Mysore central warehouse.'
-                        : `Add ₹${metrics.deficit.toLocaleString('en-IN')} more to unlock transport dispatch.`}
+                      Order single sample units or bulk master cartons with verified direct factory pricing.
                     </div>
                   </div>
                 </div>
@@ -432,20 +423,20 @@ export default function OneAAStore() {
                   <div className="text-slate-400 text-[11px]">Selected Value:</div>
                   <div className="text-lg font-black text-brand-orange">
                     ₹{metrics.finalAmount.toLocaleString('en-IN')}
-                    <span className="text-xs text-slate-500 font-normal"> / ₹500</span>
+                    <span className="text-xs text-slate-400 font-normal"> ({metrics.units} pcs)</span>
                   </div>
                 </div>
               </div>
 
-              {/* Progress Bar with Apple Smoothness */}
+              {/* Progress Bar for 5% Wholesale Rebate */}
               <div className="w-full bg-obsidian-950 rounded-full h-2 overflow-hidden border border-white/[0.06]">
                 <div 
                   className={`h-full transition-all duration-700 ease-out rounded-full ${
-                    metrics.minOrderReached 
+                    metrics.units >= 50 
                       ? 'bg-gradient-to-r from-emerald-500 to-brand-blue shadow-glow-blue' 
                       : 'bg-gradient-to-r from-brand-orange-dark to-brand-orange shadow-glow-orange'
                   }`}
-                  style={{ width: `${Math.min(100, (metrics.finalAmount / 500) * 100)}%` }}
+                  style={{ width: `${Math.min(100, (metrics.units / 50) * 100)}%` }}
                 />
               </div>
 
@@ -755,7 +746,7 @@ export default function OneAAStore() {
 
                 <div className="text-right">
                   <span className="badge-highlight px-4 py-1.5 bg-white/[0.04] border border-white/10 rounded-full text-brand-orange font-bold text-xs inline-block shadow-sm">
-                    Strict MOV: ₹500
+                    No Minimum Order
                   </span>
                   <div className="text-[10px] text-slate-400 mt-1 font-mono">100% Pre-Dispatch Inspected</div>
                 </div>
@@ -872,39 +863,23 @@ export default function OneAAStore() {
           </div>
 
           <div className="flex items-center gap-3 w-full sm:w-auto justify-end">
-            {metrics.minOrderReached ? (
-              <div className="flex items-center gap-2 w-full sm:w-auto">
-                <button
-                  onClick={() => setShowInvoiceModal(true)}
-                  className="hidden sm:flex px-4 py-2.5 rounded-full bg-white/[0.08] border border-white/10 hover:border-brand-orange text-white text-xs font-semibold items-center gap-1.5 transition-all"
-                  title="Generate Pro-Forma Invoice"
-                >
-                  <FileText className="w-3.5 h-3.5 text-brand-orange" />
-                  <span>Invoice</span>
-                </button>
-                <a
-                  href={getWhatsAppLink(selectedHotline)}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="flex-1 sm:flex-none px-6 py-2.5 rounded-full bg-gradient-to-r from-brand-orange to-brand-orange-light hover:brightness-110 text-obsidian-950 font-black text-xs uppercase tracking-wider text-center transition-all shadow-glow-orange flex items-center justify-center gap-2"
-                >
-                  <span>Proceed to Dispatch</span>
-                  <ChevronRight className="w-4 h-4" />
-                </a>
-              </div>
-            ) : (
-              <div className="flex items-center gap-3 w-full sm:w-auto justify-between sm:justify-end">
-                <span className="text-xs text-brand-orange font-medium">
-                  Add ₹{metrics.deficit.toLocaleString("en-IN")} more for ₹500 MOV
-                </span>
-                <button
-                  disabled
-                  className="px-5 py-2.5 rounded-full bg-white/[0.08] text-slate-500 font-bold text-xs uppercase tracking-wider cursor-not-allowed border border-white/[0.06]"
-                >
-                  ₹500 Min Order
-                </button>
-              </div>
-            )}
+            <button
+              onClick={() => setShowInvoiceModal(true)}
+              className="hidden sm:flex px-4 py-2.5 rounded-full bg-white/[0.08] border border-white/10 hover:border-brand-orange text-white text-xs font-semibold items-center gap-1.5 transition-all"
+              title="Generate Pro-Forma Invoice"
+            >
+              <FileText className="w-3.5 h-3.5 text-brand-orange" />
+              <span>Invoice</span>
+            </button>
+            <a
+              href={getWhatsAppLink(selectedHotline)}
+              target="_blank"
+              rel="noreferrer"
+              className="flex-1 sm:flex-none px-6 py-2.5 rounded-full bg-gradient-to-r from-brand-orange to-brand-orange-light hover:brightness-110 text-obsidian-950 font-black text-xs uppercase tracking-wider text-center transition-all shadow-glow-orange flex items-center justify-center gap-2"
+            >
+              <span>Proceed to Dispatch</span>
+              <ChevronRight className="w-4 h-4" />
+            </a>
           </div>
 
         </div>
@@ -1038,59 +1013,44 @@ export default function OneAAStore() {
                 </div>
               </div>
 
-              {metrics.minOrderReached ? (
-                <div className="space-y-2.5">
-                  <a
-                    href={getWhatsAppLink(selectedHotline)}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="w-full py-3.5 rounded-full bg-gradient-to-r from-brand-orange to-brand-orange-light text-obsidian-950 font-black text-xs uppercase tracking-wider text-center flex items-center justify-center gap-2 transition-all shadow-glow-orange hover:brightness-105"
-                  >
-                    <span>Proceed to WhatsApp Dispatch</span>
-                    <ExternalLink className="w-3.5 h-3.5" />
-                  </a>
+              <div className="space-y-2.5">
+                <a
+                  href={getWhatsAppLink(selectedHotline)}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="w-full py-3.5 rounded-full bg-gradient-to-r from-brand-orange to-brand-orange-light text-obsidian-950 font-black text-xs uppercase tracking-wider text-center flex items-center justify-center gap-2 transition-all shadow-glow-orange hover:brightness-105"
+                >
+                  <span>Proceed to WhatsApp Dispatch</span>
+                  <ExternalLink className="w-3.5 h-3.5" />
+                </a>
 
-                  <div className="grid grid-cols-2 gap-2">
-                    <button
-                      onClick={() => setShowInvoiceModal(true)}
-                      className="py-2.5 px-3 rounded-full bg-white/[0.06] hover:bg-white/[0.12] text-slate-200 font-medium text-xs transition-colors flex items-center justify-center gap-1.5 border border-white/10"
-                    >
-                      <FileText className="w-3.5 h-3.5 text-brand-orange" />
-                      <span>Pro-Forma</span>
-                    </button>
-
-                    <button
-                      onClick={copyOrderSummary}
-                      className="py-2.5 px-3 rounded-full bg-white/[0.06] hover:bg-white/[0.12] text-slate-200 font-medium text-xs transition-colors flex items-center justify-center gap-1.5 border border-white/10"
-                    >
-                      {copySuccess ? (
-                        <>
-                          <Check className="w-3.5 h-3.5 text-emerald-400" />
-                          <span>Copied!</span>
-                        </>
-                      ) : (
-                        <>
-                          <Copy className="w-3.5 h-3.5 text-brand-blue-light" />
-                          <span>Copy Text</span>
-                        </>
-                      )}
-                    </button>
-                  </div>
-                </div>
-              ) : (
-                <div className="space-y-2.5">
-                  <div className="p-3.5 bg-brand-orange/10 border border-brand-orange/20 rounded-2xl text-[11px] text-brand-orange flex items-center gap-2">
-                    <AlertCircle className="w-4 h-4 shrink-0" />
-                    <span>Add ₹{metrics.deficit.toLocaleString("en-IN")} more to reach the required ₹500 Minimum Order Floor.</span>
-                  </div>
+                <div className="grid grid-cols-2 gap-2">
                   <button
-                    disabled
-                    className="w-full py-3.5 rounded-full bg-white/[0.05] text-slate-500 font-bold text-xs uppercase tracking-wider cursor-not-allowed text-center border border-white/[0.06]"
+                    onClick={() => setShowInvoiceModal(true)}
+                    className="py-2.5 px-3 rounded-full bg-white/[0.06] hover:bg-white/[0.12] text-slate-200 font-medium text-xs transition-colors flex items-center justify-center gap-1.5 border border-white/10"
                   >
-                    ₹500 MOV Required
+                    <FileText className="w-3.5 h-3.5 text-brand-orange" />
+                    <span>Pro-Forma</span>
+                  </button>
+
+                  <button
+                    onClick={copyOrderSummary}
+                    className="py-2.5 px-3 rounded-full bg-white/[0.06] hover:bg-white/[0.12] text-slate-200 font-medium text-xs transition-colors flex items-center justify-center gap-1.5 border border-white/10"
+                  >
+                    {copySuccess ? (
+                      <>
+                        <Check className="w-3.5 h-3.5 text-emerald-400" />
+                        <span>Copied!</span>
+                      </>
+                    ) : (
+                      <>
+                        <Copy className="w-3.5 h-3.5 text-brand-blue-light" />
+                        <span>Copy Text</span>
+                      </>
+                    )}
                   </button>
                 </div>
-              )}
+              </div>
 
               {activeItems.length > 0 && (
                 <button

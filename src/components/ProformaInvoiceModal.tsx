@@ -115,7 +115,7 @@ export default function ProformaInvoiceModal({
                 Procurement Profile
               </div>
               <div className="text-slate-300">Channel: <strong className="text-white">{mode === 'b2b' ? 'Institutional Wholesale (Master Carton)' : 'Direct Consumer (B2C)'}</strong></div>
-              <div className="text-slate-300">Dispatch Floor: <strong className="text-brand-orange">₹500 MOV Met</strong></div>
+              <div className="text-slate-300">Minimum Order: <strong className="text-emerald-400">No Minimum Order (Any Qty)</strong></div>
               <div className="text-slate-300">Warehouse Origin: <strong className="text-white">Mysore Central Logistics Facility</strong></div>
             </div>
 

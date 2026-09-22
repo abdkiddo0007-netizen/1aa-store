@@ -26,8 +26,8 @@ export interface OrderMetrics {
   finalAmount: number;
   marketValue: number;
   totalSavings: number;
-  minOrderReached: boolean;
-  deficit: number;
+  minOrderReached?: boolean;
+  deficit?: number;
   isB2BVolumeEligible: boolean;
 }
 
