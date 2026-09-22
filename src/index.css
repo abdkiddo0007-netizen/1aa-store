@@ -1,0 +1,112 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply antialiased font-sans text-slate-100;
+    background-color: #030712;
+    background-image: 
+      radial-gradient(ellipse 80% 50% at 50% -20%, rgba(0, 71, 171, 0.22), transparent 75%),
+      radial-gradient(ellipse 60% 40% at 85% 15%, rgba(255, 140, 0, 0.08), transparent 60%);
+    background-attachment: fixed;
+  }
+
+  ::selection {
+    background-color: #FF8C00;
+    color: #030712;
+  }
+}
+
+/* Apple-style ultra-smooth custom scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+/* Apple specular card highlights */
+.apple-glass {
+  background: rgba(14, 22, 43, 0.65);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.apple-glass-hover:hover {
+  border-color: rgba(59, 130, 246, 0.35);
+  box-shadow: 0 20px 40px -15px rgba(0, 71, 171, 0.2), 0 0 1px 1px rgba(255, 255, 255, 0.1);
+}
+
+.apple-dock {
+  background: rgba(8, 14, 30, 0.85);
+  backdrop-filter: blur(32px);
+  -webkit-backdrop-filter: blur(32px);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 0 30px 60px -12px rgba(0, 0, 0, 0.85), 0 0 20px rgba(0, 71, 171, 0.15);
+}
+
+/* Subtle pulse animation for live warehouse status */
+@keyframes apple-pulse {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.15); opacity: 0.7; }
+}
+
+.animate-apple-pulse {
+  animation: apple-pulse 2.5s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* Print specifications for Commercial Brochure and Pro-Forma Invoice */
+@media print {
+  header,
+  footer,
+  .top-utility-bar,
+  .persistent-order-dock,
+  .no-print,
+  button {
+    display: none !important;
+  }
+
+  body {
+    background: #ffffff !important;
+    background-image: none !important;
+    color: #0f172a !important;
+  }
+
+  .print-surface {
+    box-shadow: none !important;
+    border: 1px solid #cbd5e1 !important;
+    background: #ffffff !important;
+    color: #0f172a !important;
+    padding: 24px !important;
+    margin: 0 !important;
+  }
+
+  .print-surface * {
+    color: #0f172a !important;
+  }
+
+  .print-surface .badge-highlight {
+    background: #f1f5f9 !important;
+    border: 1px solid #94a3b8 !important;
+    color: #0047AB !important;
+  }
+
+  table {
+    border-collapse: collapse !important;
+    width: 100% !important;
+  }
+
+  th, td {
+    border-bottom: 1px solid #e2e8f0 !important;
+  }
+}
