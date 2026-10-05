@@ -7,6 +7,8 @@ import ProformaInvoiceModal from "./components/ProformaInvoiceModal";
 import LiveOrderTicker from "./components/LiveOrderTicker";
 import SpinWheelModal from "./components/SpinWheelModal";
 import MarginCalculatorModal from "./components/MarginCalculatorModal";
+import UpiPaymentModal from "./components/UpiPaymentModal";
+import BroadcastStudioModal from "./components/BroadcastStudioModal";
 import { handleImgError } from "./utils/imageFallback";
 import { 
   ShieldCheck, 
@@ -40,7 +42,9 @@ import {
   Star,
   Flame,
   Zap,
-  TrendingUp
+  TrendingUp,
+  QrCode,
+  Share2
 } from "lucide-react";
 
 export default function OneAAStore() {
@@ -62,6 +66,8 @@ export default function OneAAStore() {
   const [showInvoiceModal, setShowInvoiceModal] = useState(false);
   const [showSpinModal, setShowSpinModal] = useState(false);
   const [showCalcModal, setShowCalcModal] = useState(false);
+  const [showUpiModal, setShowUpiModal] = useState(false);
+  const [showBroadcastModal, setShowBroadcastModal] = useState(false);
   const [calcProduct, setCalcProduct] = useState<Product | null>(null);
   const [appliedCoupon, setAppliedCoupon] = useState<{ code: string; desc: string; amount: number } | null>(null);
   const [copySuccess, setCopySuccess] = useState(false);
@@ -368,6 +374,26 @@ export default function OneAAStore() {
                 )}
               </button>
 
+              {/* Direct UPI Scanner Shortcut */}
+              <button
+                onClick={() => setShowUpiModal(true)}
+                className="hidden sm:flex text-xs px-3.5 py-2 rounded-full border border-emerald-500/30 bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500 hover:text-obsidian-950 font-semibold transition-all items-center gap-1.5 shadow-sm cursor-pointer"
+                title="Direct UPI / QR Code Payment (0% Fee)"
+              >
+                <QrCode className="w-3.5 h-3.5 text-emerald-400" />
+                <span>UPI Pay</span>
+              </button>
+
+              {/* WhatsApp Broadcast Studio Trigger */}
+              <button
+                onClick={() => setShowBroadcastModal(true)}
+                className="hidden md:flex text-xs px-3.5 py-2 rounded-full border border-brand-orange/40 bg-brand-orange/10 text-brand-orange hover:bg-brand-orange hover:text-obsidian-950 font-semibold transition-all items-center gap-1.5 shadow-sm cursor-pointer"
+                title="WhatsApp Catalog Broadcaster"
+              >
+                <Share2 className="w-3.5 h-3.5 text-brand-orange" />
+                <span>Broadcast</span>
+              </button>
+
               {/* Instant Pro-Forma Invoice Generator Trigger */}
               {metrics.units > 0 && (
                 <button
@@ -423,6 +449,16 @@ export default function OneAAStore() {
               <Gift className="w-3.5 h-3.5 text-obsidian-950" />
               <span>Spin for Secret Discount</span>
             </button>
+            <span className="text-slate-500 hidden sm:inline">•</span>
+            <a
+              href="https://wa.me/917598077003?text=Hi%201AA%2C%20please%20add%20me%20to%20the%201AA%20Daily%20Wholesale%20Deals%20Broadcast%20List"
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex items-center gap-1.5 text-[11px] px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 font-bold hover:scale-105 transition-transform"
+            >
+              <MessageSquare className="w-3.5 h-3.5 text-emerald-400" />
+              <span>Join WhatsApp VIP Broadcast</span>
+            </a>
           </div>
         </div>
 
@@ -1136,6 +1172,14 @@ export default function OneAAStore() {
 
           <div className="flex items-center gap-3 w-full sm:w-auto justify-end">
             <button
+              onClick={() => setShowUpiModal(true)}
+              className="hidden sm:flex px-4 py-2.5 rounded-full bg-emerald-500/15 border border-emerald-500/30 hover:border-emerald-500 text-emerald-400 text-xs font-bold items-center gap-1.5 transition-all shadow-glow-emerald cursor-pointer"
+              title="Direct UPI / QR Payment (0% Fee)"
+            >
+              <QrCode className="w-3.5 h-3.5" />
+              <span>UPI Pay</span>
+            </button>
+            <button
               onClick={() => setShowInvoiceModal(true)}
               className="hidden sm:flex px-4 py-2.5 rounded-full bg-white/[0.08] border border-white/10 hover:border-brand-orange text-white text-xs font-semibold items-center gap-1.5 transition-all"
               title="Generate Pro-Forma Invoice"
@@ -1286,6 +1330,17 @@ export default function OneAAStore() {
               </div>
 
               <div className="space-y-2.5">
+                <button
+                  onClick={() => {
+                    setShowOrderDrawer(false);
+                    setShowUpiModal(true);
+                  }}
+                  className="w-full py-3.5 rounded-full bg-gradient-to-r from-emerald-500 via-teal-500 to-emerald-600 text-obsidian-950 font-black text-xs uppercase tracking-wider text-center flex items-center justify-center gap-2 transition-all shadow-glow-emerald hover:brightness-105 cursor-pointer"
+                >
+                  <QrCode className="w-4 h-4 text-obsidian-950" />
+                  <span>Pay via Direct UPI / Scanner</span>
+                </button>
+
                 <a
                   href={getWhatsAppLink(selectedHotline)}
                   target="_blank"
@@ -1373,6 +1428,22 @@ export default function OneAAStore() {
         product={calcProduct}
         onClose={() => setShowCalcModal(false)}
         onAddToCart={(p, qty) => updateQty(p.sku, qty)}
+      />
+
+      {/* --- DIRECT UPI PAYMENT & SCANNER MODAL --- */}
+      <UpiPaymentModal
+        isOpen={showUpiModal}
+        onClose={() => setShowUpiModal(false)}
+        finalAmount={metrics.finalAmount}
+        items={activeItems}
+        selectedHotline={selectedHotline}
+      />
+
+      {/* --- WHATSAPP CATALOG BROADCAST STUDIO MODAL --- */}
+      <BroadcastStudioModal
+        isOpen={showBroadcastModal}
+        onClose={() => setShowBroadcastModal(false)}
+        selectedHotline={selectedHotline}
       />
 
       {/* --- LIVE ORDER NOTIFICATION TICKER (SOCIAL PROOF) --- */}
