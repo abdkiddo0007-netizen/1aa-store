@@ -9,6 +9,7 @@ import SpinWheelModal from "./components/SpinWheelModal";
 import MarginCalculatorModal from "./components/MarginCalculatorModal";
 import UpiPaymentModal from "./components/UpiPaymentModal";
 import BroadcastStudioModal from "./components/BroadcastStudioModal";
+import BrandIntroReveal from "./components/BrandIntroReveal";
 import { handleImgError } from "./utils/imageFallback";
 import { 
   ShieldCheck, 
@@ -44,7 +45,8 @@ import {
   Zap,
   TrendingUp,
   QrCode,
-  Share2
+  Share2,
+  Play
 } from "lucide-react";
 
 export default function OneAAStore() {
@@ -68,6 +70,7 @@ export default function OneAAStore() {
   const [showCalcModal, setShowCalcModal] = useState(false);
   const [showUpiModal, setShowUpiModal] = useState(false);
   const [showBroadcastModal, setShowBroadcastModal] = useState(false);
+  const [forceShowIntro, setForceShowIntro] = useState(false);
   const [calcProduct, setCalcProduct] = useState<Product | null>(null);
   const [appliedCoupon, setAppliedCoupon] = useState<{ code: string; desc: string; amount: number } | null>(null);
   const [copySuccess, setCopySuccess] = useState(false);
@@ -218,39 +221,52 @@ export default function OneAAStore() {
     });
   }, [search, selectedCategory, sortBy, quickFilter]);
 
-  // Pre-filled WhatsApp message formatted for the chosen hotline
+  // Pre-filled WhatsApp message formatted as an Official Commercial Tax Invoice Receipt
   const getWhatsAppLink = (number: "7598077003" | "7406231167") => {
-    let text = `*1AA (Available Always) - Direct Dispatch Order*\n`;
-    text += `*1st Available Always | Mysore Central Hub*\n`;
-    text += `Mode: ${mode === "b2b" ? "Institutional Wholesale (Master Carton)" : "Direct Consumer (B2C)"}\n`;
-    text += `Total Units: ${metrics.units} pcs\n`;
-    text += `Payable Amount: Rs.${metrics.finalAmount.toLocaleString("en-IN")}\n\n`;
-    text += `*Selected Manifest:*\n`;
+    let text = `🧾 *OFFICIAL 1AA INVOICE & DISPATCH ORDER*\n`;
+    text += `*1AA (Available Always) — 1st Available Always*\n`;
+    text += `Primary Facility: Mysore Central Hub, Kesare, Mysore - 570007\n`;
+    text += `Channel: ${mode === "b2b" ? "Institutional Wholesale (B2B Master Carton)" : "Direct Consumer (B2C)"}\n`;
+    text += `Total Units: ${metrics.units} pcs | Final Payable: *₹${metrics.finalAmount.toLocaleString("en-IN")}*\n`;
+    text += `Total Savings vs Marketplace MRP: *₹${metrics.totalSavings.toLocaleString("en-IN")}*\n\n`;
+    text += `━━━━━━━━━━━━━━━━━━━━\n`;
+    text += `📦 *ITEMIZED ORDER MANIFEST:*\n\n`;
     activeItems.forEach((item, index) => {
-      text += `${index + 1}. ${item.product.name} [${item.product.sku}]\n   Qty: ${item.quantity} x Rs.${item.product.fairPrice} = Rs.${item.total.toLocaleString("en-IN")}\n`;
+      text += `${index + 1}. *${item.product.name}*\n   • SKU: \`${item.product.sku}\`\n   • ${item.quantity} pcs x ₹${item.product.fairPrice} = ₹${item.total.toLocaleString("en-IN")} (MRP: ~₹${(item.product.marketPrice * item.quantity).toLocaleString("en-IN")}~)\n\n`;
     });
     if (metrics.volumeDiscount > 0) {
-      text += `\n*Volume Rebate (5% on 50+ units):* -Rs.${metrics.volumeDiscount.toLocaleString("en-IN")}\n`;
+      text += `*Volume Rebate (5% on 50+ units):* -₹${metrics.volumeDiscount.toLocaleString("en-IN")}\n`;
     }
     if (appliedCoupon && metrics.couponDiscount > 0) {
-      text += `\n*Wholesale Voucher (${appliedCoupon.code}):* -Rs.${metrics.couponDiscount.toLocaleString("en-IN")} (${appliedCoupon.desc})\n`;
+      text += `*Voucher Applied (${appliedCoupon.code}):* -₹${metrics.couponDiscount.toLocaleString("en-IN")} (${appliedCoupon.desc})\n`;
     }
-    text += `\n*Delivery Address:* [Enter City & Pincode]\n`;
-    text += `Please confirm inventory allocation and dispatch details.`;
+    text += `━━━━━━━━━━━━━━━━━━━━\n`;
+    text += `🏦 *OFFICIAL BANK & UPI REMITTANCE:*\n`;
+    text += `• Primary Account Holder: *Abdul Darvesh*\n`;
+    text += `• Bank Name: *Axis Bank*\n`;
+    text += `• Account Number: *922010002282280*\n`;
+    text += `• IFSC Code: *UTIB0004543* (Savings A/c)\n`;
+    text += `• Official UPI ID: *7406231167@axisbank*\n`;
+    text += `━━━━━━━━━━━━━━━━━━━━\n\n`;
+    text += `📍 *Delivery Address / Pincode:* [Enter Shipping Address]\n`;
+    text += `Please confirm payment receipt & initiate insured Mysore dispatch.`;
     return `https://wa.me/91${number}?text=${encodeURIComponent(text)}`;
   };
 
   const copyOrderSummary = () => {
-    let summary = `1AA (Available Always) - Order Summary\n`;
+    let summary = `1AA (Available Always) - Official Invoice Receipt\n`;
     summary += `Mysore Central Hub (+91 75980 77003 / +91 74062 31167)\n\n`;
-    summary += `Total Units: ${metrics.units}\nTotal Amount: Rs.${metrics.finalAmount.toLocaleString("en-IN")}\n\n`;
-    summary += `Items:\n`;
+    summary += `Total Units: ${metrics.units} pcs\n`;
+    summary += `Total Amount: Rs. ${metrics.finalAmount.toLocaleString("en-IN")}\n`;
+    summary += `Total Savings vs MRP: Rs. ${metrics.totalSavings.toLocaleString("en-IN")}\n\n`;
+    summary += `Order Items:\n`;
     activeItems.forEach((item) => {
-      summary += `• ${item.product.name} (${item.product.sku}) x ${item.quantity} = Rs.${item.total.toLocaleString("en-IN")}\n`;
+      summary += `• ${item.product.name} [${item.product.sku}] x ${item.quantity} = Rs. ${item.total.toLocaleString("en-IN")}\n`;
     });
     if (metrics.volumeDiscount > 0) {
-      summary += `\nVolume Rebate: -Rs.${metrics.volumeDiscount.toLocaleString("en-IN")}\n`;
+      summary += `\nVolume Rebate: -Rs. ${metrics.volumeDiscount.toLocaleString("en-IN")}\n`;
     }
+    summary += `\nOfficial Bank Remittance:\nAccount Holder: Abdul Darvesh\nBank Name: Axis Bank\nAccount Number: 922010002282280\nIFSC Code: UTIB0004543 (Savings A/c)\nOfficial UPI: 7406231167@axisbank\n`;
     navigator.clipboard.writeText(summary);
     setCopySuccess(true);
     setTimeout(() => setCopySuccess(false), 2500);
@@ -259,6 +275,9 @@ export default function OneAAStore() {
   return (
     <div className="min-h-screen bg-obsidian-950 text-slate-100 font-sans antialiased selection:bg-brand-orange selection:text-obsidian-950 flex flex-col justify-between pb-24">
       
+      {/* --- CINEMATIC BRAND INTRO / LOGO REVEAL SEQUENCE --- */}
+      <BrandIntroReveal forceShow={forceShowIntro} onComplete={() => setForceShowIntro(false)} />
+
       <div>
         {/* --- APPLE-STYLE MINIMAL UTILITY BAR --- */}
         <div className="top-utility-bar bg-obsidian-900/60 border-b border-white/[0.06] text-[11px] px-4 py-2 text-slate-400 backdrop-blur-md">
@@ -272,6 +291,15 @@ export default function OneAAStore() {
                 </span>
                 1AA Mysore Central Facility Active
               </span>
+
+              <button
+                onClick={() => setForceShowIntro(true)}
+                className="flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-brand-orange/15 hover:bg-brand-orange/25 text-brand-orange border border-brand-orange/30 text-[10px] font-bold transition-all cursor-pointer shadow-glow-orange"
+                title="Replay Official 1AA Cinematic Logo Reveal"
+              >
+                <Play className="w-2.5 h-2.5 fill-brand-orange text-brand-orange" />
+                <span>Brand Intro Reveal</span>
+              </button>
               
               {/* Dual Contact Hotlines */}
               <div className="flex items-center gap-3 text-slate-300">

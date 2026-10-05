@@ -201,14 +201,79 @@ export default function ProformaInvoiceModal({
             </div>
           </div>
 
+          {/* Official Bank Remittance & PhonePe QR Section */}
+          <div className="p-6 bg-white/[0.03] rounded-2xl border border-white/10 space-y-4">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-white/[0.08] pb-4">
+              <div>
+                <h4 className="text-white font-bold text-sm flex items-center gap-2">
+                  <Building2 className="w-4 h-4 text-brand-orange" />
+                  <span>Official Verified Commercial Bank Remittance</span>
+                </h4>
+                <p className="text-slate-400 text-xs mt-0.5">Please remit total payable amount (₹{metrics.finalAmount.toLocaleString('en-IN')}) via UPI / IMPS / NEFT</p>
+              </div>
+
+              <div className="text-right">
+                <span className="px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 text-[10px] font-bold uppercase font-mono">
+                  Verified Axis Bank A/c
+                </span>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-center">
+              {/* Bank Details Table */}
+              <div className="md:col-span-2 space-y-2 text-xs font-mono">
+                <div className="flex justify-between py-1 border-b border-white/[0.04]">
+                  <span className="text-slate-400">Primary Account Holder:</span>
+                  <span className="text-white font-bold font-sans">Abdul Darvesh</span>
+                </div>
+                <div className="flex justify-between py-1 border-b border-white/[0.04]">
+                  <span className="text-slate-400">Bank Name:</span>
+                  <span className="text-white font-bold">Axis Bank</span>
+                </div>
+                <div className="flex justify-between py-1 border-b border-white/[0.04]">
+                  <span className="text-slate-400">Account Number:</span>
+                  <span className="text-brand-orange font-bold text-sm">922010002282280</span>
+                </div>
+                <div className="flex justify-between py-1 border-b border-white/[0.04]">
+                  <span className="text-slate-400">IFSC Code:</span>
+                  <span className="text-brand-blue-light font-bold text-sm">UTIB0004543</span>
+                </div>
+                <div className="flex justify-between py-1 border-b border-white/[0.04]">
+                  <span className="text-slate-400">Account Type:</span>
+                  <span className="text-emerald-400 font-bold">Savings A/c</span>
+                </div>
+                <div className="flex justify-between py-1">
+                  <span className="text-slate-400">Official UPI ID:</span>
+                  <span className="text-brand-orange font-bold">7406231167@axisbank</span>
+                </div>
+              </div>
+
+              {/* Official PhonePe QR Scanner */}
+              <div className="flex flex-col items-center justify-center p-3 bg-black rounded-xl border border-white/10">
+                <img
+                  src="./1AA-Official-UPI-QR.jpg"
+                  alt="Official PhonePe QR Code - Abdul Darvesh"
+                  className="w-36 h-auto object-contain rounded-lg"
+                  loading="lazy"
+                />
+                <div className="text-[10px] text-slate-300 font-mono text-center mt-1.5 font-bold">
+                  Scan & Pay: Abdul Darvesh
+                </div>
+                <div className="text-[9px] text-slate-500 font-sans text-center">
+                  PhonePe • GPay • Paytm • BHIM
+                </div>
+              </div>
+            </div>
+          </div>
+
           {/* Instructions */}
           <div className="p-5 bg-white/[0.02] rounded-2xl border border-white/[0.06] text-xs text-slate-400 space-y-2">
             <div className="font-bold text-white text-xs">Payment & Dispatch Protocol:</div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-[11px] leading-relaxed">
               <div>1. Connect via WhatsApp with Quotation Reference (#{invoiceNumber}).</div>
               <div>2. Dedicated Dispatch Officer confirms volumetric weight & transport waybill.</div>
-              <div>3. Remit via RTGS / NEFT / IMPS or UPI to 1AA Mysore Central Facility account.</div>
-              <div>4. Same-day insured dispatch with tracking docket shared instantly.</div>
+              <div>3. Remit directly to Abdul Darvesh (Axis Bank A/C: 922010002282280, UPI: 7406231167@axisbank).</div>
+              <div>4. Same-day insured dispatch from Mysore Hub with tracking docket shared instantly.</div>
             </div>
           </div>
 
