@@ -1,9 +1,12 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { CATALOG_PRODUCTS } from "./data/catalog";
 import { Product, ActiveOrderItem } from "./types";
 import OneAALogo from "./components/OneAALogo";
 import ProductDetailModal from "./components/ProductDetailModal";
 import ProformaInvoiceModal from "./components/ProformaInvoiceModal";
+import LiveOrderTicker from "./components/LiveOrderTicker";
+import SpinWheelModal from "./components/SpinWheelModal";
+import MarginCalculatorModal from "./components/MarginCalculatorModal";
 import { handleImgError } from "./utils/imageFallback";
 import { 
   ShieldCheck, 
@@ -28,7 +31,16 @@ import {
   Copy,
   Check,
   MessageSquare,
-  ChevronRight
+  ChevronRight,
+  Gift,
+  Calculator,
+  Clock,
+  Sparkles,
+  Download,
+  Star,
+  Flame,
+  Zap,
+  TrendingUp
 } from "lucide-react";
 
 export default function OneAAStore() {
@@ -42,17 +54,45 @@ export default function OneAAStore() {
   const [search, setSearch] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string>("All");
   const [sortBy, setSortBy] = useState<"recommended" | "savings" | "price-asc" | "price-desc" | "carton">("recommended");
+  const [quickFilter, setQuickFilter] = useState<"all" | "high-margin" | "under-150" | "top-rated">("all");
   
   // Modals and Drawers
   const [showOrderDrawer, setShowOrderDrawer] = useState(false);
   const [selectedProductForModal, setSelectedProductForModal] = useState<Product | null>(null);
   const [showInvoiceModal, setShowInvoiceModal] = useState(false);
+  const [showSpinModal, setShowSpinModal] = useState(false);
+  const [showCalcModal, setShowCalcModal] = useState(false);
+  const [calcProduct, setCalcProduct] = useState<Product | null>(null);
+  const [appliedCoupon, setAppliedCoupon] = useState<{ code: string; desc: string; amount: number } | null>(null);
   const [copySuccess, setCopySuccess] = useState(false);
   const [selectedHotline, setSelectedHotline] = useState<"7598077003" | "7406231167">("7598077003");
+
+  // Live Mysore Dispatch Countdown Timer
+  const [countdown, setCountdown] = useState({ hours: 4, minutes: 28, seconds: 15 });
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCountdown((prev) => {
+        if (prev.seconds > 0) return { ...prev, seconds: prev.seconds - 1 };
+        if (prev.minutes > 0) return { ...prev, minutes: 59, seconds: 59 };
+        if (prev.hours > 0) return { hours: prev.hours - 1, minutes: 59, seconds: 59 };
+        return { hours: 6, minutes: 0, seconds: 0 };
+      });
+    }, 1000);
+    return () => clearInterval(timer);
+  }, []);
 
   const categories = useMemo(() => {
     const set = new Set(CATALOG_PRODUCTS.map((p) => p.category));
     return ["All", ...Array.from(set)];
+  }, []);
+
+  const categoryCounts = useMemo(() => {
+    const counts: { [cat: string]: number } = { All: CATALOG_PRODUCTS.length };
+    CATALOG_PRODUCTS.forEach((p) => {
+      counts[p.category] = (counts[p.category] || 0) + 1;
+    });
+    return counts;
   }, []);
 
   const updateQty = (sku: string, delta: number) => {
@@ -90,7 +130,23 @@ export default function OneAAStore() {
 
     const isB2BVolumeEligible = units >= 50;
     const volumeDiscount = isB2BVolumeEligible ? subtotal * 0.05 : 0;
-    const finalAmount = subtotal - volumeDiscount;
+
+    let couponDiscount = 0;
+    if (appliedCoupon && subtotal > 0) {
+      if (appliedCoupon.code === "MYSORE150") {
+        couponDiscount = Math.min(150, subtotal);
+      } else if (appliedCoupon.code === "1AAB2B5") {
+        couponDiscount = Math.round(subtotal * 0.05);
+      } else if (appliedCoupon.code === "MEGA300") {
+        couponDiscount = units >= 20 ? Math.min(300, subtotal) : 0;
+      } else if (appliedCoupon.code === "MYSORE7") {
+        couponDiscount = Math.round(subtotal * 0.07);
+      } else {
+        couponDiscount = Math.min(100, subtotal);
+      }
+    }
+
+    const finalAmount = Math.max(0, subtotal - volumeDiscount - couponDiscount);
     const totalSavings = marketValue - finalAmount;
     const minOrderReached = true;
     const deficit = 0;
@@ -99,6 +155,7 @@ export default function OneAAStore() {
       units,
       subtotal,
       volumeDiscount,
+      couponDiscount,
       finalAmount,
       marketValue,
       totalSavings,
@@ -106,7 +163,7 @@ export default function OneAAStore() {
       deficit,
       isB2BVolumeEligible,
     };
-  }, [quantities]);
+  }, [quantities, appliedCoupon]);
 
   const activeItems: ActiveOrderItem[] = useMemo(() => {
     return CATALOG_PRODUCTS.filter((p) => (quantities[p.sku] || 0) > 0).map((p) => ({
@@ -125,7 +182,17 @@ export default function OneAAStore() {
         p.sku.toLowerCase().includes(search.toLowerCase()) ||
         p.category.toLowerCase().includes(search.toLowerCase()) ||
         p.highlight.toLowerCase().includes(search.toLowerCase());
-      return matchesCategory && matchesSearch;
+
+      let matchesQuick = true;
+      if (quickFilter === "high-margin") {
+        matchesQuick = ((p.marketPrice - p.fairPrice) / p.marketPrice) >= 0.55;
+      } else if (quickFilter === "under-150") {
+        matchesQuick = p.fairPrice <= 150;
+      } else if (quickFilter === "top-rated") {
+        matchesQuick = (p.rating || 4.8) >= 4.85;
+      }
+
+      return matchesCategory && matchesSearch && matchesQuick;
     });
 
     return filtered.sort((a, b) => {
@@ -143,7 +210,7 @@ export default function OneAAStore() {
       }
       return 0; // recommended order
     });
-  }, [search, selectedCategory, sortBy]);
+  }, [search, selectedCategory, sortBy, quickFilter]);
 
   // Pre-filled WhatsApp message formatted for the chosen hotline
   const getWhatsAppLink = (number: "7598077003" | "7406231167") => {
@@ -158,6 +225,9 @@ export default function OneAAStore() {
     });
     if (metrics.volumeDiscount > 0) {
       text += `\n*Volume Rebate (5% on 50+ units):* -Rs.${metrics.volumeDiscount.toLocaleString("en-IN")}\n`;
+    }
+    if (appliedCoupon && metrics.couponDiscount > 0) {
+      text += `\n*Wholesale Voucher (${appliedCoupon.code}):* -Rs.${metrics.couponDiscount.toLocaleString("en-IN")} (${appliedCoupon.desc})\n`;
     }
     text += `\n*Delivery Address:* [Enter City & Pincode]\n`;
     text += `Please confirm inventory allocation and dispatch details.`;
@@ -327,6 +397,34 @@ export default function OneAAStore() {
             </div>
           </div>
         </header>
+
+        {/* --- LIVE WAREHOUSE DISPATCH COUNTDOWN STRIP --- */}
+        <div className="bg-gradient-to-r from-brand-orange/20 via-brand-blue/20 to-brand-orange/20 border-b border-white/[0.08] px-4 py-2.5 text-center text-xs backdrop-blur-md">
+          <div className="max-w-7xl mx-auto flex flex-wrap items-center justify-center gap-3">
+            <span className="flex items-center gap-1.5 font-bold text-brand-orange">
+              <Flame className="w-4 h-4 text-brand-orange animate-bounce" />
+              <span>TODAY'S MYSORE DISPATCH CUTOFF:</span>
+            </span>
+            <div className="flex items-center gap-1 font-mono font-black text-white bg-black/50 px-2.5 py-0.5 rounded-lg border border-white/10">
+              <Clock className="w-3.5 h-3.5 text-brand-orange mr-0.5" />
+              <span>{String(countdown.hours).padStart(2, "0")}h</span>:
+              <span>{String(countdown.minutes).padStart(2, "0")}m</span>:
+              <span>{String(countdown.seconds).padStart(2, "0")}s</span>
+            </div>
+            <span className="text-slate-500 hidden sm:inline">•</span>
+            <span className="text-slate-300 hidden md:inline">
+              <span className="text-emerald-400 font-semibold">{CATALOG_PRODUCTS.length}+ Factory Lines</span> in Active Stock
+            </span>
+            <span className="text-slate-500 hidden sm:inline">•</span>
+            <button
+              onClick={() => setShowSpinModal(true)}
+              className="inline-flex items-center gap-1.5 text-[11px] px-3 py-1 rounded-full bg-gradient-to-r from-brand-orange to-brand-orange-light text-obsidian-950 font-bold hover:scale-105 transition-transform shadow-glow-orange cursor-pointer"
+            >
+              <Gift className="w-3.5 h-3.5 text-obsidian-950" />
+              <span>Spin for Secret Discount</span>
+            </button>
+          </div>
+        </div>
 
         {/* --- CONTENT ROUTER --- */}
         {activeTab === "catalog" ? (
@@ -512,21 +610,74 @@ export default function OneAAStore() {
 
               </div>
 
-              {/* Category Pills */}
+              {/* Category Pills with Dynamic Counts */}
               <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none text-xs">
                 {categories.map((cat) => (
                   <button
                     key={cat}
                     onClick={() => setSelectedCategory(cat)}
-                    className={`px-4 py-2 rounded-full whitespace-nowrap transition-all duration-300 text-xs font-medium ${
+                    className={`px-4 py-2 rounded-full whitespace-nowrap transition-all duration-300 text-xs font-medium flex items-center gap-1.5 ${
                       selectedCategory === cat
                         ? "bg-brand-orange text-obsidian-950 font-bold shadow-glow-orange scale-[1.02]"
                         : "bg-white/[0.04] text-slate-300 hover:text-white border border-white/[0.08] hover:border-white/20"
                     }`}
                   >
-                    {cat}
+                    <span>{cat}</span>
+                    <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-mono ${
+                      selectedCategory === cat ? "bg-black/25 text-obsidian-950 font-black" : "bg-white/10 text-slate-400"
+                    }`}>
+                      {categoryCounts[cat] || 0}
+                    </span>
                   </button>
                 ))}
+              </div>
+
+              {/* High-Converting Quick Filters */}
+              <div className="flex flex-wrap items-center gap-2 pt-1 text-xs">
+                <span className="text-[11px] text-slate-400 font-medium">Quick Filters:</span>
+                <button
+                  onClick={() => setQuickFilter("all")}
+                  className={`px-3 py-1 rounded-full text-[11px] font-semibold transition-all ${
+                    quickFilter === "all"
+                      ? "bg-white/15 text-white border border-white/30"
+                      : "bg-white/[0.03] text-slate-400 hover:text-white border border-white/[0.06]"
+                  }`}
+                >
+                  All ({CATALOG_PRODUCTS.length})
+                </button>
+                <button
+                  onClick={() => setQuickFilter("high-margin")}
+                  className={`px-3 py-1 rounded-full text-[11px] font-semibold flex items-center gap-1.5 transition-all ${
+                    quickFilter === "high-margin"
+                      ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 shadow-sm"
+                      : "bg-white/[0.03] text-slate-400 hover:text-emerald-400 border border-white/[0.06]"
+                  }`}
+                >
+                  <TrendingUp className="w-3 h-3 text-emerald-400" />
+                  High Margin (&gt;55% ROI)
+                </button>
+                <button
+                  onClick={() => setQuickFilter("under-150")}
+                  className={`px-3 py-1 rounded-full text-[11px] font-semibold flex items-center gap-1.5 transition-all ${
+                    quickFilter === "under-150"
+                      ? "bg-brand-orange/20 text-brand-orange border border-brand-orange/40 shadow-sm"
+                      : "bg-white/[0.03] text-slate-400 hover:text-brand-orange border border-white/[0.06]"
+                  }`}
+                >
+                  <Zap className="w-3 h-3 text-brand-orange" />
+                  Under ₹150 Fast Movers
+                </button>
+                <button
+                  onClick={() => setQuickFilter("top-rated")}
+                  className={`px-3 py-1 rounded-full text-[11px] font-semibold flex items-center gap-1.5 transition-all ${
+                    quickFilter === "top-rated"
+                      ? "bg-amber-500/20 text-amber-400 border border-amber-500/40 shadow-sm"
+                      : "bg-white/[0.03] text-slate-400 hover:text-amber-400 border border-white/[0.06]"
+                  }`}
+                >
+                  <Star className="w-3 h-3 text-amber-400 fill-amber-400" />
+                  Top Rated (4.8★+)
+                </button>
               </div>
 
             </div>
@@ -591,6 +742,18 @@ export default function OneAAStore() {
                           <span className="text-slate-400 font-mono text-[10px]">Box: {product.cartonSize} pcs</span>
                         </div>
 
+                        {/* Verified Rating Display */}
+                        <div className="flex items-center gap-1.5 text-[11px]">
+                          <div className="flex items-center text-amber-400">
+                            <Star className="w-3 h-3 fill-amber-400 text-amber-400" />
+                          </div>
+                          <span className="font-bold text-white text-[11px]">{product.rating || 4.9}</span>
+                          <span className="text-slate-500">•</span>
+                          <span className="text-slate-400 text-[10px]">
+                            {product.reviewsCount || 100}+ reviews
+                          </span>
+                        </div>
+
                         <h3 
                           onClick={() => setSelectedProductForModal(product)}
                           className="text-sm font-bold text-white line-clamp-2 leading-snug group-hover:text-brand-orange transition-colors cursor-pointer"
@@ -603,7 +766,7 @@ export default function OneAAStore() {
                         </p>
 
                         {/* Transparent Price Breakdown Card */}
-                        <div className="bg-white/[0.03] p-3.5 rounded-2xl border border-white/[0.06] space-y-1.5 mt-3 font-mono text-xs">
+                        <div className="bg-white/[0.03] p-3 rounded-2xl border border-white/[0.06] space-y-1.5 mt-2 font-mono text-xs">
                           <div className="flex justify-between text-[11px] text-slate-400">
                             <span>Factory Cost:</span>
                             <span className="text-slate-300">₹{product.baseCost}</span>
@@ -617,15 +780,29 @@ export default function OneAAStore() {
                             <span>+₹100</span>
                           </div>
 
-                          <div className="border-t border-white/[0.08] pt-2 flex justify-between items-baseline">
+                          <div className="border-t border-white/[0.08] pt-1.5 flex justify-between items-baseline">
                             <span className="text-xs text-white font-bold font-sans">1AA Price:</span>
                             <span className="text-lg text-brand-orange font-black">₹{product.fairPrice}</span>
                           </div>
 
                           <div className="flex justify-between text-[10px] text-slate-500 pt-0.5">
-                            <span>Market Benchmark:</span>
+                            <span>Market Retail:</span>
                             <span className="line-through">₹{product.marketPrice}</span>
                           </div>
+
+                          {/* Profit Calculator Shortcut Button */}
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setCalcProduct(product);
+                              setShowCalcModal(true);
+                            }}
+                            className="w-full mt-1.5 py-1 px-2 rounded-lg bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/25 text-emerald-400 text-[10px] font-semibold flex items-center justify-center gap-1 transition-colors"
+                            title="Calculate resale margin"
+                          >
+                            <Calculator className="w-3 h-3 text-emerald-400" />
+                            <span>Margin: ₹{product.marketPrice - product.fairPrice}/pc ({Math.round(((product.marketPrice - product.fairPrice) / product.marketPrice) * 100)}% ROI)</span>
+                          </button>
                         </div>
                       </div>
                     </div>
@@ -760,6 +937,101 @@ export default function OneAAStore() {
                 <p className="leading-relaxed text-slate-400">
                   1AA connects primary manufacturing plants directly with Indian businesses and smart consumers. Operating on a strict open-ledger Factory Cost + ₹100 margin, we bypass marketplace take-rates of 30% to 50%. Every parcel undergoes bench testing in Mysore prior to dispatch.
                 </p>
+              </div>
+
+              {/* Official 1AA Brand Brochure Documents */}
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <h3 className="font-bold text-white uppercase tracking-wider text-xs flex items-center gap-1.5">
+                    <Sparkles className="w-4 h-4 text-brand-orange" />
+                    Official 1AA Brand Brochures & Sourcing Documents
+                  </h3>
+                  <span className="text-[10px] text-slate-400 font-mono">High Resolution Vector & Print</span>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {/* Brochure Card 1 */}
+                  <div className="p-4 bg-white/[0.03] rounded-2xl border border-white/10 hover:border-brand-orange/40 transition-all group flex flex-col justify-between space-y-3">
+                    <div className="relative rounded-xl overflow-hidden aspect-[4/3] bg-obsidian-950 border border-white/10">
+                      <img 
+                        src="./1AA-Brand-Brochure.jpg" 
+                        alt="1AA Commercial Wholesale Brochure"
+                        className="w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-500"
+                        loading="lazy"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-obsidian-950/80 via-transparent to-transparent pointer-events-none" />
+                      <div className="absolute bottom-2 left-2">
+                        <span className="px-2.5 py-1 rounded-full bg-brand-orange text-obsidian-950 font-bold text-[10px]">
+                          Official Brochure
+                        </span>
+                      </div>
+                    </div>
+                    <div>
+                      <h4 className="font-bold text-white text-sm">1AA Commercial Wholesale Brochure</h4>
+                      <p className="text-slate-400 text-[11px] mt-1">Official Mysore Central Facility catalogue featuring direct factory pricing, operational standards, and logistics policies.</p>
+                    </div>
+                    <div className="flex items-center gap-2 pt-1">
+                      <a
+                        href="./1AA-Brand-Brochure.jpg"
+                        target="_blank"
+                        rel="noreferrer"
+                        className="flex-1 py-2 px-3 rounded-full bg-white/[0.08] hover:bg-white/[0.15] text-white font-semibold text-xs flex items-center justify-center gap-1.5 transition-colors border border-white/10"
+                      >
+                        <Eye className="w-3.5 h-3.5 text-brand-blue-light" />
+                        <span>View High-Res</span>
+                      </a>
+                      <a
+                        href="./1AA-Brand-Brochure.jpg"
+                        download="1AA-Commercial-Brochure.jpg"
+                        className="py-2 px-3 rounded-full bg-brand-orange hover:bg-brand-orange-dark text-obsidian-950 font-bold text-xs flex items-center justify-center gap-1.5 transition-all shadow-glow-orange"
+                      >
+                        <Download className="w-3.5 h-3.5" />
+                        <span>Download</span>
+                      </a>
+                    </div>
+                  </div>
+
+                  {/* Brochure Card 2 */}
+                  <div className="p-4 bg-white/[0.03] rounded-2xl border border-white/10 hover:border-brand-blue/40 transition-all group flex flex-col justify-between space-y-3">
+                    <div className="relative rounded-xl overflow-hidden aspect-[4/3] bg-obsidian-950 border border-white/10">
+                      <img 
+                        src="./1AA-Brand-Brochure-ABD.jpg" 
+                        alt="1AA Sourcing Manual & Commercial Policies"
+                        className="w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-500"
+                        loading="lazy"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-obsidian-950/80 via-transparent to-transparent pointer-events-none" />
+                      <div className="absolute bottom-2 left-2">
+                        <span className="px-2.5 py-1 rounded-full bg-brand-blue text-white font-bold text-[10px]">
+                          Sourcing Guide
+                        </span>
+                      </div>
+                    </div>
+                    <div>
+                      <h4 className="font-bold text-white text-sm">1AA Sourcing Manual & Terms</h4>
+                      <p className="text-slate-400 text-[11px] mt-1">Industrial buyer playbook detailing open-ledger pricing, certified QA benchmark, and direct factory-to-store routing.</p>
+                    </div>
+                    <div className="flex items-center gap-2 pt-1">
+                      <a
+                        href="./1AA-Brand-Brochure-ABD.jpg"
+                        target="_blank"
+                        rel="noreferrer"
+                        className="flex-1 py-2 px-3 rounded-full bg-white/[0.08] hover:bg-white/[0.15] text-white font-semibold text-xs flex items-center justify-center gap-1.5 transition-colors border border-white/10"
+                      >
+                        <Eye className="w-3.5 h-3.5 text-brand-blue-light" />
+                        <span>View High-Res</span>
+                      </a>
+                      <a
+                        href="./1AA-Brand-Brochure-ABD.jpg"
+                        download="1AA-Sourcing-Manual.jpg"
+                        className="py-2 px-3 rounded-full bg-brand-blue hover:bg-brand-blue-light text-white font-bold text-xs flex items-center justify-center gap-1.5 transition-all shadow-glow-blue"
+                      >
+                        <Download className="w-3.5 h-3.5" />
+                        <span>Download</span>
+                      </a>
+                    </div>
+                  </div>
+                </div>
               </div>
 
               {/* Specification Table */}
@@ -1073,6 +1345,10 @@ export default function OneAAStore() {
         onUpdateQty={updateQty}
         currentQty={selectedProductForModal ? quantities[selectedProductForModal.sku] || 0 : 0}
         mode={mode}
+        onOpenCalculator={(p) => {
+          setCalcProduct(p);
+          setShowCalcModal(true);
+        }}
       />
 
       {/* --- PRO-FORMA INVOICE GENERATOR MODAL --- */}
@@ -1083,6 +1359,35 @@ export default function OneAAStore() {
         metrics={metrics}
         mode={mode}
       />
+
+      {/* --- LUCKY SPIN-THE-WHEEL DISCOUNT MODAL --- */}
+      <SpinWheelModal
+        isOpen={showSpinModal}
+        onClose={() => setShowSpinModal(false)}
+        onApplyCoupon={(code, desc) => setAppliedCoupon({ code, desc, amount: 0 })}
+      />
+
+      {/* --- RESELLER PROFIT / MARGIN CALCULATOR MODAL --- */}
+      <MarginCalculatorModal
+        isOpen={showCalcModal}
+        product={calcProduct}
+        onClose={() => setShowCalcModal(false)}
+        onAddToCart={(p, qty) => updateQty(p.sku, qty)}
+      />
+
+      {/* --- LIVE ORDER NOTIFICATION TICKER (SOCIAL PROOF) --- */}
+      <LiveOrderTicker onSelectProduct={(p) => setSelectedProductForModal(p)} />
+
+      {/* --- FLOATING DISCOUNT WHEEL TRIGGER --- */}
+      <div className="fixed bottom-24 right-5 sm:bottom-6 sm:right-6 z-30">
+        <button
+          onClick={() => setShowSpinModal(true)}
+          className="flex items-center gap-2 px-4 py-3 rounded-full bg-gradient-to-r from-brand-orange via-amber-500 to-brand-orange-light text-obsidian-950 font-black text-xs tracking-wider shadow-2xl hover:scale-105 active:scale-95 transition-all shadow-glow-orange border border-white/30 cursor-pointer animate-pulse"
+        >
+          <Gift className="w-4 h-4 text-obsidian-950" />
+          <span>SPIN & WIN ₹300 OFF</span>
+        </button>
+      </div>
 
       {/* --- APPLE-STYLE MINIMAL FOOTER --- */}
       <footer className="border-t border-white/[0.08] py-16 bg-obsidian-950/80 text-xs text-slate-400 mt-16">

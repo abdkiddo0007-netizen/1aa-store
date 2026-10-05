@@ -17,6 +17,8 @@ export interface Product {
   specs?: string[];
   material?: string;
   leadTime?: string;
+  reviewsCount?: number;
+  rating?: number;
 }
 
 export interface OrderMetrics {
