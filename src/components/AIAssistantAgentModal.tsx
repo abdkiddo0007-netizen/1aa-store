@@ -19,7 +19,9 @@ import {
   Copy,
   Plus,
   Eye,
-  Check
+  Check,
+  Navigation,
+  Radio
 } from "lucide-react";
 
 interface AIAssistantAgentModalProps {
@@ -30,6 +32,7 @@ interface AIAssistantAgentModalProps {
   selectedHotline: "7598077003" | "7406231167";
   activeCartTotal?: number;
   activeCartUnits?: number;
+  onTrackOrder?: (orderRef: string) => void;
 }
 
 interface ChatMessage {
@@ -38,7 +41,8 @@ interface ChatMessage {
   text: string;
   time: string;
   suggestedProducts?: Product[];
-  actionType?: "escalate" | "delivery" | "payment" | "catalog" | "sample" | "calculator";
+  actionType?: "escalate" | "delivery" | "payment" | "catalog" | "sample" | "calculator" | "tracking";
+  trackingRef?: string;
   transitInfo?: {
     city: string;
     expressDays: string;
@@ -82,6 +86,7 @@ export default function AIAssistantAgentModal({
   selectedHotline,
   activeCartTotal = 0,
   activeCartUnits = 0,
+  onTrackOrder,
 }: AIAssistantAgentModalProps) {
   const [input, setInput] = useState("");
   const [copiedId, setCopiedId] = useState<string | null>(null);
@@ -112,6 +117,7 @@ export default function AIAssistantAgentModal({
 
   // Quick Action Chips
   const quickChips = [
+    { label: "🛰️ Track My Package (Live Radar)", query: "How do I track my package in real-time?" },
     { label: "🧸 Trending Toys (81 SKUs)", query: "What are the trending toys?" },
     { label: "🚀 High Margin Items (>58%)", query: "Show me high margin products for resellers" },
     { label: "⚡ Smart Tech & Electronics", query: "Show me electronics and smart tech gadgets" },
@@ -129,7 +135,7 @@ export default function AIAssistantAgentModal({
     const q = userQuery.toLowerCase().trim();
     let replyText = "";
     let suggested: Product[] | undefined = undefined;
-    let action: "escalate" | "delivery" | "payment" | "catalog" | "sample" | "calculator" | undefined = undefined;
+    let action: "escalate" | "delivery" | "payment" | "catalog" | "sample" | "calculator" | "tracking" | undefined = undefined;
     let transitInfo: ChatMessage["transitInfo"] = undefined;
     let calcResult: ChatMessage["calcResult"] = undefined;
 
@@ -152,6 +158,36 @@ export default function AIAssistantAgentModal({
         action = "delivery";
         return { text: replyText, suggestedProducts: suggested, actionType: action, transitInfo };
       }
+    }
+
+    // 0. Real-time Cargo & Package Tracking
+    if (
+      q.includes("track") ||
+      q.includes("where is my") ||
+      q.includes("package") ||
+      q.includes("parcel") ||
+      q.includes("awb") ||
+      q.includes("docket") ||
+      q.includes("consignment") ||
+      q.includes("lorry receipt") ||
+      q.includes("dispatch status") ||
+      q.startsWith("1aa-")
+    ) {
+      const refMatch = userQuery.match(/1AA-[A-Za-z0-9-]+/i);
+      const matchedRef = refMatch ? refMatch[0].toUpperCase() : undefined;
+
+      replyText = 
+        `🛰️ **1AA Real-Time Cargo Radar & Package Tracking:**\n\n` +
+        `Every consignment departing our Mysore Central Facility is monitored across our **6-Stage Quality & Transit Pipeline**:\n\n` +
+        `1️⃣ **Remittance Verified**: Reconciled by Abdul Darvesh in Axis Bank (A/c 922010002282280)\n` +
+        `2️⃣ **Mysore Bench QA**: 100% pre-dispatch physical testing (Zero Defect Certification)\n` +
+        `3️⃣ **Export Packaging**: 5-ply reinforced outer carton with holographic tamper seals\n` +
+        `4️⃣ **Courier Handover**: Transferred to BlueDart Apex Air / Delhivery Express Cargo\n` +
+        `5️⃣ **Line-Haul In-Transit**: Active satellite GPS radar with temperature & shock sensors\n` +
+        `6️⃣ **Out for Delivery**: Doorstep delivery with 4-digit verification OTP\n\n` +
+        `Click **Launch Live Satellite Radar** below to view real-time checkpoint telemetry, GPS flight path, and print your commercial Lorry Receipt (LR)!`;
+      action = "tracking";
+      return { text: replyText, actionType: action, trackingRef: matchedRef };
     }
 
     // 1. Trending Toys & STEM Games (Fix for User Bug)
@@ -728,6 +764,35 @@ export default function AIAssistantAgentModal({
                         <span>Chat Live with Abdul Darvesh (WhatsApp)</span>
                         <ExternalLink className="w-3 h-3" />
                       </a>
+                    </div>
+                  )}
+
+                  {/* Tracking Action Card */}
+                  {m.actionType === "tracking" && onTrackOrder && (
+                    <div className="mt-3 p-3.5 rounded-2xl bg-gradient-to-r from-emerald-500/10 via-obsidian-950 to-brand-blue/10 border border-emerald-500/30 space-y-2.5">
+                      <div className="flex items-center justify-between text-xs">
+                        <span className="font-bold text-white flex items-center gap-1.5">
+                          <Navigation className="w-3.5 h-3.5 text-emerald-400" />
+                          <span>Satellite Telemetry Active</span>
+                        </span>
+                        <span className="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 font-mono text-[10px] font-bold">
+                          Live Radar Ready
+                        </span>
+                      </div>
+                      <p className="text-[11px] text-slate-300">
+                        Track the exact 6-stage checkpoint progress, live sensor telemetry, and print your official Lorry Receipt (LR) consignment slip.
+                      </p>
+                      <button
+                        onClick={() => {
+                          haptics.selection();
+                          onTrackOrder(m.trackingRef || "");
+                          onClose();
+                        }}
+                        className="w-full py-2.5 px-4 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:brightness-110 text-obsidian-950 font-black text-xs flex items-center justify-center gap-2 shadow-glow-emerald transition-all cursor-pointer active:scale-95"
+                      >
+                        <Radio className="w-3.5 h-3.5" />
+                        <span>Launch Live Satellite Package Radar</span>
+                      </button>
                     </div>
                   )}
 

@@ -1,10 +1,11 @@
 import { useState, useEffect } from "react";
 import { CATALOG_PRODUCTS } from "../data/catalog";
-import { CheckCircle2, MapPin, X, ArrowUpRight } from "lucide-react";
+import { CheckCircle2, MapPin, X, ArrowUpRight, Navigation } from "lucide-react";
 import { Product } from "../types";
 
 interface LiveOrderTickerProps {
   onSelectProduct?: (product: Product) => void;
+  onTrackOrder?: (orderRef: string) => void;
 }
 
 const CITIES = [
@@ -24,7 +25,7 @@ const CITIES = [
 
 const TIME_AGOS = ["Just now", "2 mins ago", "5 mins ago", "8 mins ago", "12 mins ago", "18 mins ago", "24 mins ago"];
 
-export default function LiveOrderTicker({ onSelectProduct }: LiveOrderTickerProps) {
+export default function LiveOrderTicker({ onSelectProduct, onTrackOrder }: LiveOrderTickerProps) {
   const [currentOrder, setCurrentOrder] = useState<{
     product: Product;
     city: string;
@@ -122,7 +123,18 @@ export default function LiveOrderTicker({ onSelectProduct }: LiveOrderTickerProp
                 onClick={() => onSelectProduct(currentOrder.product)}
                 className="text-[10px] text-brand-blue-light hover:underline flex items-center ml-auto font-medium"
               >
-                View <ArrowUpRight className="w-2.5 h-2.5" />
+                <span>View</span>
+                <ArrowUpRight className="w-2.5 h-2.5" />
+              </button>
+            )}
+            {onTrackOrder && (
+              <button
+                onClick={() => onTrackOrder("1AA-EXP-MUM-8921")}
+                className="text-[10px] text-emerald-400 hover:text-emerald-300 font-bold flex items-center gap-0.5 ml-2 cursor-pointer"
+                title="View live radar package telemetry"
+              >
+                <Navigation className="w-2.5 h-2.5" />
+                <span>Track</span>
               </button>
             )}
           </div>

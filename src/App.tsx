@@ -16,6 +16,7 @@ import ResellerShareModal from "./components/ResellerShareModal";
 import SavedOrdersModal from "./components/SavedOrdersModal";
 import DisplayResolutionModal, { DisplayConfig } from "./components/DisplayResolutionModal";
 import DeliveryTransitModal from "./components/DeliveryTransitModal";
+import OrderTrackingModal from "./components/OrderTrackingModal";
 import { handleImgError } from "./utils/imageFallback";
 import { haptics } from "./utils/haptics";
 import { 
@@ -55,7 +56,8 @@ import {
   Crown,
   RotateCcw,
   Volume2,
-  VolumeX
+  VolumeX,
+  Navigation
 } from "lucide-react";
 
 export default function OneAAStore() {
@@ -111,6 +113,16 @@ export default function OneAAStore() {
   const [appliedCoupon, setAppliedCoupon] = useState<{ code: string; desc: string; amount: number } | null>(null);
   const [copySuccess, setCopySuccess] = useState(false);
   const [selectedHotline, setSelectedHotline] = useState<"7598077003" | "7406231167">("7598077003");
+  const [showTrackingModal, setShowTrackingModal] = useState(false);
+  const [trackingOrderRef, setTrackingOrderRef] = useState<string | null>(null);
+
+  const handleOpenTracking = (orderRef?: string) => {
+    haptics.light();
+    if (orderRef) {
+      setTrackingOrderRef(orderRef);
+    }
+    setShowTrackingModal(true);
+  };
 
   // Live Mysore Dispatch Countdown Timer
   const [countdown, setCountdown] = useState({ hours: 4, minutes: 28, seconds: 15 });
@@ -387,6 +399,20 @@ export default function OneAAStore() {
                 <span>Delivery SLA (10–15d / &lt;7d)</span>
               </button>
 
+              {/* Real-Time Package Radar Tracker */}
+              <button
+                onClick={() => handleOpenTracking()}
+                className="flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-300 border border-emerald-500/30 text-[10px] font-bold transition-all cursor-pointer shadow-glow-emerald"
+                title="Track Live Mysore Dispatch & Satellite Package Radar"
+              >
+                <span className="relative flex h-2 w-2">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-400"></span>
+                </span>
+                <Navigation className="w-2.5 h-2.5 text-emerald-400" />
+                <span>Track Package Radar</span>
+              </button>
+
               {/* Sound FX Toggle */}
               <button
                 onClick={() => {
@@ -543,6 +569,17 @@ export default function OneAAStore() {
                 <span>Re-Order</span>
               </button>
 
+              {/* Real-time Order & Package Tracking Trigger */}
+              <button
+                onClick={() => handleOpenTracking()}
+                className="flex text-xs px-3.5 py-2 rounded-full border border-emerald-500/40 bg-emerald-500/10 text-emerald-300 hover:bg-emerald-500 hover:text-obsidian-950 font-semibold transition-all items-center gap-1.5 shadow-glow-emerald cursor-pointer"
+                title="Real-Time Package Radar & Consignment Tracking"
+              >
+                <Navigation className="w-3.5 h-3.5 text-emerald-400" />
+                <span className="hidden sm:inline">Track Package</span>
+                <span className="sm:hidden">Track</span>
+              </button>
+
               {/* Display Resolution & Screen Density Controls */}
               <button
                 onClick={() => {
@@ -667,6 +704,15 @@ export default function OneAAStore() {
               <MessageSquare className="w-3.5 h-3.5 text-emerald-400" />
               <span>Join WhatsApp VIP Broadcast</span>
             </a>
+            <span className="text-slate-500 hidden sm:inline">•</span>
+            <button
+              onClick={() => handleOpenTracking()}
+              className="inline-flex items-center gap-1.5 text-[11px] px-3 py-1 rounded-full bg-white/[0.06] hover:bg-emerald-500 text-slate-200 hover:text-obsidian-950 border border-white/10 hover:border-emerald-500 font-bold hover:scale-105 transition-all cursor-pointer shadow-sm"
+              title="Track Live Mysore Dispatch & Satellite Package Radar"
+            >
+              <Navigation className="w-3.5 h-3.5 text-emerald-400" />
+              <span>Package Radar</span>
+            </button>
           </div>
         </div>
 
@@ -1711,6 +1757,7 @@ export default function OneAAStore() {
         items={activeItems}
         metrics={metrics}
         mode={mode}
+        onTrackOrder={handleOpenTracking}
       />
 
       {/* --- LUCKY SPIN-THE-WHEEL DISCOUNT MODAL --- */}
@@ -1735,6 +1782,7 @@ export default function OneAAStore() {
         finalAmount={metrics.finalAmount}
         items={activeItems}
         selectedHotline={selectedHotline}
+        onTrackOrder={handleOpenTracking}
       />
 
       {/* --- WHATSAPP CATALOG BROADCAST STUDIO MODAL --- */}
@@ -1770,11 +1818,15 @@ export default function OneAAStore() {
           setQuantities(qtyMap);
           setShowOrderDrawer(true);
         }}
+        onTrackOrder={handleOpenTracking}
         selectedHotline={selectedHotline}
       />
 
       {/* --- LIVE ORDER NOTIFICATION TICKER (SOCIAL PROOF) --- */}
-      <LiveOrderTicker onSelectProduct={(p) => setSelectedProductForModal(p)} />
+      <LiveOrderTicker 
+        onSelectProduct={(p) => setSelectedProductForModal(p)} 
+        onTrackOrder={handleOpenTracking}
+      />
 
       {/* --- DISPLAY RESOLUTION & SCREEN DENSITY MODAL --- */}
       <DisplayResolutionModal
@@ -1807,6 +1859,18 @@ export default function OneAAStore() {
         selectedHotline={selectedHotline}
         activeCartTotal={metrics.finalAmount}
         activeCartUnits={metrics.units}
+        onTrackOrder={handleOpenTracking}
+      />
+
+      {/* --- REAL-TIME CARGO RADAR & PACKAGE TRACKING MODAL --- */}
+      <OrderTrackingModal
+        isOpen={showTrackingModal}
+        onClose={() => {
+          setShowTrackingModal(false);
+          setTrackingOrderRef(null);
+        }}
+        initialOrderRef={trackingOrderRef}
+        selectedHotline={selectedHotline}
       />
 
       {/* --- FLOATING 1AA SOURCING AI AGENT TRIGGER --- */}
@@ -1901,6 +1965,14 @@ export default function OneAAStore() {
               >
                 <Truck className="w-2.5 h-2.5 text-emerald-400" />
                 <span>City Transit Times</span>
+              </button>
+
+              <button
+                onClick={() => handleOpenTracking()}
+                className="px-2.5 py-1 rounded-full bg-white/[0.04] hover:bg-white/[0.08] text-emerald-400 border border-emerald-500/30 font-semibold flex items-center gap-1 transition-colors cursor-pointer"
+              >
+                <Navigation className="w-2.5 h-2.5 text-emerald-400" />
+                <span>Live Package Radar</span>
               </button>
             </div>
           </div>

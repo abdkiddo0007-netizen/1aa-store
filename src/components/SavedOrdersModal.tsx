@@ -8,13 +8,15 @@ import {
   ShoppingBag, 
   Truck, 
   Trash2, 
-  MessageSquare
+  MessageSquare,
+  Navigation
 } from "lucide-react";
 
 interface SavedOrdersModalProps {
   isOpen: boolean;
   onClose: () => void;
   onReorderCart: (quantities: { [sku: string]: number }) => void;
+  onTrackOrder?: (orderRef: string) => void;
   selectedHotline: "7598077003" | "7406231167";
 }
 
@@ -22,6 +24,7 @@ export default function SavedOrdersModal({
   isOpen,
   onClose,
   onReorderCart,
+  onTrackOrder,
   selectedHotline,
 }: SavedOrdersModalProps) {
   const [savedOrders, setSavedOrders] = useState<SavedOrder[]>([]);
@@ -174,21 +177,39 @@ export default function SavedOrdersModal({
                     )}
                   </div>
 
-                  {/* Quick Track WhatsApp */}
-                  <div className="flex items-center justify-between text-xs pt-1 border-t border-white/5">
-                    <span className="text-[11px] text-slate-400 flex items-center gap-1">
+                  {/* Quick Track & Actions */}
+                  <div className="flex flex-wrap items-center justify-between gap-2 text-xs pt-2 border-t border-white/10">
+                    <span className="text-[11px] text-slate-400 flex items-center gap-1 font-mono">
                       <Truck className="w-3.5 h-3.5 text-brand-orange" />
-                      Delivery SLA: 10–15d (Express &lt;7d)
+                      <span>SLA: {order.deliverySpeed === "express" ? "Express (<7d)" : "Surface (10-15d)"}</span>
                     </span>
-                    <a
-                      href={getWhatsAppTrackUrl(order)}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="text-emerald-400 hover:text-emerald-300 font-semibold text-[11px] flex items-center gap-1 cursor-pointer"
-                    >
-                      <MessageSquare className="w-3 h-3" />
-                      <span>Track on WhatsApp</span>
-                    </a>
+
+                    <div className="flex items-center gap-2">
+                      {onTrackOrder && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            haptics.selection();
+                            onTrackOrder(order.orderRef);
+                            onClose();
+                          }}
+                          className="px-2.5 py-1 rounded-lg bg-emerald-500/20 hover:bg-emerald-500 text-emerald-300 hover:text-obsidian-950 font-bold text-[10px] flex items-center gap-1 transition-all border border-emerald-500/40 cursor-pointer shadow-sm"
+                        >
+                          <Navigation className="w-3 h-3 text-emerald-400" />
+                          <span>Live Radar Track</span>
+                        </button>
+                      )}
+
+                      <a
+                        href={getWhatsAppTrackUrl(order)}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="text-slate-300 hover:text-emerald-400 font-semibold text-[11px] flex items-center gap-1 cursor-pointer"
+                      >
+                        <MessageSquare className="w-3 h-3 text-emerald-400" />
+                        <span>WhatsApp</span>
+                      </a>
+                    </div>
                   </div>
                 </div>
               ))}

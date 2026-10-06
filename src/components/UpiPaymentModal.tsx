@@ -11,7 +11,8 @@ import {
   CheckCircle2,
   ArrowRight,
   Mail,
-  FileText
+  FileText,
+  Navigation
 } from "lucide-react";
 import { ActiveOrderItem, SavedOrder } from "../types";
 import { haptics } from "../utils/haptics";
@@ -22,6 +23,7 @@ interface UpiPaymentModalProps {
   finalAmount: number;
   items: ActiveOrderItem[];
   selectedHotline: "7598077003" | "7406231167";
+  onTrackOrder?: (orderRef: string) => void;
 }
 
 export default function UpiPaymentModal({
@@ -30,6 +32,7 @@ export default function UpiPaymentModal({
   finalAmount,
   items,
   selectedHotline,
+  onTrackOrder,
 }: UpiPaymentModalProps) {
   // Official Authentic Bank & UPI Credentials
   const officialUpiId = "7406231167@axisbank";
@@ -507,6 +510,22 @@ export default function UpiPaymentModal({
               <span>Get Invoice Receipt & Book Dispatch on WhatsApp</span>
               <ArrowRight className="w-4 h-4" />
             </a>
+
+            {onTrackOrder && (
+              <button
+                type="button"
+                onClick={() => {
+                  haptics.selection();
+                  saveCurrentOrderToHistory();
+                  onClose();
+                  onTrackOrder(orderRef);
+                }}
+                className="w-full py-2.5 px-4 rounded-full bg-white/[0.06] hover:bg-white/[0.12] border border-white/15 text-white font-bold text-xs flex items-center justify-center gap-2 transition-all cursor-pointer shadow-md active:scale-95"
+              >
+                <Navigation className="w-3.5 h-3.5 text-emerald-400" />
+                <span>Track Package Real-Time on Satellite Radar</span>
+              </button>
+            )}
 
             <div className="flex items-center justify-center gap-3 text-[10px] text-slate-400 pt-1">
               <span className="flex items-center gap-1">

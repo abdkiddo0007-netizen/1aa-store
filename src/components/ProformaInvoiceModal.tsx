@@ -11,7 +11,8 @@ import {
   Calendar, 
   CheckCircle2, 
   Building2,
-  Truck 
+  Truck,
+  Navigation
 } from 'lucide-react';
 
 interface ProformaInvoiceModalProps {
@@ -20,6 +21,7 @@ interface ProformaInvoiceModalProps {
   items: ActiveOrderItem[];
   metrics: OrderMetrics;
   mode: 'retail' | 'b2b';
+  onTrackOrder?: (orderRef: string) => void;
 }
 
 export default function ProformaInvoiceModal({
@@ -28,6 +30,7 @@ export default function ProformaInvoiceModal({
   items,
   metrics,
   mode,
+  onTrackOrder,
 }: ProformaInvoiceModalProps) {
   if (!isOpen) return null;
 
@@ -54,15 +57,28 @@ export default function ProformaInvoiceModal({
             </div>
           </div>
           <div className="flex items-center gap-3">
+            {onTrackOrder && (
+              <button
+                onClick={() => {
+                  haptics.selection();
+                  onTrackOrder(invoiceNumber);
+                  onClose();
+                }}
+                className="px-4 py-2 bg-emerald-500/20 hover:bg-emerald-500 text-emerald-300 hover:text-obsidian-950 border border-emerald-500/40 font-bold text-xs rounded-full flex items-center gap-1.5 transition-all active:scale-95 cursor-pointer shadow-glow-emerald"
+              >
+                <Navigation className="w-3.5 h-3.5 text-emerald-400" />
+                <span>Track Consignment</span>
+              </button>
+            )}
             <button
               onClick={() => {
                 haptics.selection();
                 window.print();
               }}
-              className="px-5 py-2 bg-gradient-to-r from-brand-orange to-brand-orange-light text-obsidian-950 font-bold text-xs rounded-full flex items-center gap-1.5 transition-all shadow-glow-orange hover:brightness-105 active:scale-95"
+              className="px-5 py-2 bg-gradient-to-r from-brand-orange to-brand-orange-light text-obsidian-950 font-bold text-xs rounded-full flex items-center gap-1.5 transition-all shadow-glow-orange hover:brightness-105 active:scale-95 cursor-pointer"
             >
               <Printer className="w-3.5 h-3.5" />
-              Print / Save PDF
+              <span>Print / Save PDF</span>
             </button>
             <button
               onClick={() => {

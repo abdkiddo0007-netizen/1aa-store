@@ -48,4 +48,53 @@ export interface SavedOrder {
   totalUnits: number;
   deliverySpeed: 'standard' | 'express';
   utrNumber?: string;
+  trackingNumber?: string;
+  courierPartner?: string;
+  destinationCity?: string;
+  currentStage?: number;
 }
+
+export type TrackingStageStatus = 'completed' | 'in_progress' | 'pending';
+
+export interface TrackingStage {
+  id: number;
+  title: string;
+  shortDesc: string;
+  detailedNotes: string[];
+  location: string;
+  timestamp: string;
+  status: TrackingStageStatus;
+  leadTimeHours: number;
+}
+
+export interface PackageTrackingInfo {
+  orderRef: string;
+  courierPartner: string;
+  awbDocket: string;
+  bookingDate: string;
+  deliverySpeed: 'standard' | 'express';
+  originHub: string;
+  destinationCity: string;
+  currentStageId: number;
+  overallStatus: 'Remittance Verifying' | 'Bench QA In Progress' | 'Packed & Barcoded' | 'Handed Over to Courier' | 'Line-Haul In-Transit' | 'Out for Delivery' | 'Delivered';
+  estimatedArrival: string;
+  stages: TrackingStage[];
+  gpsCoordinates: {
+    origin: { lat: number; lng: number; label: string };
+    destination: { lat: number; lng: number; label: string };
+    current: { lat: number; lng: number; label: string; progressPercent: number };
+  };
+  telemetry: {
+    temperature: string;
+    shockIndex: string;
+    humidity: string;
+    vehicleFlightId: string;
+    driverHotline?: string;
+  };
+  cartSummary?: {
+    totalUnits: number;
+    totalAmount: number;
+    itemsCount: number;
+  };
+}
+
