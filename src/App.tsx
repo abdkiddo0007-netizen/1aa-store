@@ -20,6 +20,8 @@ import OrderTrackingModal from "./components/OrderTrackingModal";
 import BarcodeLabelGeneratorModal from "./components/BarcodeLabelGeneratorModal";
 import CartonFreightModal from "./components/CartonFreightModal";
 import MasterCartonLabelModal from "./components/MasterCartonLabelModal";
+import PlatformPriceComparisonModal from "./components/PlatformPriceComparisonModal";
+import WholesaleOpsHubModal from "./components/WholesaleOpsHubModal";
 import { CurrencyCode } from "./utils/currency";
 import { handleImgError } from "./utils/imageFallback";
 import { haptics } from "./utils/haptics";
@@ -32,7 +34,6 @@ import {
   CheckCircle2, 
   Sliders, 
   Layers, 
-  Tag, 
   Percent, 
   ExternalLink, 
   X,
@@ -63,8 +64,6 @@ import {
   VolumeX,
   Navigation,
   Boxes,
-  Printer,
-  Package,
   Globe
 } from "lucide-react";
 
@@ -129,6 +128,9 @@ export default function OneAAStore() {
   const [freightProduct, setFreightProduct] = useState<Product | null>(null);
   const [showCartonLabelModal, setShowCartonLabelModal] = useState(false);
   const [cartonLabelProduct, setCartonLabelProduct] = useState<Product | null>(null);
+  const [showPriceCompareModal, setShowPriceCompareModal] = useState(false);
+  const [priceCompareProduct, setPriceCompareProduct] = useState<Product | null>(null);
+  const [showOpsHubModal, setShowOpsHubModal] = useState(false);
   const [selectedCurrency, setSelectedCurrency] = useState<CurrencyCode>("INR");
 
   const handleOpenTracking = (orderRef?: string) => {
@@ -382,115 +384,63 @@ export default function OneAAStore() {
       />
 
       <div>
-        {/* --- APPLE-STYLE MINIMAL UTILITY BAR --- */}
+        {/* --- APPLE-STYLE MINIMAL LUXURY UTILITY BAR --- */}
         <div className="top-utility-bar bg-obsidian-900/60 border-b border-white/[0.06] text-[11px] px-4 py-2 text-slate-400 backdrop-blur-md">
           <div className="max-w-7xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-2">
             
+            {/* Left: Mysore Central Hub Status & Fast Hotlines */}
             <div className="flex flex-wrap items-center gap-3">
               <span className="flex items-center gap-2 text-brand-orange font-semibold">
                 <span className="relative flex h-2 w-2">
                   <span className="animate-apple-pulse absolute inline-flex h-full w-full rounded-full bg-brand-orange opacity-75"></span>
                   <span className="relative inline-flex rounded-full h-2 w-2 bg-brand-orange"></span>
                 </span>
-                1AA Mysore Facility Active
+                1AA Mysore Central Hub • Active
               </span>
 
-              <button
-                onClick={() => {
-                  haptics.light();
-                  setIntroSessionKey((k) => k + 1);
-                  setForceShowIntro(true);
-                }}
-                className="flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-brand-orange/15 hover:bg-brand-orange/25 text-brand-orange border border-brand-orange/30 text-[10px] font-bold transition-all cursor-pointer shadow-glow-orange"
-                title="Replay Official 1AA Cinematic Logo Reveal"
-              >
-                <Play className="w-2.5 h-2.5 fill-brand-orange text-brand-orange" />
-                <span>Brand Intro Reveal</span>
-              </button>
+              <span className="text-white/20 hidden sm:inline">•</span>
 
-              {/* Display Resolution & Screen Density Controls */}
-              <button
-                onClick={() => {
-                  haptics.light();
-                  setShowDisplayModal(true);
-                }}
-                className="flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-white/[0.05] hover:bg-white/[0.12] text-slate-300 border border-white/10 text-[10px] font-semibold transition-all cursor-pointer"
-                title="Adjust screen display resolution and density for phone / tab / desktop"
-              >
-                <Sliders className="w-2.5 h-2.5 text-brand-blue-light" />
-                <span>Display: <strong className="text-white capitalize">{displayConfig.density}</strong> ({displayConfig.zoom}%)</span>
-              </button>
+              <div className="flex items-center gap-3 text-slate-300">
+                <a 
+                  href="tel:+917598077003" 
+                  className="flex items-center gap-1 hover:text-brand-orange transition-colors font-mono"
+                  title="Call Abdul Darvesh (Hotline 1)"
+                >
+                  <Phone className="w-3 h-3 text-brand-blue-light" />
+                  <span>+91 75980 77003</span>
+                </a>
+                <span className="text-white/20">•</span>
+                <a 
+                  href="tel:+917406231167" 
+                  className="flex items-center gap-1 hover:text-brand-orange transition-colors font-mono"
+                  title="Call Dispatch Center (Hotline 2)"
+                >
+                  <Phone className="w-3 h-3 text-brand-blue-light" />
+                  <span>+91 74062 31167</span>
+                </a>
+              </div>
 
-              {/* Delivery SLA Quick Lookup */}
-              <button
-                onClick={() => {
-                  haptics.light();
-                  setShowTransitModal(true);
-                }}
-                className="flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-[10px] font-semibold transition-all cursor-pointer"
-                title="Check delivery timelines & city transit SLA"
-              >
-                <Truck className="w-2.5 h-2.5 text-emerald-400" />
-                <span>Delivery SLA (10–15d / &lt;7d)</span>
-              </button>
+              <span className="text-white/20 hidden lg:inline">•</span>
 
-              {/* Real-Time Package Radar Tracker */}
-              <button
-                onClick={() => handleOpenTracking()}
-                className="flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-300 border border-emerald-500/30 text-[10px] font-bold transition-all cursor-pointer shadow-glow-emerald"
-                title="Track Live Mysore Dispatch & Satellite Package Radar"
+              <a 
+                href="mailto:1aaavailablealways@gmail.com" 
+                className="hidden lg:flex items-center gap-1 hover:text-brand-orange transition-colors text-slate-400 font-mono text-[10px]"
               >
-                <span className="relative flex h-2 w-2">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                  <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-400"></span>
-                </span>
-                <Navigation className="w-2.5 h-2.5 text-emerald-400" />
-                <span>Track Package Radar</span>
-              </button>
+                <Mail className="w-3 h-3 text-brand-orange" />
+                1aaavailablealways@gmail.com
+              </a>
+            </div>
 
-              {/* Wholesale Shelf Barcode Tag Generator */}
-              <button
-                onClick={() => {
-                  haptics.light();
-                  setBarcodeProduct(filteredAndSorted[0] || CATALOG_PRODUCTS[0]);
-                  setShowBarcodeModal(true);
-                }}
-                className="flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-white/[0.05] hover:bg-white/[0.12] text-slate-300 hover:text-white border border-white/10 text-[10px] font-semibold transition-all cursor-pointer"
-                title="Print retail price tags with custom barcode stickers"
-              >
-                <Printer className="w-2.5 h-2.5 text-brand-orange" />
-                <span>Shelf Barcodes</span>
-              </button>
+            {/* Right: Currency, Sound FX, Delivery SLA */}
+            <div className="flex items-center gap-3">
+              <span className="text-brand-orange font-bold flex items-center gap-1.5">
+                <Truck className="w-3.5 h-3.5 text-brand-orange" />
+                <span>Delivery: 10–15 Days (<strong className="text-white font-mono">&lt;7d Express</strong>) post-payment</span>
+              </span>
 
-              {/* Master Carton CBM & Freight Calculator */}
-              <button
-                onClick={() => {
-                  haptics.light();
-                  setFreightProduct(filteredAndSorted[0] || CATALOG_PRODUCTS[0]);
-                  setShowFreightModal(true);
-                }}
-                className="flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-white/[0.05] hover:bg-white/[0.12] text-slate-300 hover:text-white border border-white/10 text-[10px] font-semibold transition-all cursor-pointer"
-                title="Calculate master carton volume (CBM), air/surface weight & pallet load"
-              >
-                <Boxes className="w-2.5 h-2.5 text-brand-blue-light" />
-                <span>CBM & Freight</span>
-              </button>
+              <span className="text-white/20">•</span>
 
-              {/* Master Carton Shipping Box Label & Stencil */}
-              <button
-                onClick={() => {
-                  haptics.light();
-                  setCartonLabelProduct(filteredAndSorted[0] || CATALOG_PRODUCTS[0]);
-                  setShowCartonLabelModal(true);
-                }}
-                className="flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-white/[0.05] hover:bg-white/[0.12] text-slate-300 hover:text-white border border-white/10 text-[10px] font-semibold transition-all cursor-pointer"
-                title="Print 4x6 inch outer master carton shipping labels with handling stencils"
-              >
-                <Package className="w-2.5 h-2.5 text-brand-orange" />
-                <span>Box Shipping Labels</span>
-              </button>
-
-              {/* Multi-Currency Global Sourcing Selector */}
+              {/* Multi-Currency Selector */}
               <div className="flex items-center gap-1 bg-white/[0.04] px-2 py-0.5 rounded-full border border-white/10 text-[10px]">
                 <Globe className="w-2.5 h-2.5 text-brand-orange" />
                 <select
@@ -500,7 +450,7 @@ export default function OneAAStore() {
                     setSelectedCurrency(e.target.value as CurrencyCode);
                   }}
                   className="bg-transparent text-white font-mono font-bold text-[10px] outline-none cursor-pointer"
-                  title="Change Currency (INR, USD, AED, SAR, EUR, GBP)"
+                  title="Select Currency"
                 >
                   <option value="INR" className="bg-obsidian-900 text-white">🇮🇳 INR (₹)</option>
                   <option value="USD" className="bg-obsidian-900 text-white">🇺🇸 USD ($)</option>
@@ -511,7 +461,7 @@ export default function OneAAStore() {
                 </select>
               </div>
 
-              {/* Sound FX Toggle */}
+              {/* Tactile Sound FX Toggle */}
               <button
                 onClick={() => {
                   const newState = haptics.toggleSound();
@@ -528,52 +478,6 @@ export default function OneAAStore() {
                 {isSoundOn ? <Volume2 className="w-3 h-3 text-emerald-400" /> : <VolumeX className="w-3 h-3 text-slate-500" />}
                 <span className="hidden sm:inline">Haptics:</span> {isSoundOn ? "ON" : "OFF"}
               </button>
-              
-              {/* Dual Contact Hotlines */}
-              <div className="flex items-center gap-3 text-slate-300">
-                <a 
-                  href="tel:+917598077003" 
-                  className="flex items-center gap-1 hover:text-brand-orange transition-colors"
-                  title="Call Hotline 1"
-                >
-                  <Phone className="w-3 h-3 text-brand-blue-light" />
-                  <span>+91 75980 77003</span>
-                </a>
-                <span className="text-white/20">•</span>
-                <a 
-                  href="tel:+917406231167" 
-                  className="flex items-center gap-1 hover:text-brand-orange transition-colors"
-                  title="Call Hotline 2"
-                >
-                  <Phone className="w-3 h-3 text-brand-blue-light" />
-                  <span>+91 74062 31167</span>
-                </a>
-              </div>
-
-              <a 
-                href="mailto:1aaavailablealways@gmail.com" 
-                className="hidden lg:flex items-center gap-1 hover:text-brand-orange transition-colors text-slate-400"
-              >
-                <Mail className="w-3 h-3 text-brand-orange" />
-                1aaavailablealways@gmail.com
-              </a>
-            </div>
-
-            <div className="flex items-center gap-3">
-              <span className="text-brand-orange font-bold flex items-center gap-1.5">
-                <Truck className="w-3.5 h-3.5 text-brand-orange" />
-                <span>Delivery: 10–15 Days (<strong className="text-white font-mono">&lt;7d Express</strong>) post-payment</span>
-              </span>
-              <span className="text-white/20 hidden md:inline">•</span>
-              <span className="text-brand-orange font-medium hidden md:flex items-center gap-1">
-                <CheckCircle2 className="w-3 h-3 text-emerald-400" />
-                No Minimum Order
-              </span>
-              <span className="text-white/20">•</span>
-              <span className="flex items-center gap-1 text-slate-300">
-                <ShieldCheck className="w-3 h-3 text-brand-blue-light" />
-                100% Pre-Dispatch Inspected
-              </span>
             </div>
 
           </div>
@@ -641,30 +545,21 @@ export default function OneAAStore() {
                 </button>
               </div>
 
-              {/* 1AA VIP Sourcing Club Trigger */}
+              {/* Real-time Cross-Platform Price Radar Trigger */}
               <button
                 onClick={() => {
                   haptics.light();
-                  setShowVipModal(true);
+                  setPriceCompareProduct(CATALOG_PRODUCTS[0]);
+                  setShowPriceCompareModal(true);
                 }}
-                className="hidden lg:flex text-xs px-3.5 py-2 rounded-full border border-amber-500/40 bg-amber-500/10 text-amber-300 hover:bg-amber-500 hover:text-obsidian-950 font-semibold transition-all items-center gap-1.5 shadow-sm cursor-pointer"
-                title="1AA VIP Restock Club & Volume Rebates"
+                className="flex text-xs px-3.5 py-2 rounded-full border border-brand-orange/40 bg-brand-orange/10 text-brand-orange hover:bg-brand-orange hover:text-obsidian-950 font-semibold transition-all items-center gap-1.5 shadow-sm cursor-pointer"
+                title="Compare 1AA Direct Pricing Real-Time vs Amazon & Flipkart"
               >
-                <Crown className="w-3.5 h-3.5 text-amber-400" />
-                <span>VIP Club</span>
-              </button>
-
-              {/* Saved Orders / Quick Re-Order Trigger */}
-              <button
-                onClick={() => {
-                  haptics.light();
-                  setShowSavedOrdersModal(true);
-                }}
-                className="hidden lg:flex text-xs px-3.5 py-2 rounded-full border border-blue-500/40 bg-blue-500/10 text-blue-300 hover:bg-blue-500 hover:text-white font-semibold transition-all items-center gap-1.5 shadow-sm cursor-pointer"
-                title="View Past Invoices & 1-Tap Re-Order"
-              >
-                <RotateCcw className="w-3.5 h-3.5 text-blue-400" />
-                <span>Re-Order</span>
+                <TrendingUp className="w-3.5 h-3.5 text-brand-orange" />
+                <span className="hidden sm:inline">Price Radar</span>
+                <span className="text-[9px] px-1.5 py-0.2 rounded-full bg-emerald-500/20 text-emerald-400 font-mono font-bold hidden md:inline">
+                  Arbitrage
+                </span>
               </button>
 
               {/* Real-time Order & Package Tracking Trigger */}
@@ -678,73 +573,20 @@ export default function OneAAStore() {
                 <span className="sm:hidden">Track</span>
               </button>
 
-              {/* Display Resolution & Screen Density Controls */}
+              {/* Wholesale Operations Hub Consolidated Trigger */}
               <button
                 onClick={() => {
                   haptics.light();
-                  setShowDisplayModal(true);
+                  setShowOpsHubModal(true);
                 }}
-                className="hidden md:flex text-xs px-3 py-1.5 rounded-full border border-white/10 bg-white/[0.04] hover:bg-white/[0.08] text-slate-300 hover:text-white font-semibold transition-all items-center gap-1.5 cursor-pointer"
-                title="Display Resolution & Density for Phone / Tab / Desktop"
+                className="flex text-xs px-3.5 py-2 rounded-full border border-white/15 bg-white/[0.06] hover:bg-white/[0.12] text-slate-200 hover:text-white font-semibold transition-all items-center gap-1.5 cursor-pointer"
+                title="Open Wholesale Operations Hub (Outer Box Labels, Shelf Barcodes, CBM Freight, Invoice, VIP Club)"
               >
-                <Sliders className="w-3.5 h-3.5 text-brand-blue-light" />
-                <span className="capitalize">{displayConfig.density} HD</span>
+                <Boxes className="w-3.5 h-3.5 text-brand-blue-light" />
+                <span className="hidden sm:inline">Ops Hub</span>
+                <span className="sm:hidden">Ops</span>
+                {metrics.units > 0 && <span className="w-2 h-2 rounded-full bg-brand-orange animate-pulse" />}
               </button>
-
-              {/* 1AA AI Sourcing Agent Trigger */}
-              <button
-                onClick={() => {
-                  haptics.light();
-                  setShowAiAgentModal(true);
-                }}
-                className="text-xs px-3.5 py-2 rounded-full border border-purple-500/40 bg-purple-500/15 text-purple-200 hover:bg-purple-500 hover:text-white font-semibold transition-all flex items-center gap-1.5 shadow-sm shadow-purple-500/20 cursor-pointer"
-                title="Ask 1AA Sourcing AI Assistant"
-              >
-                <Bot className="w-3.5 h-3.5 text-purple-400" />
-                <span className="hidden sm:inline">Ask</span> AI Agent
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-              </button>
-
-              {/* Direct UPI Scanner Shortcut */}
-              <button
-                onClick={() => {
-                  haptics.light();
-                  setShowUpiModal(true);
-                }}
-                className="hidden sm:flex text-xs px-3.5 py-2 rounded-full border border-emerald-500/30 bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500 hover:text-obsidian-950 font-semibold transition-all items-center gap-1.5 shadow-sm cursor-pointer"
-                title="Direct UPI / QR Code Payment (0% Fee)"
-              >
-                <QrCode className="w-3.5 h-3.5 text-emerald-400" />
-                <span>UPI Pay</span>
-              </button>
-
-              {/* WhatsApp Broadcast Studio Trigger */}
-              <button
-                onClick={() => {
-                  haptics.light();
-                  setShowBroadcastModal(true);
-                }}
-                className="hidden md:flex text-xs px-3.5 py-2 rounded-full border border-brand-orange/40 bg-brand-orange/10 text-brand-orange hover:bg-brand-orange hover:text-obsidian-950 font-semibold transition-all items-center gap-1.5 shadow-sm cursor-pointer"
-                title="WhatsApp Catalog Broadcaster"
-              >
-                <Share2 className="w-3.5 h-3.5 text-brand-orange" />
-                <span>Broadcast</span>
-              </button>
-
-              {/* Instant Pro-Forma Invoice Generator Trigger */}
-              {metrics.units > 0 && (
-                <button
-                  onClick={() => {
-                    haptics.light();
-                    setShowInvoiceModal(true);
-                  }}
-                  className="hidden md:flex text-xs px-4 py-2 rounded-full border border-brand-orange/40 bg-brand-orange/10 text-brand-orange hover:bg-brand-orange hover:text-obsidian-950 font-semibold transition-all items-center gap-1.5 shadow-sm cursor-pointer"
-                  title="Generate Official Pro-Forma Invoice"
-                >
-                  <FileText className="w-3.5 h-3.5" />
-                  <span>Invoice</span>
-                </button>
-              )}
 
               {/* Shopping Manifest Drawer Trigger */}
               <button
@@ -838,7 +680,7 @@ export default function OneAAStore() {
 
             {/* Subtitle */}
             <p className="text-sm sm:text-base text-slate-400 max-w-2xl mx-auto leading-relaxed font-normal">
-              Direct manufacturing links with Indian enterprises and smart shoppers. Every line item is verified in our Mysore central facility, priced at factory cost plus an open ₹100 fee.
+              Direct manufacturing links with Indian enterprises and smart shoppers. Every line item is verified in our Mysore central facility, priced at factory cost with built-in courier freight and guaranteed 40% sustainable margin.
             </p>
 
             {/* Apple-style 3-feature grid */}
@@ -847,10 +689,10 @@ export default function OneAAStore() {
               <div className="p-4 rounded-2xl apple-glass border border-white/[0.06] space-y-1">
                 <div className="flex items-center gap-2 text-white font-semibold text-xs">
                   <CheckCircle2 className="w-4 h-4 text-brand-blue-light" />
-                  Open Ledger Pricing
+                  Courier Included + 40% Margin
                 </div>
                 <div className="text-[11px] text-slate-400">
-                  Direct factory price + ₹100 flat handling. Zero hidden commissions.
+                  Landed cost includes door courier + 40% 1AA margin. Save 40%–70% vs Amazon.
                 </div>
               </div>
 
@@ -1230,33 +1072,55 @@ export default function OneAAStore() {
                           {product.highlight}
                         </p>
 
-                        {/* Transparent Price Breakdown Card */}
+                        {/* Transparent Landed Cost & Courier Breakdown */}
                         <div className="bg-white/[0.03] p-3 rounded-2xl border border-white/[0.06] space-y-1.5 mt-2 font-mono text-xs">
                           <div className="flex justify-between text-[11px] text-slate-400">
                             <span>Factory Cost:</span>
                             <span className="text-slate-300">₹{product.baseCost}</span>
                           </div>
+
+                          <div className="flex justify-between text-[11px] text-slate-400">
+                            <span className="flex items-center gap-1">
+                              <Truck className="w-3 h-3 text-brand-orange" />
+                              Courier Freight:
+                            </span>
+                            <span className="text-emerald-400 font-semibold">₹{product.courierCost || 35} (Included)</span>
+                          </div>
                           
                           <div className="flex justify-between text-[11px] text-brand-orange font-semibold">
                             <span className="flex items-center gap-1">
-                              <Tag className="w-3 h-3" />
-                              1AA Fee:
+                              <TrendingUp className="w-3 h-3" />
+                              1AA Margin (40%):
                             </span>
-                            <span>+₹100</span>
+                            <span>+₹{product.margin1AAAmount || Math.max(0, product.fairPrice - ((product.baseCost || 0) + (product.courierCost || 35)))}</span>
                           </div>
 
                           <div className="border-t border-white/[0.08] pt-1.5 flex justify-between items-baseline">
-                            <span className="text-xs text-white font-bold font-sans">1AA Price:</span>
+                            <span className="text-xs text-white font-bold font-sans">1AA Wholesale:</span>
                             <span className="text-lg text-brand-orange font-black">₹{product.fairPrice}</span>
                           </div>
 
                           <div className="flex justify-between text-[10px] text-slate-500 pt-0.5">
-                            <span>Market Retail:</span>
-                            <span className="line-through">₹{product.marketPrice}</span>
+                            <span>Amazon/Flipkart:</span>
+                            <span className="line-through">₹{product.amazonPrice || product.marketPrice}</span>
                           </div>
 
-                          {/* Reseller ROI & Pitch Card Buttons */}
+                          {/* Real-time Comparison Button & Reseller ROI */}
                           <div className="grid grid-cols-2 gap-1.5 mt-1.5">
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                haptics.light();
+                                setPriceCompareProduct(product);
+                                setShowPriceCompareModal(true);
+                              }}
+                              className="py-1 px-1.5 rounded-lg bg-brand-orange/15 hover:bg-brand-orange/25 border border-brand-orange/30 text-brand-orange text-[10px] font-bold flex items-center justify-center gap-1 transition-colors cursor-pointer"
+                              title="Compare real-time vs Amazon & Flipkart"
+                            >
+                              <TrendingUp className="w-3 h-3 text-brand-orange" />
+                              <span>Compare Rates</span>
+                            </button>
+
                             <button
                               onClick={(e) => {
                                 e.stopPropagation();
@@ -1268,20 +1132,7 @@ export default function OneAAStore() {
                               title="Calculate resale margin & ROI"
                             >
                               <Calculator className="w-3 h-3 text-emerald-400" />
-                              <span>ROI (₹{product.marketPrice - product.fairPrice})</span>
-                            </button>
-
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                haptics.light();
-                                setResellerShareProduct(product);
-                              }}
-                              className="py-1 px-1.5 rounded-lg bg-brand-orange/10 hover:bg-brand-orange/20 border border-brand-orange/25 text-brand-orange text-[10px] font-semibold flex items-center justify-center gap-1 transition-colors cursor-pointer"
-                              title="Generate WhatsApp pitch card for your buyers"
-                            >
-                              <Share2 className="w-3 h-3 text-brand-orange" />
-                              <span>Pitch Card</span>
+                              <span>ROI (₹{(product.amazonPrice || product.marketPrice) - product.fairPrice})</span>
                             </button>
                           </div>
 
@@ -1879,6 +1730,10 @@ export default function OneAAStore() {
           setFreightProduct(p);
           setShowFreightModal(true);
         }}
+        onOpenPriceCompare={(p) => {
+          setPriceCompareProduct(p);
+          setShowPriceCompareModal(true);
+        }}
       />
 
       {/* --- PRO-FORMA INVOICE GENERATOR MODAL --- */}
@@ -2040,42 +1895,99 @@ export default function OneAAStore() {
         allProducts={CATALOG_PRODUCTS}
       />
 
-      {/* --- FLOATING 1AA SOURCING AI AGENT TRIGGER --- */}
-      <div className="fixed bottom-36 right-5 sm:bottom-20 sm:right-6 z-30 pointer-events-auto">
-        <button
-          onClick={() => {
-            haptics.light();
-            setShowAiAgentModal(true);
-          }}
-          className="group relative flex items-center gap-2.5 px-4 py-3 rounded-full bg-gradient-to-r from-purple-600 via-indigo-600 to-brand-blue text-white shadow-2xl border border-white/20 hover:scale-105 active:scale-95 transition-all duration-300 shadow-purple-500/30 cursor-pointer"
-          aria-label="Ask 1AA Sourcing AI Assistant"
-        >
-          <div className="relative">
-            <Bot className="w-4 h-4 text-purple-200 group-hover:rotate-12 transition-transform" />
-            <span className="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-emerald-400 border border-obsidian-950 animate-pulse" />
-          </div>
-          <div className="text-left">
-            <div className="text-[11px] font-black tracking-wide flex items-center gap-1">
-              <span>ASK AI AGENT</span>
-              <Sparkles className="w-3 h-3 text-amber-300" />
-            </div>
-            <div className="text-[9px] text-purple-200 font-mono">Mysore Hub Live</div>
-          </div>
-        </button>
-      </div>
+      {/* --- REAL-TIME MULTI-PLATFORM PRICE ARBITRAGE MODAL --- */}
+      <PlatformPriceComparisonModal
+        isOpen={showPriceCompareModal}
+        onClose={() => {
+          setShowPriceCompareModal(false);
+          setPriceCompareProduct(null);
+        }}
+        product={priceCompareProduct || filteredAndSorted[0] || CATALOG_PRODUCTS[0]}
+        allProducts={CATALOG_PRODUCTS}
+        onSelectProduct={(p) => setPriceCompareProduct(p)}
+        onAddToCart={(sku, qty) => updateQty(sku, qty)}
+        currency={selectedCurrency}
+      />
 
-      {/* --- FLOATING DISCOUNT WHEEL TRIGGER --- */}
-      <div className="fixed bottom-24 right-5 sm:bottom-6 sm:right-6 z-30">
-        <button
-          onClick={() => {
-            haptics.light();
-            setShowSpinModal(true);
-          }}
-          className="flex items-center gap-2 px-4 py-3 rounded-full bg-gradient-to-r from-brand-orange via-amber-500 to-brand-orange-light text-obsidian-950 font-black text-xs tracking-wider shadow-2xl hover:scale-105 active:scale-95 transition-all shadow-glow-orange border border-white/30 cursor-pointer animate-pulse"
-        >
-          <Gift className="w-4 h-4 text-obsidian-950" />
-          <span>SPIN & WIN ₹300 OFF</span>
-        </button>
+      {/* --- WHOLESALE B2B OPERATIONS HUB MODAL --- */}
+      <WholesaleOpsHubModal
+        isOpen={showOpsHubModal}
+        onClose={() => setShowOpsHubModal(false)}
+        onOpenBarcodeModal={() => {
+          setBarcodeProduct(filteredAndSorted[0] || CATALOG_PRODUCTS[0]);
+          setShowBarcodeModal(true);
+        }}
+        onOpenFreightModal={() => {
+          setFreightProduct(filteredAndSorted[0] || CATALOG_PRODUCTS[0]);
+          setShowFreightModal(true);
+        }}
+        onOpenCartonLabelModal={() => {
+          setCartonLabelProduct(filteredAndSorted[0] || CATALOG_PRODUCTS[0]);
+          setShowCartonLabelModal(true);
+        }}
+        onOpenTransitModal={() => setShowTransitModal(true)}
+        onOpenInvoiceModal={() => setShowInvoiceModal(true)}
+        onOpenSavedOrdersModal={() => setShowSavedOrdersModal(true)}
+        onOpenVipModal={() => setShowVipModal(true)}
+        onOpenBroadcastModal={() => setShowBroadcastModal(true)}
+        onOpenDisplayModal={() => setShowDisplayModal(true)}
+        onOpenPriceRadarModal={() => {
+          setPriceCompareProduct(filteredAndSorted[0] || CATALOG_PRODUCTS[0]);
+          setShowPriceCompareModal(true);
+        }}
+        onOpenUpiModal={() => setShowUpiModal(true)}
+        hasItemsInCart={metrics.units > 0}
+      />
+
+      {/* --- UNIFIED LUXURY FLOATING INTELLIGENCE DOCK --- */}
+      <div className="fixed bottom-6 right-4 sm:right-6 z-30 pointer-events-auto">
+        <div className="flex items-center gap-2 p-1.5 rounded-full bg-obsidian-950/90 backdrop-blur-2xl border border-white/20 shadow-2xl">
+          
+          {/* Ask AI Voice Agent */}
+          <button
+            onClick={() => {
+              haptics.light();
+              setShowAiAgentModal(true);
+            }}
+            className="flex items-center gap-2 px-3.5 py-2 rounded-full bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-bold text-xs hover:scale-105 active:scale-95 transition-all shadow-md cursor-pointer"
+            title="Ask 1AA Sourcing AI Assistant"
+          >
+            <div className="relative">
+              <Bot className="w-3.5 h-3.5 text-white" />
+              <span className="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+            </div>
+            <span className="hidden sm:inline">Ask AI Agent</span>
+            <span className="sm:hidden">AI</span>
+          </button>
+
+          {/* Real-Time Price Radar */}
+          <button
+            onClick={() => {
+              haptics.light();
+              setPriceCompareProduct(filteredAndSorted[0] || CATALOG_PRODUCTS[0]);
+              setShowPriceCompareModal(true);
+            }}
+            className="flex items-center gap-1.5 px-3 py-2 rounded-full bg-white/[0.08] hover:bg-white/[0.15] text-brand-orange font-bold text-xs transition-all cursor-pointer border border-white/10"
+            title="Live Cross-Platform Price Radar"
+          >
+            <TrendingUp className="w-3.5 h-3.5 text-brand-orange" />
+            <span className="hidden sm:inline">Price Radar</span>
+          </button>
+
+          {/* Spin & Win */}
+          <button
+            onClick={() => {
+              haptics.light();
+              setShowSpinModal(true);
+            }}
+            className="flex items-center gap-1.5 px-3 py-2 rounded-full bg-gradient-to-r from-brand-orange to-amber-500 text-obsidian-950 font-bold text-xs hover:scale-105 active:scale-95 transition-all shadow-glow-orange cursor-pointer"
+            title="Spin & Win ₹300 Off Voucher"
+          >
+            <Gift className="w-3.5 h-3.5 text-obsidian-950" />
+            <span className="hidden md:inline">₹300 Off</span>
+          </button>
+
+        </div>
       </div>
 
       {/* --- APPLE-STYLE MINIMAL FOOTER --- */}
@@ -2085,7 +1997,7 @@ export default function OneAAStore() {
           <div className="md:col-span-2 space-y-4">
             <OneAALogo size="md" variant="dark" />
             <p className="leading-relaxed text-slate-400 max-w-md pt-1">
-              Industrial and retail procurement re-imagined. Transparent open margins (Cost + ₹100), certified pre-dispatch testing, and zero marketplace clutter.
+              Industrial and retail procurement re-imagined. Transparent landed pricing with built-in courier freight, certified pre-dispatch testing in Mysore Central Hub, guaranteed 40% margin, and zero marketplace clutter.
             </p>
             <div className="flex items-center gap-3 pt-2 text-slate-300">
               <span className="flex items-center gap-1.5">
@@ -2178,7 +2090,7 @@ export default function OneAAStore() {
 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 pt-10 mt-10 border-t border-white/[0.06] flex flex-col sm:flex-row justify-between items-center gap-3 text-[11px] text-slate-500">
           <div>© {new Date().getFullYear()} 1AA (Available Always) — 1st Available Always. All rights reserved.</div>
-          <div className="font-mono">Direct Factory Sourcing • Flat ₹100 Handling Margin</div>
+          <div className="font-mono">Direct Factory Sourcing • Built-In Courier Freight • 40% Guaranteed Margin</div>
         </div>
       </footer>
 

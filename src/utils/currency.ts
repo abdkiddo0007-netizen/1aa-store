@@ -78,3 +78,5 @@ export function formatCurrencyPrice(amountInInr: number, targetCurrency: Currenc
   const val = convertFromInr(amountInInr, targetCurrency);
   return `${config.symbol}${val.toLocaleString("en-US", { minimumFractionDigits: config.decimals, maximumFractionDigits: config.decimals })}`;
 }
+
+export const formatCurrency = formatCurrencyPrice;

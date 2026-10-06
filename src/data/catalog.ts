@@ -1,6 +1,7 @@
 import { Product } from '../types';
+import { calculate1AAPricing } from '../utils/pricingEngine';
 
-export const CATALOG_PRODUCTS: Product[] = [
+const RAW_CATALOG_PRODUCTS: Product[] = [
 
   {
     id: "prod-001",
@@ -5829,3 +5830,19 @@ export const CATALOG_PRODUCTS: Product[] = [
     ]
   },
 ];
+
+export const CATALOG_PRODUCTS: Product[] = RAW_CATALOG_PRODUCTS.map((p) => {
+  const pricing = calculate1AAPricing(p.baseCost, p.marketPrice, p.category, p.weight);
+  return {
+    ...p,
+    courierCost: pricing.courierCost,
+    landedCost: pricing.landedCost,
+    fairPrice: pricing.fairPrice,
+    margin1AAPercent: pricing.margin1AAPercent,
+    margin1AAAmount: pricing.margin1AAAmount,
+    amazonPrice: pricing.amazonPrice,
+    flipkartPrice: pricing.flipkartPrice,
+    chickpetPrice: pricing.chickpetPrice,
+  };
+});
+

@@ -151,7 +151,8 @@ export default function AIAssistantAgentModal({
       { label: "🍳 Kitchen & Utility", query: "Show me popular kitchen and home utility items" },
       { label: "🚚 Delivery Timelines", query: "What are your delivery timelines?" },
       { label: "📍 Check City Transit ETA", query: "Check delivery transit time for my city" },
-      { label: "💰 Cost + ₹100 Model", query: "How does your pricing model work?" },
+      { label: "💰 40% Margin & Courier Model", query: "How does your pricing model work?" },
+      { label: "📊 Compare vs Amazon/Flipkart", query: "Compare your pricing real-time against Amazon and Flipkart" },
       { label: "📦 Sample Pack & Bench QA", query: "Can I order 1 piece sample first?" },
       { label: "🏦 Bank Remittance & UPI QR", query: "What are your verified payment details?" },
       { label: "👤 Speak with Abdul Darvesh", query: "I want to talk to Abdul Darvesh directly" },
@@ -392,9 +393,9 @@ export default function AIAssistantAgentModal({
     else if (q.includes("sample") || q.includes("1 piece") || q.includes("test") || q.includes("quality") || q.includes("bench") || q.includes("trial")) {
       replyText = 
         "🧪 **1AA Pre-Dispatch Sample Order Protocol:**\n\n" +
-        "• **Single Piece Sample:** You can order a 1-piece sample at the standard transparent Fair Price (Cost + ₹100).\n" +
+        "• **Single Piece Sample:** You can order a 1-piece sample at the standard transparent Fair Price (inclusive of courier freight and guaranteed quality testing).\n" +
         "• **Mysore Bench QA Video:** Before sealing the box, our team tests the product (battery, motor, ports, finish) and sends an unboxing test video directly to your WhatsApp.\n" +
-        "• **Carton Restock Rebate:** When you subsequently place a carton order (50+ units), the ₹100 sample handling fee is credited back in full on your invoice!";
+        "• **Carton Restock Rebate:** When you subsequently place a carton order (50+ units), an additional 5% volume rebate is automatically applied on your invoice!";
       action = "sample";
     }
     // 10. Wholesale Carton & Profit Margin Calculation
@@ -449,14 +450,15 @@ export default function AIAssistantAgentModal({
         "🧾 Invoices and payment confirmation are transmitted to your WhatsApp & Email within 15 minutes of UTR entry.";
       action = "payment";
     }
-    // 13. Pricing / Cost + 100 model
-    else if (q.includes("pricing") || q.includes("cost") || q.includes("100") || q.includes("model") || q.includes("fee")) {
+    // 13. Pricing / Courier & 40% Margin / Competitor comparison model
+    else if (q.includes("pricing") || q.includes("cost") || q.includes("margin") || q.includes("courier") || q.includes("amazon") || q.includes("flipkart") || q.includes("compare") || q.includes("100")) {
       replyText = 
-        "💎 **1AA Open-Ledger Factory Pricing Architecture:**\n\n" +
-        "• **Factory Base Cost:** Direct manufacturing and import landed rate without intermediary commissions.\n" +
-        "• **1AA Fair Price:** Base Cost + Flat ₹100 handling fee per unit.\n" +
-        "• **No Hidden Marketplace Cuts:** Marketplaces take 30% to 50% cuts. 1AA passes that direct savings to you.\n" +
-        "• **Volume Rebate:** 50+ units: -₹25/pc | 100+ units: -₹50/pc!";
+        "💎 **1AA Mysore Real-Time Pricing & Courier Architecture:**\n\n" +
+        "• **Built-In Courier Freight:** Every product's price already factors in insured door-to-door courier dispatch from our Mysore Central Hub (zero surprise shipping at checkout!).\n" +
+        "• **1AA Guaranteed 40% Margin:** We sustain rigorous Mysore bench testing, 6-12 month replacement warranties, and live GPS consignment tracking on an honest 40% margin.\n" +
+        "• **Customer Direct Savings (40%–70%):** On Amazon & Flipkart, sellers pay 15% referral fee + closing fees + FBA shipping + 18% GST on fees (over 30% middleman tax). 1AA bypasses middlemen completely!\n" +
+        "• **Reseller ROI in Mysore & Karnataka:** Shopkeepers reselling our SKUs at offline market rates earn **+80% to +140% ROI** on their inventory capital.\n" +
+        "• **Volume Rebate:** Automated 5% extra volume rebate on 50+ units!";
       action = "catalog";
     }
     // 14. Fallback search across catalog

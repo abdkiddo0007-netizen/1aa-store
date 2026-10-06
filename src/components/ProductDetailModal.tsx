@@ -31,6 +31,7 @@ interface ProductDetailModalProps {
   onOpenResellerShare?: (product: Product) => void;
   onOpenBarcodeGenerator?: (product: Product) => void;
   onOpenFreightCalc?: (product: Product) => void;
+  onOpenPriceCompare?: (product: Product) => void;
 }
 
 export default function ProductDetailModal({
@@ -43,6 +44,7 @@ export default function ProductDetailModal({
   onOpenResellerShare,
   onOpenBarcodeGenerator,
   onOpenFreightCalc,
+  onOpenPriceCompare,
 }: ProductDetailModalProps) {
   if (!product) return null;
 
@@ -159,26 +161,33 @@ export default function ProductDetailModal({
                 {product.highlight}
               </p>
 
-              {/* Price Breakdown Panel (Apple Pro Card) */}
+              {/* Price Breakdown Panel (Apple Pro Card with Courier Included & 40% Margin) */}
               <div className="p-4 bg-white/[0.03] rounded-2xl border border-white/[0.08] space-y-2 font-mono text-xs">
                 <div className="flex justify-between text-slate-400">
                   <span>Factory Direct Cost:</span>
                   <span className="text-white font-semibold">₹{product.baseCost}</span>
                 </div>
+                <div className="flex justify-between text-slate-400">
+                  <span className="flex items-center gap-1">
+                    <Truck className="w-3.5 h-3.5 text-brand-orange" />
+                    Built-In Mysore Courier / Freight:
+                  </span>
+                  <span className="text-emerald-400 font-bold">₹{product.courierCost || 35} (Included)</span>
+                </div>
                 <div className="flex justify-between text-brand-orange font-semibold">
                   <span className="flex items-center gap-1">
                     <TrendingUp className="w-3.5 h-3.5" />
-                    1AA Open Handling Fee:
+                    1AA Wholesale Margin (40%):
                   </span>
-                  <span>+₹100</span>
+                  <span>+₹{product.margin1AAAmount || Math.max(0, product.fairPrice - ((product.baseCost || 0) + (product.courierCost || 35)))}</span>
                 </div>
                 <div className="border-t border-white/[0.08] pt-2 flex justify-between items-baseline">
                   <span className="text-xs font-bold text-white font-sans">1AA Direct Price:</span>
                   <span className="text-2xl font-black text-brand-orange">₹{product.fairPrice}</span>
                 </div>
                 <div className="flex justify-between text-[11px] text-slate-400 pt-1 border-t border-white/[0.05]">
-                  <span>Market Benchmark:</span>
-                  <span className="line-through text-slate-500">₹{product.marketPrice}</span>
+                  <span>Amazon/Flipkart Benchmark:</span>
+                  <span className="line-through text-slate-500">₹{product.amazonPrice || product.marketPrice}</span>
                 </div>
                 <div className="text-[11px] text-emerald-400 font-bold text-right pt-0.5">
                   Direct Savings: ₹{savings} ({savingsPercent}% off retail)
@@ -215,18 +224,33 @@ export default function ProductDetailModal({
                   </div>
                 </div>
 
-                {onOpenCalculator && (
-                  <button
-                    onClick={() => {
-                      haptics.light();
-                      onOpenCalculator(product);
-                    }}
-                    className="w-full mt-2 py-2 px-3 rounded-xl bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-500/30 text-emerald-300 font-semibold text-[11px] flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
-                  >
-                    <Calculator className="w-3.5 h-3.5 text-emerald-400" />
-                    <span>Calculate Reseller Profit & Margins</span>
-                  </button>
-                )}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-2">
+                  {onOpenPriceCompare && (
+                    <button
+                      onClick={() => {
+                        haptics.light();
+                        onOpenPriceCompare(product);
+                      }}
+                      className="py-2 px-3 rounded-xl bg-brand-orange/15 hover:bg-brand-orange/25 border border-brand-orange/30 text-brand-orange font-semibold text-[11px] flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
+                    >
+                      <TrendingUp className="w-3.5 h-3.5 text-brand-orange" />
+                      <span>Compare vs Amazon/Flipkart</span>
+                    </button>
+                  )}
+
+                  {onOpenCalculator && (
+                    <button
+                      onClick={() => {
+                        haptics.light();
+                        onOpenCalculator(product);
+                      }}
+                      className="py-2 px-3 rounded-xl bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-500/30 text-emerald-300 font-semibold text-[11px] flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
+                    >
+                      <Calculator className="w-3.5 h-3.5 text-emerald-400" />
+                      <span>Reseller ROI Calculator</span>
+                    </button>
+                  )}
+                </div>
               </div>
 
               {/* Technical Specifications */}

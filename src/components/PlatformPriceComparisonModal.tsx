@@ -1,0 +1,574 @@
+import { useState, useMemo } from "react";
+import { Product } from "../types";
+import { formatCurrency, CurrencyCode } from "../utils/currency";
+import { handleImgError } from "../utils/imageFallback";
+import { haptics } from "../utils/haptics";
+import {
+  X,
+  TrendingUp,
+  ShieldCheck,
+  Truck,
+  CheckCircle2,
+  Search,
+  Share2,
+  Zap,
+  ShoppingBag
+} from "lucide-react";
+
+interface PlatformPriceComparisonModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  product: Product | null;
+  allProducts: Product[];
+  onSelectProduct: (product: Product) => void;
+  onAddToCart?: (sku: string, qty: number) => void;
+  currency?: CurrencyCode;
+}
+
+export default function PlatformPriceComparisonModal({
+  isOpen,
+  onClose,
+  product,
+  allProducts,
+  onSelectProduct,
+  onAddToCart,
+  currency = "INR",
+}: PlatformPriceComparisonModalProps) {
+  const [searchTerm, setSearchTerm] = useState("");
+  const [plannedRetailPrice, setPlannedRetailPrice] = useState<number>(0);
+  const [resaleQuantity, setResaleQuantity] = useState<number>(20);
+
+  const activeProduct = product || allProducts[0];
+
+  // Initialize or reset planned retail price when active product changes
+  useMemo(() => {
+    if (activeProduct) {
+      // Default suggested retail price: midway between 1AA price and Amazon price
+      const suggested = Math.round(activeProduct.fairPrice + (activeProduct.marketPrice - activeProduct.fairPrice) * 0.6);
+      setPlannedRetailPrice(suggested);
+    }
+  }, [activeProduct?.sku]);
+
+  const searchResults = useMemo(() => {
+    if (!searchTerm.trim()) return [];
+    const term = searchTerm.toLowerCase();
+    return allProducts
+      .filter((p) => p.name.toLowerCase().includes(term) || p.sku.toLowerCase().includes(term) || p.category.toLowerCase().includes(term))
+      .slice(0, 8);
+  }, [searchTerm, allProducts]);
+
+  if (!isOpen || !activeProduct) return null;
+
+  // Breakdown figures
+  const baseCost = activeProduct.baseCost;
+  const courierCost = activeProduct.courierCost || 35;
+  const landedCost = activeProduct.landedCost || baseCost + courierCost;
+  const oneAAPrice = activeProduct.fairPrice;
+  const oneAAProfit = activeProduct.margin1AAAmount || Math.max(0, oneAAPrice - landedCost);
+  const oneAAMarginPct = activeProduct.margin1AAPercent || 40;
+
+  // Competitor benchmarks
+  const amazonPrice = activeProduct.amazonPrice || activeProduct.marketPrice;
+  const flipkartPrice = activeProduct.flipkartPrice || Math.round(amazonPrice * 0.96);
+  const chickpetPrice = activeProduct.chickpetPrice || Math.round(oneAAPrice * 1.25 + 30);
+
+  // Customer savings
+  const savingsVsAmazon = Math.max(0, amazonPrice - oneAAPrice);
+  const savingsPctVsAmazon = Math.round((savingsVsAmazon / amazonPrice) * 100);
+
+  // Reseller Simulator
+  const unitProfit = Math.max(0, plannedRetailPrice - oneAAPrice);
+  const totalBatchProfit = unitProfit * resaleQuantity;
+  const totalInvestment = oneAAPrice * resaleQuantity;
+  const roiPercentage = totalInvestment > 0 ? Math.round((totalBatchProfit / totalInvestment) * 100) : 0;
+
+  // WhatsApp Comparison Share Link
+  const getWhatsAppShareLink = () => {
+    let msg = `🔥 *REAL-TIME PRICE COMPARISON: 1AA FACTORY DIRECT*\n\n`;
+    msg += `📦 *Product:* ${activeProduct.name}\n`;
+    msg += `🔖 *SKU:* \`${activeProduct.sku}\`\n\n`;
+    msg += `━━━━━━━━━━━━━━━━━━━━\n`;
+    msg += `💰 *CROSS-PLATFORM PRICE RADAR:*\n`;
+    msg += `• *1AA Mysore Direct:* ${formatCurrency(oneAAPrice, currency)} *(Free Built-in Courier Included)*\n`;
+    msg += `• *Amazon India:* ${formatCurrency(amazonPrice, currency)} (MRP)\n`;
+    msg += `• *Flipkart:* ${formatCurrency(flipkartPrice, currency)}\n`;
+    msg += `• *Bangalore/Mysore Offline Wholesale:* ${formatCurrency(chickpetPrice, currency)} (High MOQ + Extra Freight)\n\n`;
+    msg += `━━━━━━━━━━━━━━━━━━━━\n`;
+    msg += `💡 *DIRECT SAVINGS:* ${formatCurrency(savingsVsAmazon, currency)} (${savingsPctVsAmazon}% Cheaper than Amazon!)\n`;
+    msg += `🚚 *Delivery:* 10–15 Days Standard (<7 Days Express) post-payment\n`;
+    msg += `🛡️ *Zero Marketplace Cuts:* 1AA guarantees 100% pre-dispatch tested units with warranty.\n\n`;
+    msg += `Order factory direct from Mysore Central Hub:\n`;
+    msg += `🌐 https://1aa-store.vercel.app/?sku=${activeProduct.sku}`;
+    return `https://wa.me/?text=${encodeURIComponent(msg)}`;
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-obsidian-950/80 backdrop-blur-xl animate-fade-in overflow-y-auto">
+      <div className="relative w-full max-w-4xl bg-obsidian-900/95 border border-white/15 rounded-3xl shadow-2xl overflow-hidden my-auto max-h-[92vh] flex flex-col">
+        
+        {/* Modal Header */}
+        <div className="p-5 sm:p-6 border-b border-white/10 flex items-center justify-between bg-obsidian-950/60 sticky top-0 z-20 backdrop-blur-md">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-2xl bg-brand-orange/15 border border-brand-orange/30 flex items-center justify-center text-brand-orange shadow-glow-orange">
+              <TrendingUp className="w-5 h-5" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <h2 className="text-base sm:text-lg font-black text-white tracking-tight">
+                  Real-Time Cross-Platform Price Radar
+                </h2>
+                <span className="hidden sm:inline-block px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
+                  LIVE ARBITRAGE
+                </span>
+              </div>
+              <p className="text-xs text-slate-400">
+                1AA Mysore Central Hub vs Amazon.in, Flipkart &amp; Karnataka Wholesale
+              </p>
+            </div>
+          </div>
+
+          <button
+            onClick={() => {
+              haptics.light();
+              onClose();
+            }}
+            className="w-9 h-9 rounded-full bg-white/[0.06] hover:bg-white/[0.12] text-slate-400 hover:text-white flex items-center justify-center transition-colors cursor-pointer"
+            aria-label="Close"
+          >
+            <X className="w-5 h-5" />
+          </button>
+        </div>
+
+        {/* Modal Body */}
+        <div className="p-5 sm:p-6 space-y-6 overflow-y-auto">
+          
+          {/* Quick SKU Switcher Search */}
+          <div className="relative">
+            <Search className="w-4 h-4 text-slate-400 absolute left-4 top-3.5" />
+            <input
+              type="text"
+              placeholder="Search other SKUs to compare market rates..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full bg-white/[0.04] border border-white/10 rounded-2xl pl-11 pr-4 py-2.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-brand-orange/70 transition-all font-mono"
+            />
+            {searchResults.length > 0 && (
+              <div className="absolute top-full left-0 right-0 mt-1 bg-obsidian-900 border border-white/15 rounded-2xl p-2 shadow-2xl z-30 space-y-1">
+                {searchResults.map((p) => (
+                  <button
+                    key={p.sku}
+                    onClick={() => {
+                      haptics.selection();
+                      onSelectProduct(p);
+                      setSearchTerm("");
+                    }}
+                    className="w-full text-left p-2 rounded-xl hover:bg-white/[0.08] flex items-center justify-between text-xs transition-colors cursor-pointer"
+                  >
+                    <span className="font-semibold text-white truncate max-w-md">{p.name}</span>
+                    <span className="font-mono text-brand-orange text-[11px] shrink-0">{p.sku}</span>
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Active Product Banner */}
+          <div className="bg-white/[0.03] border border-white/10 rounded-2xl p-4 flex flex-col sm:flex-row items-center gap-4">
+            <div className="w-20 h-20 rounded-xl overflow-hidden bg-obsidian-950/80 border border-white/10 shrink-0">
+              <img
+                src={activeProduct.image}
+                alt={activeProduct.name}
+                onError={(e) => handleImgError(e, activeProduct)}
+                className="w-full h-full object-cover"
+              />
+            </div>
+            <div className="flex-1 space-y-1 text-center sm:text-left">
+              <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2">
+                <span className="font-mono text-[10px] px-2 py-0.5 rounded bg-brand-orange/20 text-brand-orange border border-brand-orange/30 font-bold">
+                  {activeProduct.sku}
+                </span>
+                <span className="text-[11px] text-slate-400">{activeProduct.category}</span>
+                <span className="text-[10px] text-slate-500 font-mono">Box: {activeProduct.cartonSize} pcs</span>
+              </div>
+              <h3 className="text-sm sm:text-base font-bold text-white line-clamp-1">
+                {activeProduct.name}
+              </h3>
+              <p className="text-xs text-slate-400 line-clamp-1">
+                {activeProduct.highlight}
+              </p>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <a
+                href={getWhatsAppShareLink()}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="px-3.5 py-2 rounded-xl bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-500/30 text-emerald-400 text-xs font-semibold flex items-center gap-1.5 transition-all shadow-sm"
+              >
+                <Share2 className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">WhatsApp Pitch</span>
+              </a>
+
+              {onAddToCart && (
+                <button
+                  onClick={() => {
+                    haptics.success();
+                    onAddToCart(activeProduct.sku, 1);
+                  }}
+                  className="px-4 py-2 rounded-xl bg-brand-orange hover:bg-brand-orange-light text-obsidian-950 font-bold text-xs flex items-center gap-1.5 transition-all shadow-glow-orange cursor-pointer"
+                >
+                  <ShoppingBag className="w-3.5 h-3.5" />
+                  <span>Add to Cart</span>
+                </button>
+              )}
+            </div>
+          </div>
+
+          {/* SIDE-BY-SIDE PLATFORM COMPARISON GRID */}
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            
+            {/* 1AA MYSORE DIRECT (HERO CARD) */}
+            <div className="relative rounded-2xl p-4 bg-gradient-to-b from-brand-orange/15 via-obsidian-900/90 to-obsidian-900 border-2 border-brand-orange/60 shadow-glow-orange flex flex-col justify-between space-y-4">
+              <div className="space-y-3">
+                <div className="flex justify-between items-start">
+                  <div className="inline-block px-2.5 py-0.5 rounded-full bg-brand-orange text-obsidian-950 text-[10px] font-black tracking-wide">
+                    1AA DIRECT (FACTORY)
+                  </div>
+                  <span className="text-[10px] font-mono text-emerald-400 font-bold flex items-center gap-1">
+                    <CheckCircle2 className="w-3 h-3" /> BEST VALUE
+                  </span>
+                </div>
+
+                <div>
+                  <div className="text-[10px] text-slate-400 uppercase font-mono">1AA Sourcing Price</div>
+                  <div className="text-2xl sm:text-3xl font-black text-brand-orange font-mono">
+                    {formatCurrency(oneAAPrice, currency)}
+                  </div>
+                  <div className="text-[10px] text-emerald-400 font-mono font-medium">
+                    ✓ Courier Included &amp; Guaranteed 40% Margin
+                  </div>
+                </div>
+
+                <div className="space-y-1.5 text-[11px] border-t border-white/10 pt-2 font-mono">
+                  <div className="flex justify-between text-slate-400">
+                    <span>Base Factory Cost:</span>
+                    <span className="text-slate-300">₹{baseCost}</span>
+                  </div>
+                  <div className="flex justify-between text-slate-400">
+                    <span>Built-In Freight:</span>
+                    <span className="text-slate-300">₹{courierCost}</span>
+                  </div>
+                  <div className="flex justify-between text-brand-orange font-semibold">
+                    <span>1AA Net Margin ({oneAAMarginPct}%):</span>
+                    <span>₹{oneAAProfit}</span>
+                  </div>
+                  <div className="flex justify-between text-slate-400">
+                    <span>Platform Commission:</span>
+                    <span className="text-emerald-400 font-bold">₹0 (Direct)</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="text-[10px] bg-black/40 p-2 rounded-xl border border-white/10 space-y-1">
+                <div className="text-slate-300 font-semibold flex items-center gap-1">
+                  <Truck className="w-3 h-3 text-brand-orange" />
+                  <span>10–15d Standard (&lt;7d Priority)</span>
+                </div>
+                <div className="text-slate-400">
+                  Pre-dispatch tested in Mysore Central Hub
+                </div>
+              </div>
+            </div>
+
+            {/* AMAZON INDIA BENCHMARK */}
+            <div className="rounded-2xl p-4 bg-white/[0.02] border border-white/10 flex flex-col justify-between space-y-4">
+              <div className="space-y-3">
+                <div className="flex justify-between items-start">
+                  <span className="text-xs font-bold text-white flex items-center gap-1.5">
+                    <span className="text-amber-400 font-black">amazon</span>.in
+                  </span>
+                  <span className="text-[10px] text-rose-400 font-mono font-bold">
+                    +{savingsPctVsAmazon}% HIGHER
+                  </span>
+                </div>
+
+                <div>
+                  <div className="text-[10px] text-slate-400 uppercase font-mono">Retail Marketplace Price</div>
+                  <div className="text-2xl font-bold text-white font-mono">
+                    {formatCurrency(amazonPrice, currency)}
+                  </div>
+                  <div className="text-[10px] text-slate-500 font-mono">
+                    You save {formatCurrency(savingsVsAmazon, currency)} with 1AA
+                  </div>
+                </div>
+
+                <div className="space-y-1.5 text-[11px] border-t border-white/10 pt-2 font-mono text-slate-400">
+                  <div className="flex justify-between">
+                    <span>Referral Fee (15%):</span>
+                    <span className="text-rose-400">₹{Math.round(amazonPrice * 0.15)}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Closing &amp; Pick Fee:</span>
+                    <span className="text-rose-400">₹65 - ₹85</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>GST on Fees (18%):</span>
+                    <span className="text-rose-400">₹30 - ₹45</span>
+                  </div>
+                  <div className="flex justify-between text-slate-500">
+                    <span>Total Platform Tax:</span>
+                    <span className="text-rose-400 font-bold">~₹{Math.round(amazonPrice * 0.32)}</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="text-[10px] bg-white/[0.02] p-2 rounded-xl border border-white/5 text-slate-500">
+                Buyer pays massive marketplace commissions &amp; middleman ad charges.
+              </div>
+            </div>
+
+            {/* FLIPKART BENCHMARK */}
+            <div className="rounded-2xl p-4 bg-white/[0.02] border border-white/10 flex flex-col justify-between space-y-4">
+              <div className="space-y-3">
+                <div className="flex justify-between items-start">
+                  <span className="text-xs font-bold text-white flex items-center gap-1.5">
+                    <span className="text-blue-400 font-black">Flipkart</span>
+                  </span>
+                  <span className="text-[10px] text-rose-400 font-mono font-bold">
+                    +{Math.round(((flipkartPrice - oneAAPrice) / flipkartPrice) * 100)}% HIGHER
+                  </span>
+                </div>
+
+                <div>
+                  <div className="text-[10px] text-slate-400 uppercase font-mono">Retail Marketplace Price</div>
+                  <div className="text-2xl font-bold text-white font-mono">
+                    {formatCurrency(flipkartPrice, currency)}
+                  </div>
+                  <div className="text-[10px] text-slate-500 font-mono">
+                    Marketplace markup &amp; collection fees
+                  </div>
+                </div>
+
+                <div className="space-y-1.5 text-[11px] border-t border-white/10 pt-2 font-mono text-slate-400">
+                  <div className="flex justify-between">
+                    <span>Platform Commission:</span>
+                    <span className="text-rose-400">12% - 18%</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Logistics Cut:</span>
+                    <span className="text-rose-400">₹70+</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Return Risk Markup:</span>
+                    <span className="text-rose-400">15%</span>
+                  </div>
+                  <div className="flex justify-between text-slate-500">
+                    <span>1AA Direct Savings:</span>
+                    <span className="text-emerald-400 font-bold">{formatCurrency(flipkartPrice - oneAAPrice, currency)}</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="text-[10px] bg-white/[0.02] p-2 rounded-xl border border-white/5 text-slate-500">
+                Subject to high marketplace return charges built into the retail price.
+              </div>
+            </div>
+
+            {/* BANGALORE CHICKPET / MYSORE OFFLINE WHOLESALE */}
+            <div className="rounded-2xl p-4 bg-white/[0.02] border border-white/10 flex flex-col justify-between space-y-4">
+              <div className="space-y-3">
+                <div className="flex justify-between items-start">
+                  <span className="text-xs font-bold text-white flex items-center gap-1.5">
+                    <span className="text-amber-300 font-black">Offline B2B</span>
+                  </span>
+                  <span className="text-[10px] text-slate-400 font-mono">Chickpet/Mysore</span>
+                </div>
+
+                <div>
+                  <div className="text-[10px] text-slate-400 uppercase font-mono">Offline Trader Rate</div>
+                  <div className="text-2xl font-bold text-slate-300 font-mono">
+                    {formatCurrency(chickpetPrice, currency)}
+                  </div>
+                  <div className="text-[10px] text-amber-400 font-mono">
+                    Requires 50-100 pcs MOQ
+                  </div>
+                </div>
+
+                <div className="space-y-1.5 text-[11px] border-t border-white/10 pt-2 font-mono text-slate-400">
+                  <div className="flex justify-between">
+                    <span>Doorstep Delivery:</span>
+                    <span className="text-rose-400 font-bold">Extra ₹400-800</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Replacement Warranty:</span>
+                    <span className="text-rose-400">None (As-is)</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Transit Loss Cover:</span>
+                    <span className="text-rose-400">Buyer's Risk</span>
+                  </div>
+                  <div className="flex justify-between text-slate-500">
+                    <span>Convenience:</span>
+                    <span className="text-slate-400">Travel required</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="text-[10px] bg-white/[0.02] p-2 rounded-xl border border-white/5 text-slate-500">
+                1AA gives you factory direct pricing at your doorstep with 0 travel cost.
+              </div>
+            </div>
+
+          </div>
+
+          {/* INTERACTIVE RESALE ROI & PROFIT SIMULATOR (FOR SHOPKEEPERS & RESELLERS) */}
+          <div className="bg-gradient-to-r from-obsidian-950 via-obsidian-900 to-obsidian-950 border border-brand-orange/30 rounded-3xl p-5 sm:p-6 space-y-5">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+              <div>
+                <div className="flex items-center gap-2 text-brand-orange text-xs font-bold uppercase tracking-wider">
+                  <Zap className="w-4 h-4 text-brand-orange" />
+                  <span>Reseller Profit &amp; ROI Simulator</span>
+                </div>
+                <h4 className="text-base font-bold text-white">
+                  Estimate Your Realized Net Profit Selling in Your Store
+                </h4>
+              </div>
+
+              <div className="px-3 py-1 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 text-xs font-mono font-bold">
+                ROI: +{roiPercentage}% on Capital
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              
+              {/* Controls */}
+              <div className="space-y-4">
+                <div>
+                  <div className="flex justify-between text-xs text-slate-300 font-medium mb-1.5">
+                    <span>Your Planned Selling Price in Shop:</span>
+                    <span className="font-mono text-brand-orange font-bold">
+                      {formatCurrency(plannedRetailPrice, currency)}
+                    </span>
+                  </div>
+                  <input
+                    type="range"
+                    min={oneAAPrice + 10}
+                    max={amazonPrice}
+                    step={10}
+                    value={plannedRetailPrice}
+                    onChange={(e) => setPlannedRetailPrice(Number(e.target.value))}
+                    className="w-full accent-brand-orange cursor-pointer"
+                  />
+                  <div className="flex justify-between text-[10px] text-slate-500 font-mono mt-1">
+                    <span>1AA Sourcing: {formatCurrency(oneAAPrice, currency)}</span>
+                    <span>Amazon MRP: {formatCurrency(amazonPrice, currency)}</span>
+                  </div>
+                </div>
+
+                <div>
+                  <div className="flex justify-between text-xs text-slate-300 font-medium mb-1.5">
+                    <span>Batch Quantity (Units):</span>
+                    <span className="font-mono text-white font-bold">{resaleQuantity} pcs</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    {[10, 20, 50, 100].map((q) => (
+                      <button
+                        key={q}
+                        onClick={() => {
+                          haptics.selection();
+                          setResaleQuantity(q);
+                        }}
+                        className={`flex-1 py-1.5 rounded-xl text-xs font-mono font-bold transition-all cursor-pointer ${
+                          resaleQuantity === q
+                            ? "bg-brand-orange text-obsidian-950 shadow-glow-orange"
+                            : "bg-white/[0.05] text-slate-400 hover:text-white border border-white/10"
+                        }`}
+                      >
+                        {q} pcs
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              {/* Profit Calculations */}
+              <div className="bg-obsidian-950/80 p-4 rounded-2xl border border-white/10 flex flex-col justify-between space-y-3 font-mono">
+                <div className="space-y-2 text-xs">
+                  <div className="flex justify-between text-slate-400">
+                    <span>Cost per Unit (Sourcing + Freight):</span>
+                    <span className="text-white">{formatCurrency(oneAAPrice, currency)}</span>
+                  </div>
+                  <div className="flex justify-between text-slate-400">
+                    <span>Your Gross Profit per Unit:</span>
+                    <span className="text-emerald-400 font-bold">+{formatCurrency(unitProfit, currency)}</span>
+                  </div>
+                  <div className="flex justify-between text-slate-400">
+                    <span>Total Capital Outlay ({resaleQuantity} pcs):</span>
+                    <span className="text-slate-300">{formatCurrency(totalInvestment, currency)}</span>
+                  </div>
+                </div>
+
+                <div className="border-t border-white/10 pt-2 flex justify-between items-baseline">
+                  <div>
+                    <div className="text-[10px] text-slate-400 uppercase font-sans">Total Batch Profit</div>
+                    <div className="text-xs text-slate-500 font-sans">
+                      ({resaleQuantity} pcs sold @ {formatCurrency(plannedRetailPrice, currency)})
+                    </div>
+                  </div>
+                  <div className="text-2xl font-black text-emerald-400 font-mono">
+                    +{formatCurrency(totalBatchProfit, currency)}
+                  </div>
+                </div>
+              </div>
+
+            </div>
+          </div>
+
+          {/* TRANSPARENT PRICING GUARANTEE */}
+          <div className="p-4 rounded-2xl bg-white/[0.02] border border-white/10 flex items-start gap-3 text-xs text-slate-400">
+            <ShieldCheck className="w-5 h-5 text-brand-orange shrink-0 mt-0.5" />
+            <div className="space-y-1">
+              <strong className="text-white">The 1AA Mysore Wholesale Covenant:</strong>
+              <p className="leading-relaxed">
+                We believe in zero hidden fees. Our wholesale prices explicitly incorporate the door-to-door courier freight allowance, allow 1AA to maintain an honest 40% margin to sustain operations and quality testing in Mysore, and still save you 40% to 70% compared to national e-commerce marketplaces.
+              </p>
+            </div>
+          </div>
+
+        </div>
+
+        {/* Modal Footer */}
+        <div className="p-4 sm:p-5 border-t border-white/10 bg-obsidian-950/70 flex flex-col sm:flex-row justify-between items-center gap-3">
+          <div className="text-xs text-slate-400 text-center sm:text-left">
+            Need custom truckload or 100+ master carton quotes? Call Abdul Darvesh: <strong className="text-white">+91 75980 77003</strong>
+          </div>
+
+          <div className="flex items-center gap-2.5 w-full sm:w-auto">
+            <button
+              onClick={() => {
+                haptics.light();
+                onClose();
+              }}
+              className="flex-1 sm:flex-none px-5 py-2.5 rounded-full bg-white/[0.06] hover:bg-white/[0.12] text-slate-300 text-xs font-semibold transition-colors cursor-pointer"
+            >
+              Close
+            </button>
+            {onAddToCart && (
+              <button
+                onClick={() => {
+                  haptics.success();
+                  onAddToCart(activeProduct.sku, resaleQuantity > 0 ? resaleQuantity : 1);
+                  onClose();
+                }}
+                className="flex-1 sm:flex-none px-6 py-2.5 rounded-full bg-brand-orange hover:bg-brand-orange-light text-obsidian-950 text-xs font-bold transition-all shadow-glow-orange cursor-pointer"
+              >
+                Add {resaleQuantity} Units to Manifest
+              </button>
+            )}
+          </div>
+        </div>
+
+      </div>
+    </div>
+  );
+}

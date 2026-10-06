@@ -4,8 +4,15 @@ export interface Product {
   name: string;
   category: string;
   baseCost: number;     // Direct Factory Sourcing Price
-  fairPrice: number;    // Base Cost + ₹100 flat margin
+  fairPrice: number;    // Landed Cost + 40% Margin (Inclusive of Courier)
   marketPrice: number;  // Amazon / Flipkart Retail Benchmark
+  courierCost?: number; // Built-in Courier & Freight allocation from Mysore Central Hub
+  landedCost?: number;  // baseCost + courierCost
+  margin1AAPercent?: number; // 1AA Guaranteed Margin (40%)
+  margin1AAAmount?: number;  // 1AA Net Profit per unit
+  amazonPrice?: number; // Real-time Amazon India Benchmark
+  flipkartPrice?: number;// Real-time Flipkart Benchmark
+  chickpetPrice?: number;// Offline Bangalore Chickpet / Mysore Wholesale Benchmark
   cartonSize: number;
   inStock: number;
   image: string;
