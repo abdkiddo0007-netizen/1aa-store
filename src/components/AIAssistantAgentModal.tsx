@@ -16,7 +16,10 @@ import {
   MapPin,
   Calculator,
   CheckCircle2,
-  Copy
+  Copy,
+  Plus,
+  Eye,
+  Check
 } from "lucide-react";
 
 interface AIAssistantAgentModalProps {
@@ -82,11 +85,12 @@ export default function AIAssistantAgentModal({
 }: AIAssistantAgentModalProps) {
   const [input, setInput] = useState("");
   const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [addedSku, setAddedSku] = useState<string | null>(null);
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
       id: "welcome-1",
       sender: "agent",
-      text: "Hello! 👋 I am your **1AA Sourcing AI Agent** live from our Mysore Central Facility.\n\nI can help you:\n• Calculate **wholesale carton profits** & margins\n• Check **exact delivery transit times** for your city\n• Arrange **pre-dispatch bench QA tested samples**\n• Verify **Abdul Darvesh (Axis Bank & UPI)** remittance\n• Connect you with senior management on WhatsApp",
+      text: "Hello! 👋 I am your **1AA Sourcing AI Agent** live from our Mysore Central Facility.\n\nI can help you:\n• Explore **trending toys & STEM games** (81+ factory SKUs)\n• Calculate **wholesale carton profits** & margins\n• Check **exact delivery transit times** for your city\n• Arrange **pre-dispatch bench QA tested samples**\n• Verify **Abdul Darvesh (Axis Bank & UPI)** remittance\n• Connect you directly with senior management on WhatsApp",
       time: "Just now",
       actionType: "delivery",
     }
@@ -108,12 +112,15 @@ export default function AIAssistantAgentModal({
 
   // Quick Action Chips
   const quickChips = [
+    { label: "🧸 Trending Toys (81 SKUs)", query: "What are the trending toys?" },
+    { label: "🚀 High Margin Items (>58%)", query: "Show me high margin products for resellers" },
+    { label: "⚡ Smart Tech & Electronics", query: "Show me electronics and smart tech gadgets" },
+    { label: "🍳 Kitchen & Utility", query: "Show me popular kitchen and home utility items" },
     { label: "🚚 Delivery Timelines", query: "What are your delivery timelines?" },
     { label: "📍 Check City Transit ETA", query: "Check delivery transit time for my city" },
     { label: "💰 Cost + ₹100 Model", query: "How does your pricing model work?" },
     { label: "📦 Sample Pack & Bench QA", query: "Can I order 1 piece sample first?" },
     { label: "🏦 Bank Remittance & UPI QR", query: "What are your verified payment details?" },
-    { label: "🚀 High Margin Items (>55%)", query: "Show me high margin products for resellers" },
     { label: "👤 Speak with Abdul Darvesh", query: "I want to talk to Abdul Darvesh directly" },
   ];
 
@@ -147,8 +154,139 @@ export default function AIAssistantAgentModal({
       }
     }
 
-    // 1. Delivery timeline inquiry / city check
-    if (q.includes("delivery") || q.includes("shipping") || q.includes("timeline") || q.includes("how long") || q.includes("days") || q.includes("dispatch") || q.includes("transit") || q.includes("city")) {
+    // 1. Trending Toys & STEM Games (Fix for User Bug)
+    if (
+      q.includes("toy") ||
+      q.includes("kid") ||
+      q.includes("game") ||
+      q.includes("stem") ||
+      q.includes("puzzle") ||
+      q.includes("play") ||
+      q.includes("baby") ||
+      q.includes("doll") ||
+      q.includes("clay")
+    ) {
+      suggested = CATALOG_PRODUCTS.filter(
+        (p) =>
+          p.category === "Toys & STEM Games" ||
+          p.name.toLowerCase().includes("toy") ||
+          p.name.toLowerCase().includes("game") ||
+          p.name.toLowerCase().includes("stem") ||
+          p.name.toLowerCase().includes("puzzle") ||
+          p.highlight.toLowerCase().includes("toy") ||
+          p.highlight.toLowerCase().includes("kid")
+      ).slice(0, 6);
+
+      replyText = 
+        `🧸 **Trending Toys & STEM Games from Mysore Facility (81+ SKUs in Stock):**\n\n` +
+        `Here are **${suggested.length} of our top-selling toys & educational games** with high consumer demand and **40% to 65% retail margins** for shopkeepers.\n\n` +
+        `Every unit is pre-inspected at our Mysore bench facility. Click **Add to Cart** or tap any item to inspect full specs:`;
+      action = "catalog";
+    }
+    // 2. High margin / Reseller Top Picks
+    else if (q.includes("high margin") || q.includes("reseller") || q.includes("best margin") || q.includes("highest profit") || q.includes("top pick")) {
+      suggested = CATALOG_PRODUCTS.filter(
+        (p) => ((p.marketPrice - p.fairPrice) / p.marketPrice) >= 0.58
+      ).slice(0, 6);
+      replyText = 
+        `🚀 **Highest-ROI Products for Resellers (>58% Gross Margin):**\n\n` +
+        `These items provide the maximum price delta between 1AA direct factory pricing and Amazon/Flipkart retail rates:`;
+      action = "catalog";
+    }
+    // 3. Electronics & Smart Tech
+    else if (
+      q.includes("electronic") ||
+      q.includes("tech") ||
+      q.includes("watch") ||
+      q.includes("smart") ||
+      q.includes("trimmer") ||
+      q.includes("headphone") ||
+      q.includes("speaker") ||
+      q.includes("cable") ||
+      q.includes("charger") ||
+      q.includes("gadget")
+    ) {
+      suggested = CATALOG_PRODUCTS.filter(
+        (p) =>
+          p.category === "Electronics & Smart Tech" ||
+          p.category === "Appliances & Comfort" ||
+          p.name.toLowerCase().includes("smart") ||
+          p.name.toLowerCase().includes("wireless") ||
+          p.name.toLowerCase().includes("trimmer")
+      ).slice(0, 6);
+      replyText = 
+        `⚡ **Direct Factory Electronics & Smart Tech:**\n\n` +
+        `Here are trending personal electronics and smart tech gadgets ready for immediate Mysore dispatch:`;
+      action = "catalog";
+    }
+    // 4. Kitchen, Home & Utility
+    else if (
+      q.includes("kitchen") ||
+      q.includes("home") ||
+      q.includes("kettle") ||
+      q.includes("clean") ||
+      q.includes("mop") ||
+      q.includes("dining") ||
+      q.includes("cook") ||
+      q.includes("utility")
+    ) {
+      suggested = CATALOG_PRODUCTS.filter(
+        (p) =>
+          p.category === "Home, Kitchen & Utility" ||
+          p.category === "Kitchen & Dining" ||
+          p.category === "Kitchen & Travel" ||
+          p.category === "Home Improvement"
+      ).slice(0, 6);
+      replyText = 
+        `🍳 **Home, Kitchen & Smart Utility Fast Movers:**\n\n` +
+        `Popular daily household essentials with proven retail velocity and zero defect returns:`;
+      action = "catalog";
+    }
+    // 5. Stationery & Desk Supplies
+    else if (
+      q.includes("stationery") ||
+      q.includes("pen") ||
+      q.includes("pencil") ||
+      q.includes("desk") ||
+      q.includes("book") ||
+      q.includes("geometry") ||
+      q.includes("note")
+    ) {
+      suggested = CATALOG_PRODUCTS.filter(
+        (p) => p.category === "Stationery & Desk Supplies"
+      ).slice(0, 6);
+      replyText = 
+        `✏️ **Stationery & Desk Supplies (School & Office Wholesale):**\n\n` +
+        `High-volume school and institutional stationery items available at direct factory base rates:`;
+      action = "catalog";
+    }
+    // 6. Jewellery & Accessories
+    else if (
+      q.includes("jewel") ||
+      q.includes("necklace") ||
+      q.includes("earring") ||
+      q.includes("ring") ||
+      q.includes("bangle") ||
+      q.includes("accessories")
+    ) {
+      suggested = CATALOG_PRODUCTS.filter(
+        (p) => p.category === "Jewellery & Accessories"
+      ).slice(0, 6);
+      replyText = 
+        `💎 **Fashion Jewellery & Accessories:**\n\n` +
+        `Top trending fashion jewellery, earrings, and lifestyle accessories direct from primary manufacturers:`;
+      action = "catalog";
+    }
+    // 7. Budget / Under 150 items
+    else if (q.includes("under 150") || q.includes("under 100") || q.includes("cheap") || q.includes("low cost") || q.includes("budget")) {
+      suggested = CATALOG_PRODUCTS.filter((p) => p.fairPrice <= 150).slice(0, 6);
+      replyText = 
+        `⚡ **High-Velocity Fast Movers (Under ₹150):**\n\n` +
+        `These items have ultra-low entry costs, making them perfect for fast counter sales and impulse purchases:`;
+      action = "catalog";
+    }
+    // 8. Delivery timeline inquiry / city check
+    else if (q.includes("delivery") || q.includes("shipping") || q.includes("timeline") || q.includes("how long") || q.includes("days") || q.includes("dispatch") || q.includes("transit") || q.includes("city")) {
       replyText = 
         "📦 **Official 1AA Delivery & Shipment Policy:**\n\n" +
         "• 🚛 **Standard Surface Delivery:** **10 to 15 Days** post-payment confirmation (Insured Heavy Cargo via BlueDart, Delhivery & SafeExpress).\n" +
@@ -157,7 +295,7 @@ export default function AIAssistantAgentModal({
         "👉 *Type your city name (e.g., Bangalore, Delhi, Mumbai, Hyderabad, Kolkata) to see exact transit days!*";
       action = "delivery";
     }
-    // 2. Sample pack & quality testing
+    // 9. Sample pack & quality testing
     else if (q.includes("sample") || q.includes("1 piece") || q.includes("test") || q.includes("quality") || q.includes("bench") || q.includes("trial")) {
       replyText = 
         "🧪 **1AA Pre-Dispatch Sample Order Protocol:**\n\n" +
@@ -166,9 +304,8 @@ export default function AIAssistantAgentModal({
         "• **Carton Restock Rebate:** When you subsequently place a carton order (50+ units), the ₹100 sample handling fee is credited back in full on your invoice!";
       action = "sample";
     }
-    // 3. Wholesale Carton & Profit Margin Calculation
+    // 10. Wholesale Carton & Profit Margin Calculation
     else if (q.includes("calculate") || q.includes("margin") || q.includes("carton") || q.includes("box") || q.includes("profit") || q.includes("roi") || q.includes("bulk")) {
-      // Find a popular product for demo or calculate
       const sampleProd = CATALOG_PRODUCTS.find(p => p.sku === "1AA-TY-001") || CATALOG_PRODUCTS[0];
       const units = 50; // 1 carton
       const unitPrice = sampleProd.fairPrice - 25; // Tier discount
@@ -198,14 +335,14 @@ export default function AIAssistantAgentModal({
       };
       suggested = [sampleProd];
     }
-    // 4. Escalation / Speak with Abdul Darvesh
+    // 11. Escalation / Speak with Abdul Darvesh
     else if (q.includes("human") || q.includes("speak") || q.includes("talk") || q.includes("person") || q.includes("abdul") || q.includes("darvesh") || q.includes("call") || q.includes("contact") || q.includes("whatsapp") || q.includes("number")) {
       replyText = 
         "🤝 **Direct Escalation to Abdul Darvesh (Mysore Hub):**\n\n" +
         "You can chat live on WhatsApp or call our facility desks directly. I have prepared an instant escalation button below with your requirements and cart summary pre-attached so Abdul Darvesh has all details immediately:";
       action = "escalate";
     }
-    // 5. Payment / Bank / UPI details
+    // 12. Payment / Bank / UPI details
     else if (q.includes("payment") || q.includes("bank") || q.includes("upi") || q.includes("qr") || q.includes("account") || q.includes("pay") || q.includes("axis") || q.includes("scanner")) {
       replyText = 
         "🏦 **Official Payment & Remittance Channels (0% Surcharge):**\n\n" +
@@ -219,7 +356,7 @@ export default function AIAssistantAgentModal({
         "🧾 Invoices and payment confirmation are transmitted to your WhatsApp & Email within 15 minutes of UTR entry.";
       action = "payment";
     }
-    // 6. Pricing / Cost + 100 model
+    // 13. Pricing / Cost + 100 model
     else if (q.includes("pricing") || q.includes("cost") || q.includes("100") || q.includes("model") || q.includes("fee")) {
       replyText = 
         "💎 **1AA Open-Ledger Factory Pricing Architecture:**\n\n" +
@@ -229,29 +366,19 @@ export default function AIAssistantAgentModal({
         "• **Volume Rebate:** 50+ units: -₹25/pc | 100+ units: -₹50/pc!";
       action = "catalog";
     }
-    // 7. Search for specific categories or items
-    else if (q.includes("toy") || q.includes("kid") || q.includes("baby") || q.includes("gun") || q.includes("car")) {
-      suggested = CATALOG_PRODUCTS.filter(p => p.category === "Toys & Baby").slice(0, 4);
-      replyText = "🧸 Here are top-performing toys & games from our Mysore stock with maximum resale margins:";
-      action = "catalog";
-    }
-    else if (q.includes("high margin") || q.includes("reseller") || q.includes("best") || q.includes("top")) {
-      suggested = CATALOG_PRODUCTS.filter(p => ((p.marketPrice - p.fairPrice) / p.marketPrice) >= 0.58).slice(0, 4);
-      replyText = "🚀 Here are our highest-ROI items (>58% profit margin) currently trending with shopkeepers across India:";
-      action = "catalog";
-    }
+    // 14. Fallback search across catalog
     else {
-      // General keyword search across catalog
-      const matched = CATALOG_PRODUCTS.filter(p => 
-        p.name.toLowerCase().includes(q) || 
-        p.category.toLowerCase().includes(q) || 
-        p.highlight.toLowerCase().includes(q) ||
-        p.sku.toLowerCase().includes(q)
-      ).slice(0, 4);
+      const matched = CATALOG_PRODUCTS.filter(
+        (p) =>
+          p.name.toLowerCase().includes(q) ||
+          p.category.toLowerCase().includes(q) ||
+          p.highlight.toLowerCase().includes(q) ||
+          p.sku.toLowerCase().includes(q)
+      ).slice(0, 6);
 
       if (matched.length > 0) {
         suggested = matched;
-        replyText = `🔍 Found ${matched.length} matching items from our Mysore stock for "${userQuery}":`;
+        replyText = `🔍 Found **${matched.length} matching items** from our Mysore stock for "${userQuery}":`;
         action = "catalog";
       } else {
         replyText = 
@@ -301,8 +428,7 @@ export default function AIAssistantAgentModal({
   };
 
   const getEscalationWhatsAppUrl = () => {
-    // Compile a full structured transcript
-    const lastUserQuery = messages.filter(m => m.sender === "user").pop()?.text || "Inquiry regarding 1AA sourcing";
+    const lastUserQuery = messages.filter((m) => m.sender === "user").pop()?.text || "Inquiry regarding 1AA sourcing";
     let text = 
       `🚨 *CUSTOMER SOURCING INQUIRY VIA 1AA AI AGENT*\n` +
       `Date: ${new Date().toLocaleDateString("en-IN")} ${new Date().toLocaleTimeString("en-IN")}\n\n` +
@@ -324,6 +450,13 @@ export default function AIAssistantAgentModal({
     setCopiedId(id);
     haptics.success();
     setTimeout(() => setCopiedId(null), 2000);
+  };
+
+  const handleAddAllToCart = (products: Product[]) => {
+    products.forEach((p) => {
+      onAddToCart(p.sku, 1);
+    });
+    haptics.success();
   };
 
   return (
@@ -380,11 +513,19 @@ export default function AIAssistantAgentModal({
         </div>
 
         {/* Delivery SLA Header Strip */}
-        <div className="bg-gradient-to-r from-brand-blue/20 via-brand-orange/20 to-brand-blue/20 border-b border-white/[0.08] px-4 py-2 text-center text-[11px] text-slate-300 flex items-center justify-center gap-2 flex-wrap">
-          <Truck className="w-3.5 h-3.5 text-brand-orange shrink-0" />
-          <span>
-            <strong>Delivery Timelines:</strong> Standard: <span className="text-white font-bold">10-15 Days</span> • Express Air: <span className="text-brand-orange font-bold">Within 7 Days</span> (Post-Payment Verification)
-          </span>
+        <div className="bg-gradient-to-r from-brand-blue/20 via-brand-orange/20 to-brand-blue/20 border-b border-white/[0.08] px-4 py-2 text-center text-[11px] text-slate-300 flex items-center justify-between gap-2 flex-wrap">
+          <div className="flex items-center gap-2">
+            <Truck className="w-3.5 h-3.5 text-brand-orange shrink-0" />
+            <span>
+              <strong>Delivery SLA:</strong> Standard: <span className="text-white font-bold">10-15 Days</span> • Express: <span className="text-brand-orange font-bold">&lt;7 Days</span> (Post-Payment)
+            </span>
+          </div>
+
+          {activeCartUnits > 0 && (
+            <div className="text-[10px] font-mono bg-white/[0.08] px-2.5 py-0.5 rounded-full text-slate-200">
+              Cart: <strong>{activeCartUnits} pcs</strong> (₹{activeCartTotal.toLocaleString("en-IN")})
+            </div>
+          )}
         </div>
 
         {/* Message Stream */}
@@ -394,7 +535,7 @@ export default function AIAssistantAgentModal({
               key={m.id} 
               className={`flex flex-col ${m.sender === "user" ? "items-end" : "items-start"}`}
             >
-              <div className="flex items-end gap-2 max-w-[92%] sm:max-w-[85%]">
+              <div className="flex items-end gap-2 max-w-[95%] sm:max-w-[88%]">
                 {m.sender === "agent" && (
                   <div className="w-6 h-6 rounded-full bg-brand-orange/20 border border-brand-orange/40 flex items-center justify-center text-brand-orange shrink-0 mb-1">
                     <Sparkles className="w-3 h-3" />
@@ -467,6 +608,112 @@ export default function AIAssistantAgentModal({
                     </div>
                   )}
 
+                  {/* Suggested Products Grid */}
+                  {m.suggestedProducts && m.suggestedProducts.length > 0 && (
+                    <div className="mt-3.5 pt-3.5 border-t border-white/10 space-y-2.5">
+                      <div className="flex items-center justify-between text-[11px] text-slate-400">
+                        <span className="font-semibold text-white">Suggested Stock Items ({m.suggestedProducts.length})</span>
+                        <button
+                          onClick={() => handleAddAllToCart(m.suggestedProducts!)}
+                          className="px-2.5 py-1 rounded-full bg-brand-orange/20 hover:bg-brand-orange text-brand-orange hover:text-obsidian-950 font-bold text-[10px] transition-all flex items-center gap-1 cursor-pointer"
+                        >
+                          <Plus className="w-3 h-3" />
+                          <span>Add All ({m.suggestedProducts.length}) to Cart</span>
+                        </button>
+                      </div>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                        {m.suggestedProducts.map((p) => {
+                          const margin = p.marketPrice - p.fairPrice;
+                          const marginPct = Math.round((margin / p.marketPrice) * 100);
+                          const isJustAdded = addedSku === p.sku;
+
+                          return (
+                            <div 
+                              key={p.id}
+                              className="p-3 rounded-2xl bg-obsidian-950/80 border border-white/10 flex flex-col justify-between hover:border-brand-orange/50 transition-all group"
+                            >
+                              <div className="flex items-center gap-3">
+                                <img
+                                  src={p.image}
+                                  alt={p.name}
+                                  className="w-14 h-14 rounded-xl object-cover bg-obsidian-900 border border-white/10 shrink-0 cursor-pointer group-hover:scale-105 transition-transform"
+                                  onClick={() => {
+                                    haptics.selection();
+                                    onSelectProduct(p);
+                                  }}
+                                />
+                                <div className="flex-1 min-w-0">
+                                  <div className="flex items-center gap-1 text-[9px] text-brand-orange font-mono font-bold">
+                                    <span>{p.sku}</span>
+                                    <span className="text-white/20">•</span>
+                                    <span className="text-emerald-400">{p.inStock} in stock</span>
+                                  </div>
+                                  <div 
+                                    className="font-bold text-white text-xs truncate group-hover:text-brand-orange transition-colors cursor-pointer mt-0.5"
+                                    onClick={() => {
+                                      haptics.selection();
+                                      onSelectProduct(p);
+                                    }}
+                                  >
+                                    {p.name}
+                                  </div>
+                                  <div className="flex items-baseline gap-2 mt-1">
+                                    <span className="font-mono font-black text-brand-orange text-xs sm:text-sm">₹{p.fairPrice}</span>
+                                    <span className="text-[10px] text-slate-500 line-through">₹{p.marketPrice}</span>
+                                    <span className="text-[9px] px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-400 font-mono font-bold">
+                                      Save ₹{margin} ({marginPct}%)
+                                    </span>
+                                  </div>
+                                </div>
+                              </div>
+
+                              {/* Card Action Buttons */}
+                              <div className="flex items-center gap-2 mt-2.5 pt-2 border-t border-white/[0.06]">
+                                <button
+                                  onClick={() => {
+                                    haptics.selection();
+                                    onSelectProduct(p);
+                                  }}
+                                  className="flex-1 py-1.5 px-2 rounded-xl bg-white/[0.04] hover:bg-white/[0.08] text-slate-300 hover:text-white text-[10px] font-semibold flex items-center justify-center gap-1 transition-colors cursor-pointer"
+                                >
+                                  <Eye className="w-3 h-3" />
+                                  <span>Specs</span>
+                                </button>
+
+                                <button
+                                  onClick={() => {
+                                    haptics.success();
+                                    onAddToCart(p.sku, 1);
+                                    setAddedSku(p.sku);
+                                    setTimeout(() => setAddedSku(null), 1500);
+                                  }}
+                                  className={`flex-1 py-1.5 px-2 rounded-xl text-[10px] font-bold flex items-center justify-center gap-1 transition-all cursor-pointer ${
+                                    isJustAdded 
+                                      ? "bg-emerald-500 text-obsidian-950 font-black shadow-glow-emerald"
+                                      : "bg-brand-orange text-obsidian-950 hover:bg-brand-orange-light shadow-glow-orange"
+                                  }`}
+                                >
+                                  {isJustAdded ? (
+                                    <>
+                                      <Check className="w-3 h-3 stroke-[3]" />
+                                      <span>Added!</span>
+                                    </>
+                                  ) : (
+                                    <>
+                                      <ShoppingBag className="w-3 h-3" />
+                                      <span>+ Add to Cart</span>
+                                    </>
+                                  )}
+                                </button>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+
                   {/* Contextual Action Cards inside Agent Messages */}
                   {m.actionType === "escalate" && (
                     <div className="mt-3 pt-3 border-t border-white/10 flex flex-wrap gap-2">
@@ -503,57 +750,6 @@ export default function AIAssistantAgentModal({
                           </>
                         )}
                       </button>
-                    </div>
-                  )}
-
-                  {/* Suggested Products Mini-Cards */}
-                  {m.suggestedProducts && m.suggestedProducts.length > 0 && (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-3 pt-3 border-t border-white/10">
-                      {m.suggestedProducts.map((p) => {
-                        const margin = p.marketPrice - p.fairPrice;
-                        return (
-                          <div 
-                            key={p.id}
-                            className="p-2.5 rounded-xl bg-obsidian-950/80 border border-white/10 flex items-center gap-2.5 hover:border-brand-orange/50 transition-all group"
-                          >
-                            <img
-                              src={p.image}
-                              alt={p.name}
-                              className="w-12 h-12 rounded-lg object-cover bg-obsidian-900 border border-white/10 shrink-0 cursor-pointer"
-                              onClick={() => {
-                                haptics.selection();
-                                onSelectProduct(p);
-                              }}
-                            />
-                            <div className="flex-1 min-w-0">
-                              <div 
-                                className="font-semibold text-white text-[11px] truncate group-hover:text-brand-orange transition-colors cursor-pointer"
-                                onClick={() => {
-                                  haptics.selection();
-                                  onSelectProduct(p);
-                                }}
-                              >
-                                {p.name}
-                              </div>
-                              <div className="flex items-baseline gap-1.5 mt-0.5">
-                                <span className="font-mono font-bold text-brand-orange text-xs">₹{p.fairPrice}</span>
-                                <span className="text-[10px] text-slate-500 line-through">₹{p.marketPrice}</span>
-                                <span className="text-[9px] text-emerald-400 font-mono font-bold">Save ₹{margin}</span>
-                              </div>
-                            </div>
-                            <button
-                              onClick={() => {
-                                haptics.success();
-                                onAddToCart(p.sku, 1);
-                              }}
-                              className="w-7 h-7 rounded-lg bg-brand-orange/20 hover:bg-brand-orange text-brand-orange hover:text-obsidian-950 flex items-center justify-center transition-colors shrink-0 cursor-pointer"
-                              title="Add to Cart"
-                            >
-                              <ShoppingBag className="w-3.5 h-3.5" />
-                            </button>
-                          </div>
-                        );
-                      })}
                     </div>
                   )}
                 </div>
@@ -598,7 +794,7 @@ export default function AIAssistantAgentModal({
         <div className="p-3 sm:p-4 bg-obsidian-950 border-t border-white/10 flex items-center gap-2 shrink-0">
           <input
             type="text"
-            placeholder="Ask city delivery ETA, wholesale margin, sample pack, or bank info..."
+            placeholder="Ask trending toys, city delivery ETA, wholesale margin, or sample pack..."
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={(e) => {
