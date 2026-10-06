@@ -62,7 +62,78 @@
 }
 
 .animate-apple-pulse {
-  animation: apple-pulse 2.5s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  animation: apple-pulse 2.5s cubic-bezier(0.4, 0, 1) infinite;
+}
+
+/* --- Display Density & Screen Resolution System for Phone / Tablet / Desktop --- */
+.density-compact .catalog-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  gap: 0.625rem !important;
+}
+@media (min-width: 640px) {
+  .density-compact .catalog-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    gap: 0.75rem !important;
+  }
+}
+@media (min-width: 1024px) {
+  .density-compact .catalog-grid {
+    grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
+    gap: 1rem !important;
+  }
+}
+.density-compact .product-image-stage {
+  height: 9.5rem !important;
+}
+.density-compact .product-card-body {
+  padding: 0.75rem !important;
+}
+
+.density-standard .catalog-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  gap: 1rem !important;
+}
+@media (min-width: 640px) {
+  .density-standard .catalog-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 1.25rem !important;
+  }
+}
+@media (min-width: 1024px) {
+  .density-standard .catalog-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+    gap: 1.5rem !important;
+  }
+}
+.density-standard .product-image-stage {
+  height: 14rem !important;
+}
+
+.density-retina .catalog-grid {
+  grid-template-columns: repeat(1, minmax(0, 1fr)) !important;
+  gap: 1.25rem !important;
+}
+@media (min-width: 640px) {
+  .density-retina .catalog-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 1.75rem !important;
+  }
+}
+@media (min-width: 1024px) {
+  .density-retina .catalog-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    gap: 2rem !important;
+  }
+}
+.density-retina .product-image-stage {
+  height: 18rem !important;
+}
+
+/* Ultra-HD Hardware Image Rendering Sharpening */
+.retina-sharp-images img {
+  image-rendering: -webkit-optimize-contrast;
+  image-rendering: crisp-edges;
+  filter: contrast(1.03) saturate(1.04);
 }
 
 /* Print specifications for Commercial Brochure and Pro-Forma Invoice */

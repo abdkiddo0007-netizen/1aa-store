@@ -115,6 +115,30 @@ class HapticFeedback {
     }
     this.playClickSound(800, 0.015, 0.03);
   }
+
+  // Luxury ascending chime for Brand Reveal and VIP milestones
+  chime() {
+    if (!this.soundEnabled || !this.audioCtx) return;
+    try {
+      if (this.audioCtx.state === "suspended") {
+        this.audioCtx.resume();
+      }
+      const now = this.audioCtx.currentTime;
+      const notes = [523.25, 659.25, 783.99, 1046.5]; // C5, E5, G5, C6
+      notes.forEach((freq, i) => {
+        const osc = this.audioCtx!.createOscillator();
+        const gain = this.audioCtx!.createGain();
+        osc.type = "sine";
+        osc.frequency.setValueAtTime(freq, now + i * 0.09);
+        gain.gain.setValueAtTime(0.04, now + i * 0.09);
+        gain.gain.exponentialRampToValueAtTime(0.0001, now + i * 0.09 + 0.35);
+        osc.connect(gain);
+        gain.connect(this.audioCtx!.destination);
+        osc.start(now + i * 0.09);
+        osc.stop(now + i * 0.09 + 0.35);
+      });
+    } catch {}
+  }
 }
 
 export const haptics = new HapticFeedback();

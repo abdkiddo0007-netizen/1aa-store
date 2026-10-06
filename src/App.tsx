@@ -14,6 +14,8 @@ import AIAssistantAgentModal from "./components/AIAssistantAgentModal";
 import VipLoyaltyModal from "./components/VipLoyaltyModal";
 import ResellerShareModal from "./components/ResellerShareModal";
 import SavedOrdersModal from "./components/SavedOrdersModal";
+import DisplayResolutionModal, { DisplayConfig } from "./components/DisplayResolutionModal";
+import DeliveryTransitModal from "./components/DeliveryTransitModal";
 import { handleImgError } from "./utils/imageFallback";
 import { haptics } from "./utils/haptics";
 import { 
@@ -23,6 +25,7 @@ import {
   Search, 
   ShoppingBag, 
   CheckCircle2, 
+  Sliders, 
   Layers, 
   Tag, 
   Percent, 
@@ -82,6 +85,28 @@ export default function OneAAStore() {
   const [resellerShareProduct, setResellerShareProduct] = useState<Product | null>(null);
   const [isSoundOn, setIsSoundOn] = useState(() => haptics.isSoundEnabled());
   const [forceShowIntro, setForceShowIntro] = useState(false);
+  const [introSessionKey, setIntroSessionKey] = useState(0);
+  const [showDisplayModal, setShowDisplayModal] = useState(false);
+  const [displayConfig, setDisplayConfig] = useState<DisplayConfig>(() => {
+    if (typeof window !== "undefined") {
+      try {
+        const saved = localStorage.getItem("1aa_display_config");
+        if (saved) return JSON.parse(saved);
+      } catch {}
+    }
+    return { density: "standard", zoom: 100, ultraHdSharpening: true };
+  });
+
+  const handleDisplayConfigChange = (newConfig: DisplayConfig) => {
+    setDisplayConfig(newConfig);
+    try {
+      if (typeof window !== "undefined") {
+        localStorage.setItem("1aa_display_config", JSON.stringify(newConfig));
+      }
+    } catch {}
+  };
+
+  const [showTransitModal, setShowTransitModal] = useState(false);
   const [calcProduct, setCalcProduct] = useState<Product | null>(null);
   const [appliedCoupon, setAppliedCoupon] = useState<{ code: string; desc: string; amount: number } | null>(null);
   const [copySuccess, setCopySuccess] = useState(false);
@@ -291,32 +316,75 @@ export default function OneAAStore() {
   };
 
   return (
-    <div className="min-h-screen bg-obsidian-950 text-slate-100 font-sans antialiased selection:bg-brand-orange selection:text-obsidian-950 flex flex-col justify-between pb-24">
+    <div 
+      className={`min-h-screen bg-obsidian-950 text-slate-100 font-sans antialiased selection:bg-brand-orange selection:text-obsidian-950 flex flex-col justify-between pb-24 ${
+        displayConfig.density === "compact"
+          ? "density-compact"
+          : displayConfig.density === "retina"
+          ? "density-retina"
+          : "density-standard"
+      } ${displayConfig.ultraHdSharpening ? "retina-sharp-images" : ""}`}
+      style={{ zoom: `${displayConfig.zoom}%` }}
+    >
       
       {/* --- CINEMATIC BRAND INTRO / LOGO REVEAL SEQUENCE --- */}
-      <BrandIntroReveal forceShow={forceShowIntro} onComplete={() => setForceShowIntro(false)} />
+      <BrandIntroReveal 
+        key={introSessionKey} 
+        forceShow={forceShowIntro} 
+        onComplete={() => setForceShowIntro(false)} 
+      />
 
       <div>
         {/* --- APPLE-STYLE MINIMAL UTILITY BAR --- */}
         <div className="top-utility-bar bg-obsidian-900/60 border-b border-white/[0.06] text-[11px] px-4 py-2 text-slate-400 backdrop-blur-md">
           <div className="max-w-7xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-2">
             
-            <div className="flex flex-wrap items-center gap-4">
+            <div className="flex flex-wrap items-center gap-3">
               <span className="flex items-center gap-2 text-brand-orange font-semibold">
                 <span className="relative flex h-2 w-2">
                   <span className="animate-apple-pulse absolute inline-flex h-full w-full rounded-full bg-brand-orange opacity-75"></span>
                   <span className="relative inline-flex rounded-full h-2 w-2 bg-brand-orange"></span>
                 </span>
-                1AA Mysore Central Facility Active
+                1AA Mysore Facility Active
               </span>
 
               <button
-                onClick={() => setForceShowIntro(true)}
+                onClick={() => {
+                  haptics.light();
+                  setIntroSessionKey((k) => k + 1);
+                  setForceShowIntro(true);
+                }}
                 className="flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-brand-orange/15 hover:bg-brand-orange/25 text-brand-orange border border-brand-orange/30 text-[10px] font-bold transition-all cursor-pointer shadow-glow-orange"
                 title="Replay Official 1AA Cinematic Logo Reveal"
               >
                 <Play className="w-2.5 h-2.5 fill-brand-orange text-brand-orange" />
                 <span>Brand Intro Reveal</span>
+              </button>
+
+              {/* Display Resolution & Screen Density Controls */}
+              <button
+                onClick={() => {
+                  haptics.light();
+                  setShowDisplayModal(true);
+                }}
+                className="flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-white/[0.05] hover:bg-white/[0.12] text-slate-300 border border-white/10 text-[10px] font-semibold transition-all cursor-pointer"
+                title="Adjust screen display resolution and density for phone / tab / desktop"
+              >
+                <Sliders className="w-2.5 h-2.5 text-brand-blue-light" />
+                <span>Display: <strong className="text-white capitalize">{displayConfig.density}</strong> ({displayConfig.zoom}%)</span>
+              </button>
+
+              {/* Delivery SLA Quick Lookup */}
+              <button
+                onClick={() => {
+                  haptics.light();
+                  setShowTransitModal(true);
+                }}
+                className="flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-[10px] font-semibold transition-all cursor-pointer"
+                title="Check delivery timelines & city transit SLA"
+              >
+                <Truck className="w-2.5 h-2.5 text-emerald-400" />
+                <span>Delivery SLA (10–15d / &lt;7d)</span>
               </button>
 
               {/* Sound FX Toggle */}
@@ -391,15 +459,30 @@ export default function OneAAStore() {
         <header className="sticky top-0 z-40 apple-glass border-b border-white/[0.08] backdrop-blur-2xl bg-obsidian-950/75 transition-all">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3.5 flex items-center justify-between gap-4">
             
-            {/* 1AA Brand Logo */}
-            <div 
-              onClick={() => {
-                haptics.light();
-                window.scrollTo({ top: 0, behavior: 'smooth' });
-              }} 
-              className="cursor-pointer transition-transform hover:opacity-95"
-            >
-              <OneAALogo size="md" variant="dark" />
+            {/* 1AA Brand Logo & Quick Video Reveal */}
+            <div className="flex items-center gap-2.5">
+              <div 
+                onClick={() => {
+                  haptics.light();
+                  window.scrollTo({ top: 0, behavior: 'smooth' });
+                }} 
+                className="cursor-pointer transition-transform hover:opacity-95"
+              >
+                <OneAALogo size="md" variant="dark" />
+              </div>
+
+              <button
+                onClick={() => {
+                  haptics.light();
+                  setIntroSessionKey((k) => k + 1);
+                  setForceShowIntro(true);
+                }}
+                className="hidden sm:flex items-center gap-1 px-2.5 py-1 rounded-full bg-brand-orange/10 hover:bg-brand-orange/20 border border-brand-orange/30 text-brand-orange text-[10px] font-bold transition-all cursor-pointer shadow-glow-orange"
+                title="Watch 1AA Cinematic Brand Reveal"
+              >
+                <Play className="w-2.5 h-2.5 fill-brand-orange text-brand-orange" />
+                <span>Reveal</span>
+              </button>
             </div>
 
             <div className="flex items-center gap-3">
@@ -458,6 +541,19 @@ export default function OneAAStore() {
               >
                 <RotateCcw className="w-3.5 h-3.5 text-blue-400" />
                 <span>Re-Order</span>
+              </button>
+
+              {/* Display Resolution & Screen Density Controls */}
+              <button
+                onClick={() => {
+                  haptics.light();
+                  setShowDisplayModal(true);
+                }}
+                className="hidden md:flex text-xs px-3 py-1.5 rounded-full border border-white/10 bg-white/[0.04] hover:bg-white/[0.08] text-slate-300 hover:text-white font-semibold transition-all items-center gap-1.5 cursor-pointer"
+                title="Display Resolution & Density for Phone / Tab / Desktop"
+              >
+                <Sliders className="w-3.5 h-3.5 text-brand-blue-light" />
+                <span className="capitalize">{displayConfig.density} HD</span>
               </button>
 
               {/* 1AA AI Sourcing Agent Trigger */}
@@ -870,12 +966,38 @@ export default function OneAAStore() {
                   <Star className="w-3 h-3 text-amber-400 fill-amber-400" />
                   Top Rated (4.8★+)
                 </button>
+
+                {/* City Transit SLA Quick Lookup */}
+                <button
+                  onClick={() => {
+                    haptics.light();
+                    setShowTransitModal(true);
+                  }}
+                  className="px-3 py-1 rounded-full text-[11px] font-semibold flex items-center gap-1.5 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 transition-all cursor-pointer"
+                  title="Check transit days for your city"
+                >
+                  <Truck className="w-3 h-3 text-emerald-400" />
+                  <span>City Transit SLA</span>
+                </button>
+
+                {/* View Density Quick Toggle */}
+                <button
+                  onClick={() => {
+                    haptics.light();
+                    setShowDisplayModal(true);
+                  }}
+                  className="px-3 py-1 rounded-full text-[11px] font-semibold flex items-center gap-1.5 bg-white/[0.04] hover:bg-white/[0.08] text-slate-300 border border-white/10 transition-all cursor-pointer"
+                  title="Switch between Compact, Standard, and Retina Ultra HD views"
+                >
+                  <Sliders className="w-3 h-3 text-brand-orange" />
+                  <span>View: <strong className="capitalize text-white">{displayConfig.density}</strong></span>
+                </button>
               </div>
 
             </div>
 
             {/* PRODUCT CATALOG GRID (Apple Studio Pedestal Style) */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="catalog-grid grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
               {filteredAndSorted.map((product) => {
                 const qty = quantities[product.sku] || 0;
                 const savings = product.marketPrice - product.fairPrice;
@@ -889,7 +1011,7 @@ export default function OneAAStore() {
                     <div>
                       {/* Product Image Stage */}
                       <div 
-                        className="relative h-56 bg-obsidian-950/60 overflow-hidden cursor-pointer" 
+                        className="relative product-image-stage h-56 bg-obsidian-950/60 overflow-hidden cursor-pointer" 
                         onClick={() => {
                           haptics.light();
                           setSelectedProductForModal(product);
@@ -932,7 +1054,7 @@ export default function OneAAStore() {
                       </div>
 
                       {/* Product Details */}
-                      <div className="p-5 space-y-2.5">
+                      <div className="p-5 space-y-2.5 product-card-body">
                         <div className="text-[10px] text-brand-orange font-bold uppercase tracking-wider flex items-center justify-between">
                           <span>{product.category}</span>
                           <span className="text-slate-400 font-mono text-[10px]">Box: {product.cartonSize} pcs</span>
@@ -1196,6 +1318,20 @@ export default function OneAAStore() {
             >
               <Bot className="w-3.5 h-3.5 text-purple-400" />
               <span>Ask AI</span>
+            </button>
+
+            {/* Display Resolution in Dock */}
+            <button
+              onClick={() => {
+                haptics.light();
+                setShowDisplayModal(true);
+              }}
+              className="flex px-3 py-2.5 rounded-full bg-white/[0.06] border border-white/15 hover:border-brand-blue text-slate-200 text-xs font-bold items-center gap-1.5 transition-all cursor-pointer"
+              title="Adjust screen display resolution and density"
+            >
+              <Sliders className="w-3.5 h-3.5 text-brand-blue-light" />
+              <span className="hidden sm:inline">Display</span>
+              <span className="sm:hidden">HD</span>
             </button>
 
             <button
@@ -1640,6 +1776,21 @@ export default function OneAAStore() {
       {/* --- LIVE ORDER NOTIFICATION TICKER (SOCIAL PROOF) --- */}
       <LiveOrderTicker onSelectProduct={(p) => setSelectedProductForModal(p)} />
 
+      {/* --- DISPLAY RESOLUTION & SCREEN DENSITY MODAL --- */}
+      <DisplayResolutionModal
+        isOpen={showDisplayModal}
+        onClose={() => setShowDisplayModal(false)}
+        config={displayConfig}
+        onChangeConfig={handleDisplayConfigChange}
+      />
+
+      {/* --- DELIVERY TRANSIT SLA & CITY CHECKER MODAL --- */}
+      <DeliveryTransitModal
+        isOpen={showTransitModal}
+        onClose={() => setShowTransitModal(false)}
+        selectedHotline={selectedHotline}
+      />
+
       {/* --- 1AA SOURCING AI ASSISTANT AGENT MODAL --- */}
       <AIAssistantAgentModal
         isOpen={showAiAgentModal}
@@ -1654,6 +1805,8 @@ export default function OneAAStore() {
           setShowAiAgentModal(false);
         }}
         selectedHotline={selectedHotline}
+        activeCartTotal={metrics.finalAmount}
+        activeCartUnits={metrics.units}
       />
 
       {/* --- FLOATING 1AA SOURCING AI AGENT TRIGGER --- */}
@@ -1713,6 +1866,42 @@ export default function OneAAStore() {
                 <Truck className="w-4 h-4 text-brand-orange" />
                 Pan-India Logistics Cover
               </span>
+            </div>
+
+            <div className="pt-2 flex flex-wrap gap-2 text-[11px]">
+              <button
+                onClick={() => {
+                  haptics.light();
+                  setIntroSessionKey((k) => k + 1);
+                  setForceShowIntro(true);
+                }}
+                className="px-2.5 py-1 rounded-full bg-white/[0.04] hover:bg-white/[0.08] text-brand-orange border border-brand-orange/30 font-semibold flex items-center gap-1 transition-colors cursor-pointer"
+              >
+                <Play className="w-2.5 h-2.5 fill-brand-orange" />
+                <span>Replay Brand Reveal</span>
+              </button>
+
+              <button
+                onClick={() => {
+                  haptics.light();
+                  setShowDisplayModal(true);
+                }}
+                className="px-2.5 py-1 rounded-full bg-white/[0.04] hover:bg-white/[0.08] text-slate-300 border border-white/10 font-semibold flex items-center gap-1 transition-colors cursor-pointer"
+              >
+                <Sliders className="w-2.5 h-2.5 text-brand-blue-light" />
+                <span>Display Resolution Settings</span>
+              </button>
+
+              <button
+                onClick={() => {
+                  haptics.light();
+                  setShowTransitModal(true);
+                }}
+                className="px-2.5 py-1 rounded-full bg-white/[0.04] hover:bg-white/[0.08] text-emerald-400 border border-emerald-500/30 font-semibold flex items-center gap-1 transition-colors cursor-pointer"
+              >
+                <Truck className="w-2.5 h-2.5 text-emerald-400" />
+                <span>City Transit Times</span>
+              </button>
             </div>
           </div>
 
