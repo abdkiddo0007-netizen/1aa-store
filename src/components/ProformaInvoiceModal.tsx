@@ -214,7 +214,7 @@ export default function ProformaInvoiceModal({
                   <th className="py-3 px-4 text-center">Carton</th>
                   <th className="py-3 px-4 text-right">Units</th>
                   <th className="py-3 px-4 text-right">Factory Cost</th>
-                  <th className="py-3 px-4 text-right">1AA Price (+₹100)</th>
+                  <th className="py-3 px-4 text-right">1AA Price (25% Margin)</th>
                   <th className="py-3 px-4 text-right">Line Total</th>
                 </tr>
               </thead>
@@ -245,7 +245,7 @@ export default function ProformaInvoiceModal({
                 Direct Sourcing Transparency Declaration
               </div>
               <p className="text-[11px] leading-relaxed text-slate-400">
-                All prices reflect direct primary manufacturing cost plus a flat ₹100 per-unit 1AA procurement margin. Zero middleman marketplace take-rates applied.
+                All prices reflect direct primary manufacturing cost + doorstep courier freight + a flat 25% 1AA operating margin. 👑 Customer is King: zero hidden commissions, zero haggling.
               </p>
             </div>
 

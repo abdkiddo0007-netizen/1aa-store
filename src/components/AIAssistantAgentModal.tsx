@@ -151,7 +151,7 @@ export default function AIAssistantAgentModal({
       { label: "🍳 Kitchen & Utility", query: "Show me popular kitchen and home utility items" },
       { label: "🚚 Delivery Timelines", query: "What are your delivery timelines?" },
       { label: "📍 Check City Transit ETA", query: "Check delivery transit time for my city" },
-      { label: "💰 40% Margin & Courier Model", query: "How does your pricing model work?" },
+      { label: "👑 25% Margin (Customer is King)", query: "How does your pricing model work and why is there no bargaining?" },
       { label: "📊 Compare vs Amazon/Flipkart", query: "Compare your pricing real-time against Amazon and Flipkart" },
       { label: "📦 Sample Pack & Bench QA", query: "Can I order 1 piece sample first?" },
       { label: "🏦 Bank Remittance & UPI QR", query: "What are your verified payment details?" },
@@ -450,15 +450,16 @@ export default function AIAssistantAgentModal({
         "🧾 Invoices and payment confirmation are transmitted to your WhatsApp & Email within 15 minutes of UTR entry.";
       action = "payment";
     }
-    // 13. Pricing / Courier & 40% Margin / Competitor comparison model
-    else if (q.includes("pricing") || q.includes("cost") || q.includes("margin") || q.includes("courier") || q.includes("amazon") || q.includes("flipkart") || q.includes("compare") || q.includes("100")) {
+    // 13. Pricing / Courier & 25% Flat Margin / Bargaining / Competitor comparison model
+    else if (q.includes("pricing") || q.includes("cost") || q.includes("margin") || q.includes("courier") || q.includes("amazon") || q.includes("flipkart") || q.includes("compare") || q.includes("bargain") || q.includes("discount") || q.includes("less") || q.includes("rate")) {
       replyText = 
-        "💎 **1AA Mysore Real-Time Pricing & Courier Architecture:**\n\n" +
-        "• **Built-In Courier Freight:** Every product's price already factors in insured door-to-door courier dispatch from our Mysore Central Hub (zero surprise shipping at checkout!).\n" +
-        "• **1AA Guaranteed 40% Margin:** We sustain rigorous Mysore bench testing, 6-12 month replacement warranties, and live GPS consignment tracking on an honest 40% margin.\n" +
-        "• **Customer Direct Savings (40%–70%):** On Amazon & Flipkart, sellers pay 15% referral fee + closing fees + FBA shipping + 18% GST on fees (over 30% middleman tax). 1AA bypasses middlemen completely!\n" +
+        "👑 **Customer is King: No-Bargain Fair Price Architecture (1AA Mysore Central Hub):**\n\n" +
+        "• **Why No Bargaining?** Because you are the King! In traditional wholesale markets (Chickpet / Sadar Bazar), traders inflate prices by 100% just to haggle. At 1AA, we give you the genuine bottom-line price upfront with zero games.\n" +
+        "• **Transparent Pricing Formula:** **Factory Cost** + **Doorstep Courier Freight** + **Flat 25% 1AA Wholesale Operating Margin** = **1AA Final Price**.\n" +
+        "• **Built-In Courier Freight:** Every product's price already factors in insured door-to-door courier dispatch from our Mysore Central Hub (zero surprise freight at checkout!).\n" +
+        "• **Customer Direct Savings (40%–70%):** On Amazon & Flipkart, sellers pay 15% referral fees + closing fees + FBA shipping + 18% GST on fees (over 30% platform markup). 1AA bypasses all middlemen!\n" +
         "• **Reseller ROI in Mysore & Karnataka:** Shopkeepers reselling our SKUs at offline market rates earn **+80% to +140% ROI** on their inventory capital.\n" +
-        "• **Volume Rebate:** Automated 5% extra volume rebate on 50+ units!";
+        "• **Automated Volume Rebate:** Extra 5% automated wholesale volume rebate when your order crosses 50 units!";
       action = "catalog";
     }
     // 14. Fallback search across catalog

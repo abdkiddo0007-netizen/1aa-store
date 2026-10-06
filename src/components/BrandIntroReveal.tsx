@@ -272,7 +272,7 @@ export default function BrandIntroReveal({ onComplete, forceShow = false }: Bran
           </div>
 
           <p className="text-xs sm:text-sm text-slate-300 max-w-lg mx-auto font-mono leading-relaxed">
-            Transparent Cost + ₹100 Flat Margin • Pre-Dispatch Bench QA in Mysore • 10–15 Days Standard (Within 7 Days Express)
+            Factory Cost + Courier Freight + Flat 25% 1AA Margin • 👑 Customer is King: No-Bargain Guarantee • Pre-Dispatch Mysore QA
           </p>
 
           {/* Action Button & Video Time Progress */}

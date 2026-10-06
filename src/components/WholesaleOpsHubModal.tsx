@@ -282,7 +282,7 @@ export default function WholesaleOpsHubModal({
           <div className="p-4 rounded-2xl bg-white/[0.02] border border-white/10 flex items-center gap-3 text-xs text-slate-400 mt-4">
             <ShieldCheck className="w-5 h-5 text-brand-orange shrink-0" />
             <div className="leading-relaxed">
-              <strong className="text-white">Mysore Central Sourcing Hub Covenant:</strong> Direct factory lines, 100% pre-dispatch bench QA, built-in insured courier allowance, and guaranteed 40% sustainable margin with massive savings over Amazon.
+              <strong className="text-white">👑 Customer is King Guarantee (Mysore Central Hub):</strong> Direct factory lines, 100% pre-dispatch bench QA, built-in insured courier allowance, and guaranteed flat 25% transparent margin. No bargaining needed because prices are bottom-dollar factory direct!
             </div>
           </div>
         </div>

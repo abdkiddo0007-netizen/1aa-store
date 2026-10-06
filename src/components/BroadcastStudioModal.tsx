@@ -57,7 +57,7 @@ export default function BroadcastStudioModal({
     if (preset === "gadgets-home") title = "💡 *1AA SMART GADGETS & HOME BESTSELLERS* 💡";
 
     let body = `${title}\n`;
-    body += `Direct Primary Factory Sourcing • Transparent Cost + ₹100 Flat Margin • Mysore Bench QA\n\n`;
+    body += `Direct Factory Sourcing • Door Courier Freight Included + Flat 25% 1AA Margin • 👑 Customer is King Fair Price\n\n`;
     body += `📦 *TODAY'S FEATURED WHOLESALE DISPATCHES:*\n`;
 
     selectedProducts.forEach((p, index) => {

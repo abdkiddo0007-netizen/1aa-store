@@ -64,8 +64,8 @@ export default function PlatformPriceComparisonModal({
   const courierCost = activeProduct.courierCost || 35;
   const landedCost = activeProduct.landedCost || baseCost + courierCost;
   const oneAAPrice = activeProduct.fairPrice;
-  const oneAAProfit = activeProduct.margin1AAAmount || Math.max(0, oneAAPrice - landedCost);
-  const oneAAMarginPct = activeProduct.margin1AAPercent || 40;
+  const oneAAProfit = activeProduct.margin1AAAmount || Math.round(landedCost * 0.25);
+  const oneAAMarginPct = activeProduct.margin1AAPercent || 25;
 
   // Competitor benchmarks
   const amazonPrice = activeProduct.amazonPrice || activeProduct.marketPrice;
@@ -245,7 +245,7 @@ export default function PlatformPriceComparisonModal({
                     {formatCurrency(oneAAPrice, currency)}
                   </div>
                   <div className="text-[10px] text-emerald-400 font-mono font-medium">
-                    ✓ Courier Included &amp; Guaranteed 40% Margin
+                    ✓ Doorstep Courier Freight Included • Flat 25% Margin
                   </div>
                 </div>
 
@@ -259,8 +259,8 @@ export default function PlatformPriceComparisonModal({
                     <span className="text-slate-300">₹{courierCost}</span>
                   </div>
                   <div className="flex justify-between text-brand-orange font-semibold">
-                    <span>1AA Net Margin ({oneAAMarginPct}%):</span>
-                    <span>₹{oneAAProfit}</span>
+                    <span>1AA Wholesale Margin ({oneAAMarginPct}%):</span>
+                    <span>+₹{oneAAProfit}</span>
                   </div>
                   <div className="flex justify-between text-slate-400">
                     <span>Platform Commission:</span>
@@ -524,13 +524,16 @@ export default function PlatformPriceComparisonModal({
             </div>
           </div>
 
-          {/* TRANSPARENT PRICING GUARANTEE */}
-          <div className="p-4 rounded-2xl bg-white/[0.02] border border-white/10 flex items-start gap-3 text-xs text-slate-400">
-            <ShieldCheck className="w-5 h-5 text-brand-orange shrink-0 mt-0.5" />
+          {/* TRANSPARENT PRICING GUARANTEE & CUSTOMER IS KING PROMISE */}
+          <div className="p-4 rounded-2xl bg-gradient-to-r from-amber-500/10 via-brand-orange/10 to-transparent border border-amber-500/30 flex items-start gap-3 text-xs text-slate-400">
+            <ShieldCheck className="w-5 h-5 text-amber-400 shrink-0 mt-0.5" />
             <div className="space-y-1">
-              <strong className="text-white">The 1AA Mysore Wholesale Covenant:</strong>
+              <strong className="text-white flex items-center gap-1.5">
+                <span className="text-amber-400 font-black">👑 Customer is King:</span>
+                <span>No-Bargain Fair Price Covenant</span>
+              </strong>
               <p className="leading-relaxed">
-                We believe in zero hidden fees. Our wholesale prices explicitly incorporate the door-to-door courier freight allowance, allow 1AA to maintain an honest 40% margin to sustain operations and quality testing in Mysore, and still save you 40% to 70% compared to national e-commerce marketplaces.
+                Why bargain when you already get genuine factory-floor prices? We believe in 100% transparency: Factory Direct Cost + Door Courier Freight + Flat 25% 1AA Operating Margin = Final Wholesale Price. Zero inflated retail markups, zero haggling games. You save 40% to 70% compared to national e-commerce marketplaces while getting 100% pre-dispatch bench tested quality from our Mysore Central Hub.
               </p>
             </div>
           </div>

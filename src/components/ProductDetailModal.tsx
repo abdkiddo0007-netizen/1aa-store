@@ -161,7 +161,26 @@ export default function ProductDetailModal({
                 {product.highlight}
               </p>
 
-              {/* Price Breakdown Panel (Apple Pro Card with Courier Included & 40% Margin) */}
+              {/* Customer is King USP Badge */}
+              <div className="p-3 rounded-2xl bg-amber-500/10 border border-amber-500/25 flex items-center justify-between gap-2 text-xs">
+                <div className="flex items-center gap-2">
+                  <span className="text-base">👑</span>
+                  <div>
+                    <div className="text-white font-bold flex items-center gap-1.5">
+                      <span>Customer is King:</span>
+                      <span className="text-amber-400">No-Bargain Fair Price</span>
+                    </div>
+                    <div className="text-[10px] text-slate-300">
+                      Bottom factory cost + door courier + 25% 1AA margin. Zero haggling needed.
+                    </div>
+                  </div>
+                </div>
+                <span className="px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 font-mono text-[10px] font-bold shrink-0">
+                  Best in India
+                </span>
+              </div>
+
+              {/* Price Breakdown Panel (Apple Pro Card with Courier Included & 25% Margin) */}
               <div className="p-4 bg-white/[0.03] rounded-2xl border border-white/[0.08] space-y-2 font-mono text-xs">
                 <div className="flex justify-between text-slate-400">
                   <span>Factory Direct Cost:</span>
@@ -170,16 +189,16 @@ export default function ProductDetailModal({
                 <div className="flex justify-between text-slate-400">
                   <span className="flex items-center gap-1">
                     <Truck className="w-3.5 h-3.5 text-brand-orange" />
-                    Built-In Mysore Courier / Freight:
+                    Built-In Mysore Courier Freight:
                   </span>
                   <span className="text-emerald-400 font-bold">₹{product.courierCost || 35} (Included)</span>
                 </div>
                 <div className="flex justify-between text-brand-orange font-semibold">
                   <span className="flex items-center gap-1">
                     <TrendingUp className="w-3.5 h-3.5" />
-                    1AA Wholesale Margin (40%):
+                    1AA Wholesale Margin (25%):
                   </span>
-                  <span>+₹{product.margin1AAAmount || Math.max(0, product.fairPrice - ((product.baseCost || 0) + (product.courierCost || 35)))}</span>
+                  <span>+₹{product.margin1AAAmount || Math.round(((product.baseCost || 0) + (product.courierCost || 35)) * 0.25)}</span>
                 </div>
                 <div className="border-t border-white/[0.08] pt-2 flex justify-between items-baseline">
                   <span className="text-xs font-bold text-white font-sans">1AA Direct Price:</span>
