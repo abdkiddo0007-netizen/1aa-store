@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { Product } from '../types';
 import { handleImgError } from '../utils/imageFallback';
 import { haptics } from '../utils/haptics';
@@ -46,6 +47,16 @@ export default function ProductDetailModal({
   onOpenFreightCalc,
   onOpenPriceCompare,
 }: ProductDetailModalProps) {
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        onClose();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [onClose]);
+
   if (!product) return null;
 
   const savings = product.marketPrice - product.fairPrice;
@@ -58,25 +69,52 @@ export default function ProductDetailModal({
   )}`;
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-xl flex items-center justify-center p-4 overflow-y-auto animate-in fade-in duration-300">
-      <div className="relative w-full max-w-3xl bg-obsidian-900/90 border border-white/10 rounded-3xl shadow-apple-card overflow-hidden my-8 backdrop-blur-2xl">
+    <div 
+      className="fixed inset-0 z-50 bg-black/85 backdrop-blur-xl flex items-center justify-center p-2 sm:p-4 overflow-hidden animate-in fade-in duration-200"
+      onClick={(e) => {
+        if (e.target === e.currentTarget) {
+          haptics.light();
+          onClose();
+        }
+      }}
+    >
+      <div className="relative w-full max-w-3xl bg-obsidian-900 border border-white/10 rounded-2xl sm:rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[92dvh] sm:max-h-[90vh] backdrop-blur-2xl">
         
-        {/* Close Button */}
-        <button
-          onClick={() => {
-            haptics.light();
-            onClose();
-          }}
-          className="absolute top-5 right-5 z-10 w-9 h-9 rounded-full bg-white/[0.08] hover:bg-white/[0.15] text-slate-300 hover:text-white flex items-center justify-center border border-white/10 transition-all cursor-pointer"
-          title="Close Modal"
-        >
-          <X className="w-4 h-4" />
-        </button>
+        {/* Sticky Header with Unmissable Close Button */}
+        <div className="sticky top-0 z-30 shrink-0 px-4 py-3 sm:px-6 sm:py-3.5 bg-obsidian-950/95 backdrop-blur-md border-b border-white/10 flex items-center justify-between">
+          <div className="flex items-center gap-2.5 min-w-0">
+            <span className="px-2.5 py-1 rounded-full bg-brand-orange/15 text-brand-orange text-xs font-mono font-bold border border-brand-orange/30 truncate flex items-center gap-1.5">
+              <Tag className="w-3.5 h-3.5 shrink-0" />
+              <span>{product.sku}</span>
+            </span>
+            <span className="text-xs text-slate-300 font-semibold uppercase tracking-wider hidden sm:inline truncate">
+              {product.category}
+            </span>
+            <span className="text-[11px] text-emerald-400 font-mono hidden md:inline">
+              • {product.inStock} ready in Mysore
+            </span>
+          </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2">
+          <button
+            type="button"
+            onClick={() => {
+              haptics.light();
+              onClose();
+            }}
+            className="min-w-[40px] min-h-[40px] sm:min-w-[44px] sm:min-h-[44px] rounded-full bg-white/[0.08] hover:bg-white/[0.18] active:scale-95 text-slate-200 hover:text-white flex items-center justify-center border border-white/15 transition-all cursor-pointer shadow-md"
+            title="Close Modal (Esc)"
+            aria-label="Close modal"
+          >
+            <X className="w-5 h-5" />
+          </button>
+        </div>
+
+        {/* Scrollable Modal Body */}
+        <div className="overflow-y-auto flex-1 p-4 sm:p-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           
           {/* Visual Showcase (Apple Hardware Style) */}
-          <div className="relative bg-obsidian-950/70 p-8 flex flex-col justify-between border-b md:border-b-0 md:border-r border-white/[0.06]">
+          <div className="relative bg-obsidian-950/70 p-4 sm:p-6 md:p-8 rounded-2xl flex flex-col justify-between border-b md:border-b-0 md:border-r border-white/[0.06]">
             <div className="relative aspect-square rounded-2xl overflow-hidden bg-obsidian-900/80 border border-white/[0.08] shadow-inner group">
               <img
                 src={product.image}
@@ -452,5 +490,6 @@ export default function ProductDetailModal({
 
       </div>
     </div>
+  </div>
   );
 }

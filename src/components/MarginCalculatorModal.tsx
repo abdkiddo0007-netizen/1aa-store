@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Product } from "../types";
 import { Calculator, X, TrendingUp, ShoppingBag, ShieldCheck } from "lucide-react";
+import { haptics } from "../utils/haptics";
 
 interface MarginCalculatorModalProps {
   isOpen: boolean;
@@ -15,6 +16,14 @@ export default function MarginCalculatorModal({
   product,
   onAddToCart,
 }: MarginCalculatorModalProps) {
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [onClose]);
+
   if (!isOpen || !product) return null;
 
   const [quantity, setQuantity] = useState<number>(product.cartonSize || 24);
@@ -27,39 +36,56 @@ export default function MarginCalculatorModal({
   const roi = totalCost > 0 ? Math.round((netProfit / totalCost) * 100) : 0;
 
   const handleAdd = () => {
+    haptics.success();
     onAddToCart(product, quantity);
     onClose();
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-200">
-      <div className="relative w-full max-w-lg rounded-3xl bg-obsidian-900 border border-white/15 p-6 shadow-2xl overflow-hidden text-slate-100">
+    <div 
+      className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-black/85 backdrop-blur-xl animate-in fade-in duration-200 overflow-hidden"
+      onClick={(e) => {
+        if (e.target === e.currentTarget) {
+          haptics.light();
+          onClose();
+        }
+      }}
+    >
+      <div className="relative w-full max-w-lg rounded-2xl sm:rounded-3xl bg-obsidian-900 border border-white/15 shadow-2xl overflow-hidden flex flex-col max-h-[92dvh] sm:max-h-[90vh] text-slate-100">
         
         {/* Glow ambient */}
         <div className="absolute -top-20 -right-20 w-48 h-48 bg-emerald-500/15 rounded-full blur-3xl pointer-events-none"></div>
 
-        {/* Close Button */}
-        <button
-          onClick={onClose}
-          className="absolute top-4 right-4 p-2 text-slate-400 hover:text-white rounded-full bg-white/5 hover:bg-white/10 transition-colors"
-        >
-          <X className="w-4 h-4" />
-        </button>
+        {/* Sticky Header with Always-Visible Close Button */}
+        <div className="sticky top-0 z-30 shrink-0 px-4 py-3 sm:px-6 sm:py-4 bg-obsidian-950/95 backdrop-blur-md border-b border-white/10 flex items-center justify-between">
+          <div className="flex items-center gap-2.5">
+            <div className="p-2 rounded-xl bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
+              <Calculator className="w-5 h-5" />
+            </div>
+            <div>
+              <h2 className="text-sm sm:text-base font-bold text-white leading-tight">
+                Wholesale Profit Calculator
+              </h2>
+              <p className="text-[11px] text-slate-400">Projected ROI for Amazon, Flipkart & Retail</p>
+            </div>
+          </div>
 
-        {/* Header */}
-        <div className="flex items-center gap-2 mb-4">
-          <div className="p-2 rounded-xl bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
-            <Calculator className="w-5 h-5" />
-          </div>
-          <div>
-            <h2 className="text-lg font-bold text-white leading-tight">
-              Wholesale Reseller Profit Calculator
-            </h2>
-            <p className="text-xs text-slate-400">
-              Calculate your projected ROI selling on Amazon, Flipkart, or your local retail shop.
-            </p>
-          </div>
+          <button
+            type="button"
+            onClick={() => {
+              haptics.light();
+              onClose();
+            }}
+            className="min-w-[40px] min-h-[40px] sm:min-w-[44px] sm:min-h-[44px] rounded-full bg-white/[0.08] hover:bg-white/[0.18] active:scale-95 text-slate-200 hover:text-white flex items-center justify-center border border-white/15 transition-all cursor-pointer shadow-md"
+            title="Close (Esc)"
+            aria-label="Close modal"
+          >
+            <X className="w-5 h-5" />
+          </button>
         </div>
+
+        {/* Scrollable Body */}
+        <div className="overflow-y-auto flex-1 p-4 sm:p-6 space-y-4">
 
         {/* Product Summary */}
         <div className="flex items-center gap-3 p-3 rounded-2xl bg-white/[0.04] border border-white/10 mb-5">
@@ -168,18 +194,31 @@ export default function MarginCalculatorModal({
 
         </div>
 
-        {/* Action Buttons */}
-        <div className="flex items-center gap-3">
+        </div>
+
+        {/* Sticky Footer */}
+        <div className="sticky bottom-0 z-20 shrink-0 p-3 sm:p-4 bg-obsidian-950/95 backdrop-blur-md border-t border-white/10 flex items-center gap-2.5">
           <button
+            type="button"
+            onClick={() => {
+              haptics.light();
+              onClose();
+            }}
+            className="px-4 py-3 rounded-2xl bg-white/[0.05] hover:bg-white/[0.10] text-slate-300 hover:text-white font-semibold text-xs border border-white/10 transition-all cursor-pointer"
+          >
+            Dismiss
+          </button>
+          <button
+            type="button"
             onClick={handleAdd}
-            className="flex-1 py-3 px-4 rounded-2xl bg-gradient-to-r from-brand-orange to-brand-orange-light text-obsidian-950 font-bold text-xs shadow-glow-orange hover:opacity-95 transition-all flex items-center justify-center gap-2"
+            className="flex-1 py-3 px-4 rounded-2xl bg-gradient-to-r from-brand-orange to-brand-orange-light text-obsidian-950 font-bold text-xs shadow-glow-orange hover:opacity-95 active:scale-98 transition-all flex items-center justify-center gap-2 cursor-pointer"
           >
             <ShoppingBag className="w-4 h-4 text-obsidian-950" />
-            Add {quantity} Units to Dispatch Order
+            Add {quantity} Units to Order
           </button>
         </div>
 
-        <div className="mt-3 text-center text-[10px] text-slate-400 flex items-center justify-center gap-1">
+        <div className="py-2 bg-obsidian-950/90 text-center text-[10px] text-slate-400 flex items-center justify-center gap-1 border-t border-white/5">
           <ShieldCheck className="w-3 h-3 text-emerald-400" />
           <span>Includes 1AA Mysore QC Inspection & Master Carton Transit Protection</span>
         </div>

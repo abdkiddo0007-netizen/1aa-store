@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Gift, X, Sparkles, Check, ArrowRight, ShieldCheck } from "lucide-react";
+import { haptics } from "../utils/haptics";
 
 interface SpinWheelModalProps {
   isOpen: boolean;
@@ -17,6 +18,14 @@ const REWARDS = [
 ];
 
 export default function SpinWheelModal({ isOpen, onClose, onApplyCoupon }: SpinWheelModalProps) {
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [onClose]);
+
   const [spinning, setSpinning] = useState(false);
   const [rotation, setRotation] = useState(0);
   const [wonPrize, setWonPrize] = useState<(typeof REWARDS)[0] | null>(null);
@@ -26,6 +35,7 @@ export default function SpinWheelModal({ isOpen, onClose, onApplyCoupon }: SpinW
 
   const spin = () => {
     if (spinning) return;
+    haptics.selection();
     setSpinning(true);
     setWonPrize(null);
 
@@ -41,11 +51,13 @@ export default function SpinWheelModal({ isOpen, onClose, onApplyCoupon }: SpinW
     setTimeout(() => {
       setSpinning(false);
       setWonPrize(REWARDS[prizeIndex]);
+      haptics.success();
     }, 4000);
   };
 
   const handleApply = () => {
     if (!wonPrize) return;
+    haptics.success();
     onApplyCoupon(wonPrize.code, wonPrize.desc);
     navigator.clipboard.writeText(wonPrize.code);
     setCopied(true);
@@ -55,34 +67,53 @@ export default function SpinWheelModal({ isOpen, onClose, onApplyCoupon }: SpinW
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-200">
-      <div className="relative w-full max-w-md rounded-3xl bg-obsidian-900 border border-white/15 p-6 shadow-2xl overflow-hidden text-center text-slate-100">
+    <div 
+      className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-black/85 backdrop-blur-xl animate-in fade-in duration-200 overflow-hidden"
+      onClick={(e) => {
+        if (e.target === e.currentTarget) {
+          haptics.light();
+          onClose();
+        }
+      }}
+    >
+      <div className="relative w-full max-w-md rounded-2xl sm:rounded-3xl bg-obsidian-900 border border-white/15 shadow-2xl overflow-hidden flex flex-col max-h-[92dvh] sm:max-h-[90vh] text-center text-slate-100">
         
         {/* Glow backdrop */}
         <div className="absolute -top-24 -left-24 w-48 h-48 bg-brand-orange/20 rounded-full blur-3xl pointer-events-none"></div>
         <div className="absolute -bottom-24 -right-24 w-48 h-48 bg-brand-blue/20 rounded-full blur-3xl pointer-events-none"></div>
 
-        {/* Close button */}
-        <button
-          onClick={onClose}
-          className="absolute top-4 right-4 p-2 text-slate-400 hover:text-white rounded-full bg-white/5 hover:bg-white/10 transition-colors"
-        >
-          <X className="w-4 h-4" />
-        </button>
-
-        {/* Header */}
-        <div className="mb-4">
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-brand-orange/15 border border-brand-orange/30 text-brand-orange text-xs font-semibold mb-2">
+        {/* Sticky Header with Always-Visible Close Button */}
+        <div className="sticky top-0 z-30 shrink-0 px-4 py-3 sm:px-6 sm:py-3.5 bg-obsidian-950/95 backdrop-blur-md border-b border-white/10 flex items-center justify-between">
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-brand-orange/15 border border-brand-orange/30 text-brand-orange text-xs font-semibold">
             <Gift className="w-3.5 h-3.5" />
-            1AA Wholesale Incentive Wheel
+            <span>1AA Incentive Wheel</span>
           </div>
-          <h2 className="text-xl font-bold tracking-tight text-white">
-            Spin to Unlock Factory Discount
-          </h2>
-          <p className="text-xs text-slate-400 mt-1">
-            Exclusive instant wholesale vouchers for store owners & resellers.
-          </p>
+
+          <button
+            type="button"
+            onClick={() => {
+              haptics.light();
+              onClose();
+            }}
+            className="min-w-[40px] min-h-[40px] sm:min-w-[44px] sm:min-h-[44px] rounded-full bg-white/[0.08] hover:bg-white/[0.18] active:scale-95 text-slate-200 hover:text-white flex items-center justify-center border border-white/15 transition-all cursor-pointer shadow-md"
+            title="Close (Esc)"
+            aria-label="Close modal"
+          >
+            <X className="w-5 h-5" />
+          </button>
         </div>
+
+        {/* Scrollable Body */}
+        <div className="overflow-y-auto flex-1 p-4 sm:p-6 text-center">
+          {/* Title */}
+          <div className="mb-4">
+            <h2 className="text-lg sm:text-xl font-bold tracking-tight text-white">
+              Spin to Unlock Factory Discount
+            </h2>
+            <p className="text-xs text-slate-400 mt-1">
+              Exclusive instant wholesale vouchers for store owners & resellers.
+            </p>
+          </div>
 
         {/* Wheel Graphic */}
         <div className="relative w-64 h-64 mx-auto my-6 flex items-center justify-center">
@@ -176,6 +207,8 @@ export default function SpinWheelModal({ isOpen, onClose, onApplyCoupon }: SpinW
         <div className="mt-4 flex items-center justify-center gap-2 text-[10px] text-slate-400">
           <ShieldCheck className="w-3 h-3 text-emerald-400" />
           <span>Valid for immediate dispatch bookings from Mysore Warehouse</span>
+        </div>
+
         </div>
 
       </div>

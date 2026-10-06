@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { 
   X, 
   QrCode, 
@@ -53,6 +53,16 @@ export default function UpiPaymentModal({
   const orderRef = useMemo(() => {
     return `1AA-${Math.floor(100000 + Math.random() * 900000)}`;
   }, [isOpen]);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    if (isOpen) {
+      window.addEventListener("keydown", handleKeyDown);
+    }
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [isOpen, onClose]);
 
   if (!isOpen) return null;
 
@@ -184,34 +194,46 @@ export default function UpiPaymentModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-xl flex items-center justify-center p-4 overflow-y-auto animate-in fade-in duration-200">
-      <div className="relative w-full max-w-lg bg-obsidian-900 border border-white/10 rounded-3xl shadow-2xl overflow-hidden my-6">
+    <div 
+      className="fixed inset-0 z-50 bg-black/85 backdrop-blur-xl flex items-center justify-center p-2 sm:p-4 overflow-hidden animate-in fade-in duration-200"
+      onClick={onClose}
+    >
+      <div 
+        onClick={(e) => e.stopPropagation()}
+        className="relative w-full max-w-lg bg-obsidian-900 border border-white/10 rounded-2xl sm:rounded-3xl shadow-2xl overflow-hidden my-auto flex flex-col max-h-[92dvh] sm:max-h-[90vh] backdrop-blur-2xl"
+      >
         
-        {/* Header */}
-        <div className="p-6 bg-gradient-to-r from-obsidian-900 via-obsidian-850 to-obsidian-900 border-b border-white/10 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center text-emerald-400">
+        {/* Sticky Header */}
+        <div className="p-4 sm:p-5 bg-gradient-to-r from-obsidian-900 via-obsidian-850 to-obsidian-900 border-b border-white/10 flex items-center justify-between shrink-0 sticky top-0 z-30">
+          <div className="flex items-center gap-3 min-w-0 pr-2">
+            <div className="w-10 h-10 rounded-full bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center text-emerald-400 shrink-0">
               <QrCode className="w-5 h-5" />
             </div>
-            <div>
-              <h3 className="font-bold text-white text-base flex items-center gap-2">
-                <span>Official Direct UPI & QR Scanner</span>
-                <span className="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 text-[10px] font-mono">Verified Payee</span>
+            <div className="min-w-0">
+              <h3 className="font-bold text-white text-sm sm:text-base flex items-center gap-2 flex-wrap">
+                <span className="truncate">Official Direct UPI & QR</span>
+                <span className="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 text-[10px] font-mono shrink-0">Verified Payee</span>
               </h3>
-              <p className="text-xs text-slate-400">Direct instant transfer to {primaryAccountHolder} ({bankName})</p>
+              <p className="text-[11px] sm:text-xs text-slate-400 truncate">Direct instant transfer to {primaryAccountHolder} ({bankName})</p>
             </div>
           </div>
 
           <button
-            onClick={onClose}
-            className="w-8 h-8 rounded-full bg-white/[0.06] hover:bg-white/[0.12] text-slate-300 hover:text-white flex items-center justify-center transition-colors"
+            onClick={() => {
+              haptics.light();
+              onClose();
+            }}
+            className="min-w-[40px] min-h-[40px] sm:min-w-[44px] sm:min-h-[44px] rounded-full bg-white/[0.08] hover:bg-white/[0.16] text-slate-300 hover:text-white flex items-center justify-center transition-colors cursor-pointer shrink-0"
+            aria-label="Close UPI Payment modal"
           >
-            <X className="w-4 h-4" />
+            <X className="w-5 h-5" />
           </button>
         </div>
 
-        {/* Amount Pill */}
-        <div className="mx-6 mt-5 p-4 rounded-2xl bg-white/[0.03] border border-white/10 flex items-center justify-between">
+        {/* Scrollable Modal Body */}
+        <div className="overflow-y-auto flex-1 pb-4">
+          {/* Amount Pill */}
+          <div className="mx-4 sm:mx-6 mt-4 sm:mt-5 p-4 rounded-2xl bg-white/[0.03] border border-white/10 flex items-center justify-between">
           <div>
             <div className="text-[11px] text-slate-400">Invoice Ref: <span className="font-mono text-slate-300 font-bold">#{orderRef}</span></div>
             <div className="text-2xl font-bold font-mono text-white mt-0.5">
@@ -539,6 +561,8 @@ export default function UpiPaymentModal({
               </span>
             </div>
           </div>
+
+        </div>
 
         </div>
 

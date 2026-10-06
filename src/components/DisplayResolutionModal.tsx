@@ -55,6 +55,14 @@ export default function DisplayResolutionModal({
     }
   }, [isOpen]);
 
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [onClose]);
+
   if (!isOpen) return null;
 
   const densityOptions: {
@@ -114,13 +122,21 @@ export default function DisplayResolutionModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-xl flex items-center justify-center p-3 sm:p-4 overflow-y-auto animate-in fade-in duration-200">
-      <div className="relative w-full max-w-xl bg-obsidian-900 border border-white/10 rounded-3xl shadow-2xl overflow-hidden my-auto flex flex-col max-h-[90vh] backdrop-blur-2xl">
+    <div 
+      className="fixed inset-0 z-50 bg-black/85 backdrop-blur-xl flex items-center justify-center p-2 sm:p-4 overflow-hidden animate-in fade-in duration-200"
+      onClick={(e) => {
+        if (e.target === e.currentTarget) {
+          haptics.light();
+          onClose();
+        }
+      }}
+    >
+      <div className="relative w-full max-w-xl bg-obsidian-900 border border-white/10 rounded-2xl sm:rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[92dvh] sm:max-h-[90vh] backdrop-blur-2xl">
         
         {/* Header */}
-        <div className="p-4 sm:p-5 bg-gradient-to-r from-obsidian-900 via-obsidian-850 to-obsidian-900 border-b border-white/10 flex items-center justify-between shrink-0">
+        <div className="sticky top-0 z-30 shrink-0 px-4 py-3 sm:px-6 sm:py-4 bg-obsidian-950/95 backdrop-blur-md border-b border-white/10 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-brand-blue to-brand-orange p-0.5 shadow-glow-orange">
+            <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-brand-blue to-brand-orange p-0.5 shadow-glow-orange shrink-0">
               <div className="w-full h-full rounded-2xl bg-obsidian-950 flex items-center justify-center text-brand-orange">
                 <Sliders className="w-5 h-5" />
               </div>
@@ -128,23 +144,26 @@ export default function DisplayResolutionModal({
 
             <div>
               <div className="flex items-center gap-2">
-                <h3 className="font-bold text-white text-base">Display & Resolution Control</h3>
+                <h3 className="font-bold text-white text-sm sm:text-base">Display & Resolution Control</h3>
                 <span className="px-2 py-0.5 rounded-full bg-brand-orange/20 text-brand-orange text-[10px] font-mono font-bold">
                   HD / Retina
                 </span>
               </div>
-              <p className="text-[11px] text-slate-400">Optimize visual clarity & layout density for your device</p>
+              <p className="text-[11px] text-slate-400">Auto-calibrated for your screen resolution</p>
             </div>
           </div>
 
           <button
+            type="button"
             onClick={() => {
               haptics.light();
               onClose();
             }}
-            className="w-8 h-8 rounded-full bg-white/[0.06] hover:bg-white/[0.12] text-slate-300 hover:text-white flex items-center justify-center transition-colors cursor-pointer"
+            className="min-w-[40px] min-h-[40px] sm:min-w-[44px] sm:min-h-[44px] rounded-full bg-white/[0.08] hover:bg-white/[0.18] active:scale-95 text-slate-200 hover:text-white flex items-center justify-center border border-white/15 transition-all cursor-pointer shadow-md"
+            title="Close (Esc)"
+            aria-label="Close"
           >
-            <X className="w-4 h-4" />
+            <X className="w-5 h-5" />
           </button>
         </div>
 

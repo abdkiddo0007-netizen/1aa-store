@@ -65,7 +65,13 @@
   animation: apple-pulse 2.5s cubic-bezier(0.4, 0, 1) infinite;
 }
 
-/* --- Display Density & Screen Resolution System for Phone / Tablet / Desktop --- */
+/* --- Display Density & Screen Resolution Auto-Fit System for Phone / Tablet / Desktop --- */
+html, body {
+  overflow-x: hidden;
+  max-width: 100vw;
+  width: 100%;
+}
+
 .density-compact .catalog-grid {
   grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
   gap: 0.625rem !important;
@@ -89,14 +95,31 @@
   padding: 0.75rem !important;
 }
 
-.density-standard .catalog-grid {
-  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
-  gap: 1rem !important;
+@media (max-width: 480px) {
+  .density-standard .catalog-grid {
+    grid-template-columns: 1fr !important;
+    gap: 1rem !important;
+  }
+  .density-standard .product-image-stage {
+    height: 12.5rem !important;
+  }
+}
+@media (min-width: 481px) and (max-width: 639px) {
+  .density-standard .catalog-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 1rem !important;
+  }
+  .density-standard .product-image-stage {
+    height: 13rem !important;
+  }
 }
 @media (min-width: 640px) {
   .density-standard .catalog-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
     gap: 1.25rem !important;
+  }
+  .density-standard .product-image-stage {
+    height: 14rem !important;
   }
 }
 @media (min-width: 1024px) {
@@ -104,9 +127,6 @@
     grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
     gap: 1.5rem !important;
   }
-}
-.density-standard .product-image-stage {
-  height: 14rem !important;
 }
 
 .density-retina .catalog-grid {

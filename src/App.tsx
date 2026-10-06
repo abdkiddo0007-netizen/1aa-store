@@ -22,6 +22,7 @@ import CartonFreightModal from "./components/CartonFreightModal";
 import MasterCartonLabelModal from "./components/MasterCartonLabelModal";
 import PlatformPriceComparisonModal from "./components/PlatformPriceComparisonModal";
 import WholesaleOpsHubModal from "./components/WholesaleOpsHubModal";
+import RestockBundlesModal from "./components/RestockBundlesModal";
 import { CurrencyCode } from "./utils/currency";
 import { handleImgError } from "./utils/imageFallback";
 import { haptics } from "./utils/haptics";
@@ -64,7 +65,9 @@ import {
   VolumeX,
   Navigation,
   Boxes,
-  Globe
+  Globe,
+  Mic,
+  MicOff
 } from "lucide-react";
 
 export default function OneAAStore() {
@@ -131,7 +134,29 @@ export default function OneAAStore() {
   const [showPriceCompareModal, setShowPriceCompareModal] = useState(false);
   const [priceCompareProduct, setPriceCompareProduct] = useState<Product | null>(null);
   const [showOpsHubModal, setShowOpsHubModal] = useState(false);
+  const [showRestockBundlesModal, setShowRestockBundlesModal] = useState(false);
   const [selectedCurrency, setSelectedCurrency] = useState<CurrencyCode>("INR");
+  const [isListening, setIsListening] = useState(false);
+  const [speechSupported, setSpeechSupported] = useState(() => {
+    if (typeof window !== "undefined") {
+      return Boolean((window as any).SpeechRecognition || (window as any).webkitSpeechRecognition);
+    }
+    return true;
+  });
+  const [isDesktopViewport, setIsDesktopViewport] = useState(() => {
+    if (typeof window !== "undefined") {
+      return window.innerWidth >= 1024;
+    }
+    return true;
+  });
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsDesktopViewport(window.innerWidth >= 1024);
+    };
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
   // Real-Time Pincode Logistics & Delivery SLA Estimator Engine
   const [pincodeInput, setPincodeInput] = useState("");
@@ -225,6 +250,18 @@ export default function OneAAStore() {
     }
   }, []);
 
+  // Escape key handler for Procurement Manifest Drawer
+  useEffect(() => {
+    if (!showOrderDrawer) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        setShowOrderDrawer(false);
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [showOrderDrawer]);
+
   // Live Mysore Dispatch Countdown Timer
   const [countdown, setCountdown] = useState({ hours: 4, minutes: 28, seconds: 15 });
 
@@ -258,6 +295,68 @@ export default function OneAAStore() {
       const next = Math.max(0, (prev[sku] || 0) + delta);
       return { ...prev, [sku]: next };
     });
+  };
+
+  const handleToggleVoiceSearch = () => {
+    haptics.light();
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      setSpeechSupported(false);
+      alert("Voice search is not supported in this browser. Please use Chrome, Safari, or Edge.");
+      return;
+    }
+
+    if (isListening) {
+      setIsListening(false);
+      return;
+    }
+
+    try {
+      const recognition = new SpeechRecognition();
+      recognition.lang = "en-IN";
+      recognition.continuous = false;
+      recognition.interimResults = false;
+
+      recognition.onstart = () => {
+        setIsListening(true);
+        haptics.medium();
+      };
+
+      recognition.onresult = (event: any) => {
+        const transcript = event.results?.[0]?.[0]?.transcript;
+        if (transcript) {
+          setSearch(transcript.trim());
+          haptics.success();
+        }
+        setIsListening(false);
+      };
+
+      recognition.onerror = () => {
+        setIsListening(false);
+      };
+
+      recognition.onend = () => {
+        setIsListening(false);
+      };
+
+      recognition.start();
+    } catch (err) {
+      console.error("Speech recognition error:", err);
+      setIsListening(false);
+    }
+  };
+
+  const handleLoadBundle = (bundleQuantities: { [sku: string]: number }) => {
+    setQuantities((prev) => {
+      const next = { ...prev };
+      Object.entries(bundleQuantities).forEach(([sku, qty]) => {
+        next[sku] = (next[sku] || 0) + qty;
+      });
+      return next;
+    });
+    haptics.success();
+    setShowRestockBundlesModal(false);
+    setShowOrderDrawer(true);
   };
 
   const setDirectQty = (sku: string, val: number) => {
@@ -437,7 +536,7 @@ export default function OneAAStore() {
           ? "density-retina"
           : "density-standard"
       } ${displayConfig.ultraHdSharpening ? "retina-sharp-images" : ""}`}
-      style={{ zoom: `${displayConfig.zoom}%` }}
+      style={isDesktopViewport && displayConfig.zoom !== 100 ? { zoom: `${displayConfig.zoom}%` } : undefined}
     >
       
       {/* --- CINEMATIC BRAND INTRO / LOGO REVEAL SEQUENCE --- */}
@@ -703,6 +802,18 @@ export default function OneAAStore() {
               <span>Spin for Voucher</span>
             </button>
             <span className="text-slate-500 hidden sm:inline">•</span>
+            <button
+              onClick={() => {
+                haptics.light();
+                setShowRestockBundlesModal(true);
+              }}
+              className="inline-flex items-center gap-1.5 text-[11px] px-3 py-1 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 font-bold hover:scale-105 transition-transform cursor-pointer"
+              title="1-Click Curated Wholesale Restock Bundles"
+            >
+              <Sparkles className="w-3.5 h-3.5 text-indigo-400" />
+              <span>1-Click Restock Kits</span>
+            </button>
+            <span className="text-slate-500 hidden sm:inline">•</span>
             <a
               href="https://wa.me/917598077003?text=Hi%201AA%2C%20please%20add%20me%20to%20the%201AA%20Daily%20Wholesale%20Deals%20Broadcast%20List"
               target="_blank"
@@ -730,7 +841,7 @@ export default function OneAAStore() {
             </div>
 
             {/* Apple Cinematic Headline */}
-            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black tracking-tight text-transparent bg-clip-text bg-gradient-to-b from-white via-slate-100 to-slate-400 leading-[1.12]">
+            <h1 className="text-3xl sm:text-5xl lg:text-6xl font-black tracking-tight text-transparent bg-clip-text bg-gradient-to-b from-white via-slate-100 to-slate-400 leading-[1.12]">
               Pro Sourcing. Factory Direct.<br />
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-brand-blue-azure via-brand-blue-light to-brand-orange">
                 Zero Marketplace Markup.
@@ -988,7 +1099,7 @@ export default function OneAAStore() {
               
               <div className="flex flex-col lg:flex-row justify-between items-stretch lg:items-center gap-4">
                 
-                {/* Apple-style Capsule Search Bar */}
+                {/* Apple-style Capsule Search Bar with Voice Input */}
                 <div className="relative flex-1 max-w-md">
                   <Search className="w-4 h-4 text-slate-400 absolute left-4 top-3.5" />
                   <input
@@ -996,16 +1107,46 @@ export default function OneAAStore() {
                     placeholder="Search by product, SKU, or specs..."
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}
-                    className="w-full bg-white/[0.04] border border-white/10 rounded-full pl-11 pr-10 py-3 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-brand-orange/80 transition-all backdrop-blur-md shadow-inner"
+                    className="w-full bg-white/[0.04] border border-white/10 rounded-full pl-11 pr-20 py-3 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-brand-orange/80 transition-all backdrop-blur-md shadow-inner"
                   />
-                  {search && (
-                    <button 
-                      onClick={() => setSearch("")}
-                      className="absolute right-3.5 top-3.5 text-slate-400 hover:text-white"
+                  <div className="absolute right-3 top-2.5 flex items-center gap-1">
+                    {search && (
+                      <button 
+                        type="button"
+                        onClick={() => {
+                          haptics.light();
+                          setSearch("");
+                        }}
+                        className="p-1 text-slate-400 hover:text-white rounded-full hover:bg-white/10 transition-colors cursor-pointer"
+                        title="Clear search text"
+                        aria-label="Clear search text"
+                      >
+                        <X className="w-3.5 h-3.5" />
+                      </button>
+                    )}
+                    <button
+                      type="button"
+                      onClick={handleToggleVoiceSearch}
+                      disabled={!speechSupported}
+                      className={`p-1.5 rounded-full transition-all ${
+                        !speechSupported
+                          ? "text-slate-600 opacity-60 cursor-not-allowed"
+                          : isListening 
+                          ? "bg-red-500 text-white animate-pulse shadow-[0_0_12px_rgba(239,68,68,0.7)] cursor-pointer" 
+                          : "text-slate-400 hover:text-white hover:bg-white/10 cursor-pointer"
+                      }`}
+                      title={!speechSupported ? "Voice search not supported in this browser" : isListening ? "Listening... Speak now" : "Voice Search (Click & speak in English/Hindi)"}
+                      aria-label="Voice search"
                     >
-                      <X className="w-3.5 h-3.5" />
+                      {!speechSupported ? (
+                        <MicOff className="w-3.5 h-3.5 text-slate-500" />
+                      ) : isListening ? (
+                        <Mic className="w-3.5 h-3.5 animate-bounce text-white" />
+                      ) : (
+                        <Mic className="w-3.5 h-3.5" />
+                      )}
                     </button>
-                  )}
+                  </div>
                 </div>
 
                 {/* Sort Dropdown */}
@@ -1527,28 +1668,44 @@ export default function OneAAStore() {
 
       {/* --- ORDER / CART DRAWER MODAL --- */}
       {showOrderDrawer && (
-        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-xl flex justify-end animate-in fade-in duration-300">
-          <div className="w-full max-w-md bg-obsidian-900/95 border-l border-white/10 h-full flex flex-col justify-between p-6 sm:p-8 overflow-y-auto shadow-2xl backdrop-blur-2xl">
+        <div 
+          className="fixed inset-0 z-50 bg-black/80 backdrop-blur-xl flex justify-end animate-in fade-in duration-300"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) {
+              haptics.light();
+              setShowOrderDrawer(false);
+            }
+          }}
+        >
+          <div className="w-full max-w-md bg-obsidian-900/98 border-l border-white/10 h-full flex flex-col shadow-2xl backdrop-blur-2xl overflow-hidden">
             
-            <div>
-              <div className="flex items-center justify-between border-b border-white/[0.08] pb-5">
-                <div className="flex items-center gap-2.5">
-                  <ShoppingBag className="w-5 h-5 text-brand-orange" />
-                  <h3 className="font-bold text-white text-base">Procurement Manifest</h3>
+            {/* Sticky Header with Unmissable 44x44 Tactile Close Button */}
+            <div className="p-4 sm:p-5 border-b border-white/[0.08] flex items-center justify-between shrink-0 bg-obsidian-950/90 backdrop-blur-md">
+              <div className="flex items-center gap-2.5">
+                <ShoppingBag className="w-5 h-5 text-brand-orange" />
+                <div>
+                  <h3 className="font-bold text-white text-base leading-tight">Procurement Manifest</h3>
+                  <p className="text-[10px] text-slate-400 font-mono">{activeItems.length} SKUs • {metrics.units} Total Units</p>
                 </div>
-                <button
-                  onClick={() => {
-                    haptics.light();
-                    setShowOrderDrawer(false);
-                  }}
-                  className="w-8 h-8 rounded-full bg-white/[0.06] hover:bg-white/[0.12] text-slate-400 hover:text-white flex items-center justify-center border border-white/10 transition-colors cursor-pointer"
-                >
-                  <X className="w-4 h-4" />
-                </button>
               </div>
+              <button
+                type="button"
+                onClick={() => {
+                  haptics.light();
+                  setShowOrderDrawer(false);
+                }}
+                className="w-10 h-10 min-w-[40px] min-h-[40px] rounded-full bg-white/[0.08] hover:bg-white/20 active:scale-95 text-slate-300 hover:text-white flex items-center justify-center border border-white/10 transition-all cursor-pointer shrink-0"
+                title="Close Manifest (Esc)"
+                aria-label="Close Manifest"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
 
+            {/* Scrollable Middle Body */}
+            <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4">
               {/* Manifest Items Stepper */}
-              <div className="mt-5 space-y-3">
+              <div className="space-y-3">
                 {activeItems.length === 0 ? (
                   <div className="py-16 text-center text-slate-400 space-y-3">
                     <ShoppingBag className="w-10 h-10 text-slate-600 mx-auto" />
@@ -1559,7 +1716,7 @@ export default function OneAAStore() {
                   activeItems.map((item) => (
                     <div
                       key={item.product.id}
-                      className="p-4 bg-white/[0.03] rounded-2xl border border-white/[0.06] flex items-center justify-between gap-3 text-xs"
+                      className="p-3.5 bg-white/[0.03] rounded-2xl border border-white/[0.06] flex items-center justify-between gap-3 text-xs"
                     >
                       <div className="flex-1 min-w-0">
                         <div className="font-medium text-white truncate">{item.product.name}</div>
@@ -1571,6 +1728,7 @@ export default function OneAAStore() {
                       <div className="flex items-center gap-2.5">
                         <div className="flex items-center gap-1 bg-obsidian-950 rounded-full border border-white/10 p-0.5">
                           <button
+                            type="button"
                             onClick={() => {
                               haptics.medium();
                               updateQty(item.product.sku, -1);
@@ -1583,6 +1741,7 @@ export default function OneAAStore() {
                             {item.quantity}
                           </span>
                           <button
+                            type="button"
                             onClick={() => {
                               haptics.medium();
                               updateQty(item.product.sku, 1);
@@ -1600,11 +1759,7 @@ export default function OneAAStore() {
                   ))
                 )}
               </div>
-            </div>
 
-            {/* Calculations & Checkout */}
-            <div className="border-t border-white/[0.08] pt-5 space-y-4 mt-4">
-              
               {/* VIP Loyalty Restock Rebate Progress Card */}
               {activeItems.length > 0 && (
                 <div 
@@ -1673,6 +1828,7 @@ export default function OneAAStore() {
 
                   <div className="grid grid-cols-2 gap-2">
                     <button
+                      type="button"
                       onClick={() => {
                         haptics.selection();
                         setDeliverySpeed("standard");
@@ -1692,6 +1848,7 @@ export default function OneAAStore() {
                     </button>
 
                     <button
+                      type="button"
                       onClick={() => {
                         haptics.selection();
                         setDeliverySpeed("express");
@@ -1726,6 +1883,7 @@ export default function OneAAStore() {
                   </div>
                   <div className="grid grid-cols-2 gap-2">
                     <button
+                      type="button"
                       onClick={() => {
                         haptics.selection();
                         setSelectedHotline("7598077003");
@@ -1739,6 +1897,7 @@ export default function OneAAStore() {
                       +91 75980 77003
                     </button>
                     <button
+                      type="button"
                       onClick={() => {
                         haptics.selection();
                         setSelectedHotline("7406231167");
@@ -1754,18 +1913,22 @@ export default function OneAAStore() {
                   </div>
                 </div>
               )}
+            </div>
 
-              <div className="space-y-2 text-xs font-mono">
-                <div className="flex justify-between text-slate-400">
+            {/* Sticky Bottom Actions & Summary Bar */}
+            <div className="border-t border-white/[0.08] p-4 sm:p-5 bg-obsidian-950/95 backdrop-blur-xl shrink-0 space-y-3">
+              {/* Calculations Summary */}
+              <div className="space-y-1.5 text-xs font-mono">
+                <div className="flex justify-between text-slate-400 text-[11px]">
                   <span>Selected Units:</span>
                   <span className="text-white font-bold">{metrics.units} pcs</span>
                 </div>
-                <div className="flex justify-between text-slate-400">
+                <div className="flex justify-between text-slate-400 text-[11px]">
                   <span>Subtotal:</span>
                   <span className="text-white">₹{metrics.subtotal.toLocaleString("en-IN")}</span>
                 </div>
                 {metrics.volumeDiscount > 0 && (
-                  <div className="flex justify-between text-brand-orange font-semibold">
+                  <div className="flex justify-between text-brand-orange font-semibold text-[11px]">
                     <span>5% Volume Rebate (50+ units):</span>
                     <span>-₹{metrics.volumeDiscount.toLocaleString("en-IN")}</span>
                   </div>
@@ -1774,19 +1937,20 @@ export default function OneAAStore() {
                   <span>Savings vs Amazon/Flipkart:</span>
                   <span>₹{metrics.totalSavings.toLocaleString("en-IN")}</span>
                 </div>
-                <div className="border-t border-white/[0.08] pt-2.5 flex justify-between items-baseline font-bold text-sm">
+                <div className="border-t border-white/[0.08] pt-2 flex justify-between items-baseline font-bold text-sm">
                   <span className="text-white font-sans">Final Order Amount:</span>
                   <span className="text-brand-orange text-lg font-black">₹{metrics.finalAmount.toLocaleString("en-IN")}</span>
                 </div>
               </div>
 
-              <div className="space-y-2.5">
+              <div className="space-y-2">
                 <button
+                  type="button"
                   onClick={() => {
                     setShowOrderDrawer(false);
                     setShowUpiModal(true);
                   }}
-                  className="w-full py-3.5 rounded-full bg-gradient-to-r from-emerald-500 via-teal-500 to-emerald-600 text-obsidian-950 font-black text-xs uppercase tracking-wider text-center flex items-center justify-center gap-2 transition-all shadow-glow-emerald hover:brightness-105 cursor-pointer"
+                  className="w-full py-3 rounded-full bg-gradient-to-r from-emerald-500 via-teal-500 to-emerald-600 text-obsidian-950 font-black text-xs uppercase tracking-wider text-center flex items-center justify-center gap-2 transition-all shadow-glow-emerald hover:brightness-105 cursor-pointer"
                 >
                   <QrCode className="w-4 h-4 text-obsidian-950" />
                   <span>Pay via Direct UPI / Scanner</span>
@@ -1796,7 +1960,7 @@ export default function OneAAStore() {
                   href={getWhatsAppLink(selectedHotline)}
                   target="_blank"
                   rel="noreferrer"
-                  className="w-full py-3.5 rounded-full bg-gradient-to-r from-brand-orange to-brand-orange-light text-obsidian-950 font-black text-xs uppercase tracking-wider text-center flex items-center justify-center gap-2 transition-all shadow-glow-orange hover:brightness-105"
+                  className="w-full py-3 rounded-full bg-gradient-to-r from-brand-orange to-brand-orange-light text-obsidian-950 font-black text-xs uppercase tracking-wider text-center flex items-center justify-center gap-2 transition-all shadow-glow-orange hover:brightness-105"
                 >
                   <span>Proceed to WhatsApp Dispatch</span>
                   <ExternalLink className="w-3.5 h-3.5" />
@@ -1804,11 +1968,12 @@ export default function OneAAStore() {
 
                 <div className="grid grid-cols-3 gap-2">
                   <button
+                    type="button"
                     onClick={() => {
                       haptics.light();
                       setShowInvoiceModal(true);
                     }}
-                    className="py-2.5 px-2 rounded-full bg-white/[0.06] hover:bg-white/[0.12] text-slate-200 font-medium text-xs transition-colors flex items-center justify-center gap-1 border border-white/10 cursor-pointer"
+                    className="py-2 px-2 rounded-full bg-white/[0.06] hover:bg-white/[0.12] text-slate-200 font-medium text-xs transition-colors flex items-center justify-center gap-1 border border-white/10 cursor-pointer"
                     title="Generate Commercial Pro-Forma Invoice"
                   >
                     <FileText className="w-3.5 h-3.5 text-brand-orange" />
@@ -1829,7 +1994,7 @@ export default function OneAAStore() {
                     target="_blank"
                     rel="noreferrer"
                     onClick={() => haptics.selection()}
-                    className="py-2.5 px-2 rounded-full bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-300 font-medium text-xs transition-colors flex items-center justify-center gap-1 border border-emerald-500/30 cursor-pointer"
+                    className="py-2 px-2 rounded-full bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-300 font-medium text-xs transition-colors flex items-center justify-center gap-1 border border-emerald-500/30 cursor-pointer"
                     title="Share order summary to WhatsApp"
                   >
                     <Share2 className="w-3.5 h-3.5 text-emerald-400" />
@@ -1837,8 +2002,9 @@ export default function OneAAStore() {
                   </a>
 
                   <button
+                    type="button"
                     onClick={copyOrderSummary}
-                    className="py-2.5 px-2 rounded-full bg-white/[0.06] hover:bg-white/[0.12] text-slate-200 font-medium text-xs transition-colors flex items-center justify-center gap-1 border border-white/10 cursor-pointer"
+                    className="py-2 px-2 rounded-full bg-white/[0.06] hover:bg-white/[0.12] text-slate-200 font-medium text-xs transition-colors flex items-center justify-center gap-1 border border-white/10 cursor-pointer"
                   >
                     {copySuccess ? (
                       <>
@@ -1857,8 +2023,9 @@ export default function OneAAStore() {
 
               {activeItems.length > 0 && (
                 <button
+                  type="button"
                   onClick={clearCart}
-                  className="w-full text-center text-[10px] text-slate-400 hover:text-red-400 transition-colors pt-1"
+                  className="w-full text-center text-[10px] text-slate-400 hover:text-red-400 transition-colors pt-0.5 cursor-pointer"
                 >
                   Clear Selection
                 </button>
@@ -2095,11 +2262,20 @@ export default function OneAAStore() {
           setShowPriceCompareModal(true);
         }}
         onOpenUpiModal={() => setShowUpiModal(true)}
+        onOpenRestockBundles={() => setShowRestockBundlesModal(true)}
         hasItemsInCart={metrics.units > 0}
       />
 
+      {/* --- 1-CLICK WHOLESALE RESTOCK BUNDLES MODAL --- */}
+      <RestockBundlesModal
+        isOpen={showRestockBundlesModal}
+        onClose={() => setShowRestockBundlesModal(false)}
+        onLoadBundle={handleLoadBundle}
+        selectedHotline={selectedHotline}
+      />
+
       {/* --- UNIFIED LUXURY FLOATING INTELLIGENCE DOCK --- */}
-      <div className="fixed bottom-6 right-4 sm:right-6 z-30 pointer-events-auto">
+      <div className={`fixed ${metrics.units > 0 ? "bottom-24" : "bottom-6"} right-4 sm:right-6 z-30 pointer-events-auto transition-all duration-300`}>
         <div className="flex items-center gap-2 p-1.5 rounded-full bg-obsidian-950/90 backdrop-blur-2xl border border-white/20 shadow-2xl">
           
           {/* Ask AI Voice Agent */}

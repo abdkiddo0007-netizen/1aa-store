@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Product } from "../types";
 import { haptics } from "../utils/haptics";
 import { 
@@ -40,6 +40,16 @@ export default function MasterCartonLabelModal({
   const [docketNo] = useState(`1AA-LR-MYS-${Math.floor(10000 + Math.random() * 90000)}`);
   const [copiedDocket, setCopiedDocket] = useState(false);
 
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    if (isOpen) {
+      window.addEventListener("keydown", handleKeyDown);
+    }
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [isOpen, onClose]);
+
   // Sync with prop
   if (product && (!selectedProduct || selectedProduct.sku !== product.sku)) {
     setSelectedProduct(product);
@@ -64,42 +74,49 @@ export default function MasterCartonLabelModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-xl flex items-center justify-center p-3 sm:p-4 overflow-y-auto animate-in fade-in duration-200">
-      <div className="relative w-full max-w-4xl bg-obsidian-900 border border-white/10 rounded-3xl shadow-apple-card overflow-hidden my-6 flex flex-col max-h-[92vh] backdrop-blur-2xl">
+    <div 
+      className="fixed inset-0 z-50 bg-black/85 backdrop-blur-xl flex items-center justify-center p-2 sm:p-4 overflow-hidden animate-in fade-in duration-200"
+      onClick={onClose}
+    >
+      <div 
+        onClick={(e) => e.stopPropagation()}
+        className="relative w-full max-w-4xl bg-obsidian-900 border border-white/10 rounded-2xl sm:rounded-3xl shadow-apple-card overflow-hidden my-auto flex flex-col max-h-[92dvh] sm:max-h-[90vh] backdrop-blur-2xl"
+      >
         
-        {/* Header */}
-        <div className="no-print p-5 bg-obsidian-950 border-b border-white/10 flex items-center justify-between shrink-0">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-2xl bg-brand-orange/20 border border-brand-orange/30 flex items-center justify-center text-brand-orange">
+        {/* Sticky Header */}
+        <div className="no-print p-4 sm:p-5 bg-obsidian-950 border-b border-white/10 flex items-center justify-between shrink-0 sticky top-0 z-30">
+          <div className="flex items-center gap-3 min-w-0 pr-2">
+            <div className="w-10 h-10 rounded-2xl bg-brand-orange/20 border border-brand-orange/30 flex items-center justify-center text-brand-orange shrink-0">
               <Package className="w-5 h-5" />
             </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <h3 className="font-bold text-white text-base">Master Carton Shipping Label & Stencil</h3>
-                <span className="px-2 py-0.5 rounded-full bg-brand-orange/20 text-brand-orange text-[10px] font-mono font-bold">
-                  4×6" Thermal / A6
+            <div className="min-w-0">
+              <div className="flex items-center gap-2 flex-wrap">
+                <h3 className="font-bold text-white text-sm sm:text-base truncate">Master Carton Shipping Label</h3>
+                <span className="px-2 py-0.5 rounded-full bg-brand-orange/20 text-brand-orange text-[10px] font-mono font-bold shrink-0">
+                  4×6" Thermal
                 </span>
               </div>
-              <p className="text-xs text-slate-400">Warehouse outer box manifest with routing barcodes & fragile stencils</p>
+              <p className="text-[11px] sm:text-xs text-slate-400 truncate">Outer box manifest with routing barcodes</p>
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 shrink-0">
             <button
               onClick={handlePrint}
-              className="px-4 py-2 rounded-full bg-gradient-to-r from-brand-orange to-brand-orange-light text-obsidian-950 font-bold text-xs flex items-center gap-1.5 shadow-glow-orange hover:brightness-105 active:scale-95 transition-all cursor-pointer"
+              className="px-3 sm:px-4 py-2 rounded-full bg-gradient-to-r from-brand-orange to-brand-orange-light text-obsidian-950 font-bold text-xs flex items-center gap-1.5 shadow-glow-orange hover:brightness-105 active:scale-95 transition-all cursor-pointer"
             >
               <Printer className="w-3.5 h-3.5" />
-              <span>Print 4×6" Box Label</span>
+              <span className="hidden sm:inline">Print Box Label</span>
             </button>
             <button
               onClick={() => {
                 haptics.light();
                 onClose();
               }}
-              className="w-8 h-8 rounded-full bg-white/[0.06] hover:bg-white/[0.12] text-slate-300 hover:text-white flex items-center justify-center transition-colors cursor-pointer"
+              className="min-w-[40px] min-h-[40px] sm:min-w-[44px] sm:min-h-[44px] rounded-full bg-white/[0.08] hover:bg-white/[0.16] text-slate-300 hover:text-white flex items-center justify-center transition-colors cursor-pointer shrink-0"
+              aria-label="Close Master Carton Label modal"
             >
-              <X className="w-4 h-4" />
+              <X className="w-5 h-5" />
             </button>
           </div>
         </div>

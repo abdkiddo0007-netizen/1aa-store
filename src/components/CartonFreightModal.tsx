@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Product } from "../types";
 import { haptics } from "../utils/haptics";
 import { 
@@ -23,6 +23,13 @@ export default function CartonFreightModal({
   product,
   onAddToCart,
 }: CartonFreightModalProps) {
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [onClose]);
   const [cartonsCount, setCartonsCount] = useState<number>(2);
   const [shippingMode, setShippingMode] = useState<"surface" | "air">("surface");
 
@@ -63,38 +70,49 @@ export default function CartonFreightModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-xl flex items-center justify-center p-3 sm:p-4 overflow-y-auto animate-in fade-in duration-200">
-      <div className="relative w-full max-w-2xl bg-obsidian-900 border border-white/10 rounded-3xl shadow-2xl overflow-hidden my-auto flex flex-col max-h-[90vh] backdrop-blur-2xl">
+    <div 
+      className="fixed inset-0 z-50 bg-black/85 backdrop-blur-xl flex items-center justify-center p-2 sm:p-4 overflow-hidden animate-in fade-in duration-200"
+      onClick={(e) => {
+        if (e.target === e.currentTarget) {
+          haptics.light();
+          onClose();
+        }
+      }}
+    >
+      <div className="relative w-full max-w-2xl bg-obsidian-900 border border-white/10 rounded-2xl sm:rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[92dvh] sm:max-h-[90vh] backdrop-blur-2xl">
         
         {/* HEADER */}
-        <div className="p-4 sm:p-6 bg-gradient-to-r from-obsidian-950 via-obsidian-900 to-obsidian-950 border-b border-white/10 flex items-center justify-between shrink-0">
+        <div className="sticky top-0 z-30 shrink-0 px-4 py-3 sm:px-6 sm:py-4 bg-obsidian-950/95 backdrop-blur-md border-b border-white/10 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-2xl bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-amber-400 shadow-glow-orange">
+            <div className="w-10 h-10 rounded-2xl bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-amber-400 shadow-glow-orange shrink-0">
               <Boxes className="w-5 h-5" />
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h3 className="font-bold text-white text-base sm:text-lg">
+                <h3 className="font-bold text-white text-sm sm:text-base">
                   Master Carton Volume & Freight Optimizer
                 </h3>
                 <span className="px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 text-[10px] font-mono font-bold">
                   B2B Logistics
                 </span>
               </div>
-              <p className="text-xs text-slate-400">
-                CBM volume, dead vs. volumetric weight, and freight-per-unit analysis from Mysore Central Facility
+              <p className="text-[11px] text-slate-400">
+                CBM volume, dead vs. volumetric weight, and freight-per-unit from Mysore
               </p>
             </div>
           </div>
 
           <button
+            type="button"
             onClick={() => {
               haptics.light();
               onClose();
             }}
-            className="w-8 h-8 rounded-full bg-white/[0.06] hover:bg-white/[0.14] text-slate-300 hover:text-white flex items-center justify-center transition-colors cursor-pointer"
+            className="min-w-[40px] min-h-[40px] sm:min-w-[44px] sm:min-h-[44px] rounded-full bg-white/[0.08] hover:bg-white/[0.18] active:scale-95 text-slate-200 hover:text-white flex items-center justify-center border border-white/15 transition-all cursor-pointer shadow-md"
+            title="Close (Esc)"
+            aria-label="Close"
           >
-            <X className="w-4 h-4" />
+            <X className="w-5 h-5" />
           </button>
         </div>
 

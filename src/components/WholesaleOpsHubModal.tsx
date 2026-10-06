@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { haptics } from "../utils/haptics";
 import {
   X,
@@ -13,7 +14,8 @@ import {
   TrendingUp,
   ShieldCheck,
   ChevronRight,
-  QrCode
+  QrCode,
+  Sparkles
 } from "lucide-react";
 
 interface WholesaleOpsHubModalProps {
@@ -30,6 +32,7 @@ interface WholesaleOpsHubModalProps {
   onOpenDisplayModal: () => void;
   onOpenPriceRadarModal: () => void;
   onOpenUpiModal: () => void;
+  onOpenRestockBundles?: () => void;
   hasItemsInCart: boolean;
 }
 
@@ -47,8 +50,16 @@ export default function WholesaleOpsHubModal({
   onOpenDisplayModal,
   onOpenPriceRadarModal,
   onOpenUpiModal,
+  onOpenRestockBundles,
   hasItemsInCart,
 }: WholesaleOpsHubModalProps) {
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [onClose]);
   if (!isOpen) return null;
 
   const tools = [
@@ -63,6 +74,19 @@ export default function WholesaleOpsHubModal({
       action: () => {
         onClose();
         onOpenPriceRadarModal();
+      },
+    },
+    {
+      id: "restock-kits",
+      title: "1-Click Quick Restock Kits",
+      badge: "SMART BUNDLES",
+      badgeColor: "bg-brand-orange/20 text-brand-orange border-brand-orange/30",
+      desc: "Instant 1-tap cart loader for curated Mysore fast-selling assortments (₹5K, ₹15K, ₹35K).",
+      icon: Sparkles,
+      iconColor: "text-brand-orange",
+      action: () => {
+        onClose();
+        if (onOpenRestockBundles) onOpenRestockBundles();
       },
     },
     {
@@ -200,34 +224,44 @@ export default function WholesaleOpsHubModal({
   ];
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-obsidian-950/85 backdrop-blur-xl animate-fade-in overflow-y-auto">
-      <div className="relative w-full max-w-3xl bg-obsidian-900/95 border border-white/15 rounded-3xl shadow-2xl overflow-hidden my-auto max-h-[90vh] flex flex-col">
+    <div 
+      className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-black/85 backdrop-blur-xl animate-fade-in overflow-hidden"
+      onClick={(e) => {
+        if (e.target === e.currentTarget) {
+          haptics.light();
+          onClose();
+        }
+      }}
+    >
+      <div className="relative w-full max-w-3xl bg-obsidian-900 border border-white/15 rounded-2xl sm:rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[92dvh] sm:max-h-[90vh]">
         
         {/* Header */}
-        <div className="p-5 sm:p-6 border-b border-white/10 flex items-center justify-between bg-obsidian-950/60 sticky top-0 z-20 backdrop-blur-md">
+        <div className="sticky top-0 z-30 shrink-0 px-4 py-3 sm:px-6 sm:py-4 bg-obsidian-950/95 backdrop-blur-md border-b border-white/10 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-2xl bg-brand-orange/15 border border-brand-orange/30 flex items-center justify-center text-brand-orange shadow-glow-orange">
+            <div className="w-10 h-10 rounded-2xl bg-brand-orange/15 border border-brand-orange/30 flex items-center justify-center text-brand-orange shadow-glow-orange shrink-0">
               <Boxes className="w-5 h-5" />
             </div>
             <div>
-              <h2 className="text-base sm:text-lg font-black text-white tracking-tight flex items-center gap-2">
+              <h2 className="text-sm sm:text-base font-black text-white tracking-tight flex items-center gap-2">
                 <span>Wholesale Operations Hub</span>
                 <span className="px-2 py-0.5 rounded-full text-[10px] font-mono bg-white/10 text-slate-300 border border-white/15">
                   B2B SUITE
                 </span>
               </h2>
-              <p className="text-xs text-slate-400">
+              <p className="text-[11px] text-slate-400">
                 Logistics, labeling, arbitrage intelligence, and order automation
               </p>
             </div>
           </div>
 
           <button
+            type="button"
             onClick={() => {
               haptics.light();
               onClose();
             }}
-            className="w-9 h-9 rounded-full bg-white/[0.06] hover:bg-white/[0.12] text-slate-400 hover:text-white flex items-center justify-center transition-colors cursor-pointer"
+            className="min-w-[40px] min-h-[40px] sm:min-w-[44px] sm:min-h-[44px] rounded-full bg-white/[0.08] hover:bg-white/[0.18] active:scale-95 text-slate-200 hover:text-white flex items-center justify-center border border-white/15 transition-all cursor-pointer shadow-md"
+            title="Close (Esc)"
             aria-label="Close"
           >
             <X className="w-5 h-5" />

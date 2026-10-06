@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { ActiveOrderItem, OrderMetrics } from '../types';
 import OneAALogo from './OneAALogo';
 import { haptics } from '../utils/haptics';
@@ -33,6 +34,16 @@ export default function ProformaInvoiceModal({
   mode,
   onTrackOrder,
 }: ProformaInvoiceModalProps) {
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+    };
+    if (isOpen) {
+      window.addEventListener('keydown', handleKeyDown);
+    }
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, onClose]);
+
   if (!isOpen) return null;
 
   const invoiceNumber = `1AA-PI-${Math.floor(100000 + Math.random() * 900000)}`;
@@ -85,28 +96,34 @@ export default function ProformaInvoiceModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-xl flex items-center justify-center p-4 overflow-y-auto animate-in fade-in duration-300">
-      <div className="relative w-full max-w-4xl bg-obsidian-900/95 border border-white/10 rounded-3xl shadow-apple-card overflow-hidden my-6 backdrop-blur-2xl">
+    <div 
+      className="fixed inset-0 z-50 bg-black/85 backdrop-blur-xl flex items-center justify-center p-2 sm:p-4 overflow-hidden animate-in fade-in duration-300"
+      onClick={onClose}
+    >
+      <div 
+        onClick={(e) => e.stopPropagation()}
+        className="relative w-full max-w-4xl bg-obsidian-900/95 border border-white/10 rounded-2xl sm:rounded-3xl shadow-apple-card overflow-hidden my-auto flex flex-col max-h-[92dvh] sm:max-h-[90vh] backdrop-blur-2xl"
+      >
         
-        {/* Top Control Bar (Apple Glass Header) */}
-        <div className="no-print bg-obsidian-950/80 border-b border-white/[0.08] px-8 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-3 text-xs text-slate-300">
-            <div className="w-8 h-8 rounded-full bg-brand-orange/10 flex items-center justify-center border border-brand-orange/20">
+        {/* Top Control Bar (Sticky Apple Glass Header) */}
+        <div className="no-print bg-obsidian-950/95 border-b border-white/[0.08] px-4 sm:px-8 py-3.5 sm:py-4 flex items-center justify-between shrink-0 sticky top-0 z-30">
+          <div className="flex items-center gap-3 text-xs text-slate-300 min-w-0 pr-2">
+            <div className="w-8 h-8 rounded-full bg-brand-orange/10 flex items-center justify-center border border-brand-orange/20 shrink-0">
               <FileText className="w-4 h-4 text-brand-orange" />
             </div>
-            <div>
-              <span className="font-bold text-white text-sm">Commercial Pro-Forma Invoice</span>
-              <span className="text-slate-500 font-mono ml-2">#{invoiceNumber}</span>
+            <div className="min-w-0">
+              <span className="font-bold text-white text-sm truncate">Commercial Pro-Forma</span>
+              <span className="text-slate-500 font-mono ml-2 text-xs">#{invoiceNumber}</span>
             </div>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 sm:gap-3 shrink-0">
             <button
               onClick={handleExportCsv}
-              className="px-3.5 py-2 bg-white/[0.08] hover:bg-white/[0.15] text-slate-200 hover:text-white border border-white/15 font-bold text-xs rounded-full flex items-center gap-1.5 transition-all active:scale-95 cursor-pointer"
+              className="hidden sm:flex px-3.5 py-2 bg-white/[0.08] hover:bg-white/[0.15] text-slate-200 hover:text-white border border-white/15 font-bold text-xs rounded-full items-center gap-1.5 transition-all active:scale-95 cursor-pointer"
               title="Download Purchase Order as CSV for Excel / Tally"
             >
               <Download className="w-3.5 h-3.5 text-brand-blue-light" />
-              <span>Export PO (.CSV)</span>
+              <span>Export CSV</span>
             </button>
             {onTrackOrder && (
               <button
@@ -115,10 +132,10 @@ export default function ProformaInvoiceModal({
                   onTrackOrder(invoiceNumber);
                   onClose();
                 }}
-                className="px-4 py-2 bg-emerald-500/20 hover:bg-emerald-500 text-emerald-300 hover:text-obsidian-950 border border-emerald-500/40 font-bold text-xs rounded-full flex items-center gap-1.5 transition-all active:scale-95 cursor-pointer shadow-glow-emerald"
+                className="hidden md:flex px-3.5 py-2 bg-emerald-500/20 hover:bg-emerald-500 text-emerald-300 hover:text-obsidian-950 border border-emerald-500/40 font-bold text-xs rounded-full items-center gap-1.5 transition-all active:scale-95 cursor-pointer shadow-glow-emerald"
               >
                 <Navigation className="w-3.5 h-3.5 text-emerald-400" />
-                <span>Track Consignment</span>
+                <span>Track</span>
               </button>
             )}
             <button
@@ -126,25 +143,26 @@ export default function ProformaInvoiceModal({
                 haptics.selection();
                 window.print();
               }}
-              className="px-5 py-2 bg-gradient-to-r from-brand-orange to-brand-orange-light text-obsidian-950 font-bold text-xs rounded-full flex items-center gap-1.5 transition-all shadow-glow-orange hover:brightness-105 active:scale-95 cursor-pointer"
+              className="px-3.5 sm:px-5 py-2 bg-gradient-to-r from-brand-orange to-brand-orange-light text-obsidian-950 font-bold text-xs rounded-full flex items-center gap-1.5 transition-all shadow-glow-orange hover:brightness-105 active:scale-95 cursor-pointer"
             >
               <Printer className="w-3.5 h-3.5" />
-              <span>Print / Save PDF</span>
+              <span>Print PDF</span>
             </button>
             <button
               onClick={() => {
                 haptics.light();
                 onClose();
               }}
-              className="w-8 h-8 rounded-full bg-white/[0.06] hover:bg-white/[0.12] text-slate-400 hover:text-white flex items-center justify-center border border-white/10 transition-colors active:scale-90"
+              className="min-w-[40px] min-h-[40px] sm:min-w-[44px] sm:min-h-[44px] rounded-full bg-white/[0.08] hover:bg-white/[0.16] text-slate-300 hover:text-white flex items-center justify-center border border-white/10 transition-colors cursor-pointer shrink-0"
+              aria-label="Close Proforma Invoice modal"
             >
-              <X className="w-4 h-4" />
+              <X className="w-5 h-5" />
             </button>
           </div>
         </div>
 
-        {/* Invoice Printable Canvas (Apple Clean Specs Style) */}
-        <div className="print-surface p-8 sm:p-12 space-y-8 bg-obsidian-900/90 text-slate-200">
+        {/* Invoice Printable Canvas (Scrollable) */}
+        <div className="print-surface p-4 sm:p-8 md:p-12 space-y-6 sm:space-y-8 bg-obsidian-900/90 text-slate-200 overflow-y-auto flex-1">
           
           {/* Header Banner */}
           <div className="border-b border-white/[0.08] pb-8 flex flex-col sm:flex-row justify-between items-start gap-6">

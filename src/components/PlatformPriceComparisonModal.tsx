@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Product } from "../types";
 import { formatCurrency, CurrencyCode } from "../utils/currency";
 import { handleImgError } from "../utils/imageFallback";
@@ -34,6 +34,14 @@ export default function PlatformPriceComparisonModal({
   onAddToCart,
   currency = "INR",
 }: PlatformPriceComparisonModalProps) {
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [onClose]);
+
   const [searchTerm, setSearchTerm] = useState("");
   const [plannedRetailPrice, setPlannedRetailPrice] = useState<number>(0);
   const [resaleQuantity, setResaleQuantity] = useState<number>(20);
@@ -103,36 +111,46 @@ export default function PlatformPriceComparisonModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-obsidian-950/80 backdrop-blur-xl animate-fade-in overflow-y-auto">
-      <div className="relative w-full max-w-4xl bg-obsidian-900/95 border border-white/15 rounded-3xl shadow-2xl overflow-hidden my-auto max-h-[92vh] flex flex-col">
+    <div 
+      className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-black/85 backdrop-blur-xl animate-fade-in overflow-hidden"
+      onClick={(e) => {
+        if (e.target === e.currentTarget) {
+          haptics.light();
+          onClose();
+        }
+      }}
+    >
+      <div className="relative w-full max-w-4xl bg-obsidian-900 border border-white/15 rounded-2xl sm:rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[92dvh] sm:max-h-[90vh]">
         
         {/* Modal Header */}
-        <div className="p-5 sm:p-6 border-b border-white/10 flex items-center justify-between bg-obsidian-950/60 sticky top-0 z-20 backdrop-blur-md">
+        <div className="sticky top-0 z-30 shrink-0 px-4 py-3 sm:px-6 sm:py-4 bg-obsidian-950/95 backdrop-blur-md border-b border-white/10 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-2xl bg-brand-orange/15 border border-brand-orange/30 flex items-center justify-center text-brand-orange shadow-glow-orange">
+            <div className="w-10 h-10 rounded-2xl bg-brand-orange/15 border border-brand-orange/30 flex items-center justify-center text-brand-orange shadow-glow-orange shrink-0">
               <TrendingUp className="w-5 h-5" />
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h2 className="text-base sm:text-lg font-black text-white tracking-tight">
+                <h2 className="text-sm sm:text-base font-black text-white tracking-tight">
                   Real-Time Cross-Platform Price Radar
                 </h2>
                 <span className="hidden sm:inline-block px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
                   LIVE ARBITRAGE
                 </span>
               </div>
-              <p className="text-xs text-slate-400">
+              <p className="text-[11px] text-slate-400">
                 1AA Mysore Central Hub vs Amazon.in, Flipkart &amp; Karnataka Wholesale
               </p>
             </div>
           </div>
 
           <button
+            type="button"
             onClick={() => {
               haptics.light();
               onClose();
             }}
-            className="w-9 h-9 rounded-full bg-white/[0.06] hover:bg-white/[0.12] text-slate-400 hover:text-white flex items-center justify-center transition-colors cursor-pointer"
+            className="min-w-[40px] min-h-[40px] sm:min-w-[44px] sm:min-h-[44px] rounded-full bg-white/[0.08] hover:bg-white/[0.18] active:scale-95 text-slate-200 hover:text-white flex items-center justify-center border border-white/15 transition-all cursor-pointer shadow-md"
+            title="Close (Esc)"
             aria-label="Close"
           >
             <X className="w-5 h-5" />
@@ -140,7 +158,7 @@ export default function PlatformPriceComparisonModal({
         </div>
 
         {/* Modal Body */}
-        <div className="p-5 sm:p-6 space-y-6 overflow-y-auto">
+        <div className="p-4 sm:p-6 space-y-6 overflow-y-auto flex-1">
           
           {/* Quick SKU Switcher Search */}
           <div className="relative">

@@ -1,6 +1,7 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { CATALOG_PRODUCTS } from "../data/catalog";
 import { Product } from "../types";
+import { haptics } from "../utils/haptics";
 import { 
   X, 
   Send, 
@@ -27,6 +28,16 @@ export default function BroadcastStudioModal({
   const [preset, setPreset] = useState<BroadcastPreset>("top-margin");
   const [copied, setCopied] = useState(false);
   const [tab, setTab] = useState<"preview" | "api-guide" | "csv">("preview");
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    if (isOpen) {
+      window.addEventListener("keydown", handleKeyDown);
+    }
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [isOpen, onClose]);
 
   if (!isOpen) return null;
 
@@ -119,33 +130,45 @@ export default function BroadcastStudioModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-xl flex items-center justify-center p-4 overflow-y-auto animate-in fade-in duration-200">
-      <div className="relative w-full max-w-3xl bg-obsidian-900 border border-white/10 rounded-3xl shadow-2xl overflow-hidden my-6">
+    <div 
+      className="fixed inset-0 z-50 bg-black/85 backdrop-blur-xl flex items-center justify-center p-2 sm:p-4 overflow-hidden animate-in fade-in duration-200"
+      onClick={onClose}
+    >
+      <div 
+        onClick={(e) => e.stopPropagation()}
+        className="relative w-full max-w-3xl bg-obsidian-900 border border-white/10 rounded-2xl sm:rounded-3xl shadow-2xl overflow-hidden my-auto flex flex-col max-h-[92dvh] sm:max-h-[90vh] backdrop-blur-2xl"
+      >
         
-        {/* Header */}
-        <div className="p-6 bg-gradient-to-r from-obsidian-900 via-obsidian-850 to-obsidian-900 border-b border-white/10 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-brand-orange/15 border border-brand-orange/30 flex items-center justify-center text-brand-orange">
+        {/* Sticky Header */}
+        <div className="p-4 sm:p-5 bg-gradient-to-r from-obsidian-900 via-obsidian-850 to-obsidian-900 border-b border-white/10 flex items-center justify-between shrink-0 sticky top-0 z-30">
+          <div className="flex items-center gap-3 min-w-0 pr-2">
+            <div className="w-10 h-10 rounded-full bg-brand-orange/15 border border-brand-orange/30 flex items-center justify-center text-brand-orange shrink-0">
               <Share2 className="w-5 h-5" />
             </div>
-            <div>
-              <h3 className="font-bold text-white text-base flex items-center gap-2">
-                <span>WhatsApp Catalog Broadcast Studio</span>
-                <span className="px-2 py-0.5 rounded-full bg-brand-orange/20 text-brand-orange text-[10px] font-mono">1AA Outreach</span>
+            <div className="min-w-0">
+              <h3 className="font-bold text-white text-sm sm:text-base flex items-center gap-2 flex-wrap">
+                <span className="truncate">WhatsApp Catalog Broadcast</span>
+                <span className="px-2 py-0.5 rounded-full bg-brand-orange/20 text-brand-orange text-[10px] font-mono shrink-0">1AA Outreach</span>
               </h3>
-              <p className="text-xs text-slate-400">Broadcast deals, new arrivals, and high-margin products to buyer groups & lists</p>
+              <p className="text-[11px] sm:text-xs text-slate-400 truncate">Broadcast deals, new arrivals, and high-margin products</p>
             </div>
           </div>
 
           <button
-            onClick={onClose}
-            className="w-8 h-8 rounded-full bg-white/[0.06] hover:bg-white/[0.12] text-slate-300 hover:text-white flex items-center justify-center transition-colors"
+            onClick={() => {
+              haptics.light();
+              onClose();
+            }}
+            className="min-w-[40px] min-h-[40px] sm:min-w-[44px] sm:min-h-[44px] rounded-full bg-white/[0.08] hover:bg-white/[0.16] text-slate-300 hover:text-white flex items-center justify-center transition-colors cursor-pointer shrink-0"
+            aria-label="Close Broadcast Studio modal"
           >
-            <X className="w-4 h-4" />
+            <X className="w-5 h-5" />
           </button>
         </div>
 
-        {/* Studio Preset Pills */}
+        {/* Scrollable Body */}
+        <div className="overflow-y-auto flex-1 pb-4">
+          {/* Studio Preset Pills */}
         <div className="p-6 pb-3 border-b border-white/[0.08] space-y-3">
           <div className="text-[11px] font-semibold text-slate-300 uppercase tracking-wider">
             Select Broadcast Audience & Focus:
@@ -292,6 +315,8 @@ def broadcast_catalog(buyer_phone_numbers, message_text):
               </div>
             </div>
           )}
+
+        </div>
 
         </div>
 

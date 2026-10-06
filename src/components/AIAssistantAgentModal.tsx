@@ -108,6 +108,14 @@ export default function AIAssistantAgentModal({
   const [isTyping, setIsTyping] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [onClose]);
+
   const toggleSpeech = (msgId: string, text: string) => {
     if (typeof window === "undefined" || !("speechSynthesis" in window)) return;
     if (speakingId === msgId) {
@@ -556,14 +564,22 @@ export default function AIAssistantAgentModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-xl flex items-center justify-center p-3 sm:p-4 overflow-y-auto animate-in fade-in duration-200">
-      <div className="relative w-full max-w-2xl bg-obsidian-900 border border-white/10 rounded-3xl shadow-2xl overflow-hidden my-auto flex flex-col h-[88vh] max-h-[760px] backdrop-blur-2xl">
+    <div 
+      className="fixed inset-0 z-50 bg-black/85 backdrop-blur-xl flex items-center justify-center p-2 sm:p-4 overflow-hidden animate-in fade-in duration-200"
+      onClick={(e) => {
+        if (e.target === e.currentTarget) {
+          haptics.light();
+          onClose();
+        }
+      }}
+    >
+      <div className="relative w-full max-w-2xl bg-obsidian-900 border border-white/10 rounded-2xl sm:rounded-3xl shadow-2xl overflow-hidden flex flex-col h-[92dvh] sm:h-[88vh] max-h-[780px] backdrop-blur-2xl">
         
         {/* Apple-Style Glass Chat Header */}
-        <div className="p-4 sm:p-5 bg-gradient-to-r from-obsidian-900 via-obsidian-850 to-obsidian-900 border-b border-white/10 flex items-center justify-between shrink-0">
+        <div className="sticky top-0 z-30 shrink-0 px-4 py-3 sm:px-5 sm:py-3.5 bg-obsidian-950/95 backdrop-blur-md border-b border-white/10 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="relative">
-              <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-brand-blue to-brand-orange p-0.5 shadow-glow-orange">
+              <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-brand-blue to-brand-orange p-0.5 shadow-glow-orange shrink-0">
                 <div className="w-full h-full rounded-2xl bg-obsidian-950 flex items-center justify-center text-white">
                   <Bot className="w-5 h-5 text-brand-orange" />
                 </div>
@@ -573,9 +589,9 @@ export default function AIAssistantAgentModal({
 
             <div>
               <div className="flex items-center gap-2">
-                <h3 className="font-bold text-white text-sm sm:text-base">1AA Sourcing AI Agent</h3>
+                <h3 className="font-bold text-white text-xs sm:text-sm">1AA Sourcing AI Agent</h3>
                 <span className="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 text-[10px] font-mono font-bold">
-                  Mysore Hub Active
+                  Mysore Hub
                 </span>
               </div>
               <p className="text-[11px] text-slate-400">225+ Factory SKUs • SLA Delivery • Human Escalation</p>
@@ -597,13 +613,16 @@ export default function AIAssistantAgentModal({
             </a>
 
             <button
+              type="button"
               onClick={() => {
                 haptics.light();
                 onClose();
               }}
-              className="w-8 h-8 rounded-full bg-white/[0.06] hover:bg-white/[0.12] text-slate-300 hover:text-white flex items-center justify-center transition-colors cursor-pointer"
+              className="min-w-[40px] min-h-[40px] sm:min-w-[44px] sm:min-h-[44px] rounded-full bg-white/[0.08] hover:bg-white/[0.18] active:scale-95 text-slate-200 hover:text-white flex items-center justify-center border border-white/15 transition-all cursor-pointer shadow-md"
+              title="Close (Esc)"
+              aria-label="Close"
             >
-              <X className="w-4 h-4" />
+              <X className="w-5 h-5" />
             </button>
           </div>
         </div>
