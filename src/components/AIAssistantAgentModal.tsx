@@ -21,7 +21,10 @@ import {
   Eye,
   Check,
   Navigation,
-  Radio
+  Radio,
+  Volume2,
+  VolumeX,
+  Languages
 } from "lucide-react";
 
 interface AIAssistantAgentModalProps {
@@ -91,17 +94,40 @@ export default function AIAssistantAgentModal({
   const [input, setInput] = useState("");
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [addedSku, setAddedSku] = useState<string | null>(null);
+  const [selectedLang, setSelectedLang] = useState<"en" | "hi" | "kn" | "ta">("en");
+  const [speakingId, setSpeakingId] = useState<string | null>(null);
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
       id: "welcome-1",
       sender: "agent",
-      text: "Hello! 👋 I am your **1AA Sourcing AI Agent** live from our Mysore Central Facility.\n\nI can help you:\n• Explore **trending toys & STEM games** (81+ factory SKUs)\n• Calculate **wholesale carton profits** & margins\n• Check **exact delivery transit times** for your city\n• Arrange **pre-dispatch bench QA tested samples**\n• Verify **Abdul Darvesh (Axis Bank & UPI)** remittance\n• Connect you directly with senior management on WhatsApp",
+      text: "Hello! 👋 I am your **1AA Sourcing AI Agent** live from our Mysore Central Facility.\n\nI can help you:\n• Explore **trending toys & STEM games** (87 factory SKUs)\n• Calculate **wholesale carton profits** & margins\n• Check **exact delivery transit times** for your city\n• Arrange **pre-dispatch bench QA tested samples**\n• Verify **Abdul Darvesh (Axis Bank & UPI)** remittance\n• Connect you directly with senior management on WhatsApp",
       time: "Just now",
       actionType: "delivery",
     }
   ]);
   const [isTyping, setIsTyping] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  const toggleSpeech = (msgId: string, text: string) => {
+    if (typeof window === "undefined" || !("speechSynthesis" in window)) return;
+    if (speakingId === msgId) {
+      window.speechSynthesis.cancel();
+      setSpeakingId(null);
+      return;
+    }
+    window.speechSynthesis.cancel();
+    const cleanText = text.replace(/[*#_`•]/g, " ");
+    const utterance = new SpeechSynthesisUtterance(cleanText);
+    if (selectedLang === "hi") utterance.lang = "hi-IN";
+    else if (selectedLang === "kn") utterance.lang = "kn-IN";
+    else if (selectedLang === "ta") utterance.lang = "ta-IN";
+    else utterance.lang = "en-IN";
+
+    utterance.onend = () => setSpeakingId(null);
+    utterance.onerror = () => setSpeakingId(null);
+    setSpeakingId(msgId);
+    window.speechSynthesis.speak(utterance);
+  };
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -115,20 +141,51 @@ export default function AIAssistantAgentModal({
 
   if (!isOpen) return null;
 
-  // Quick Action Chips
-  const quickChips = [
-    { label: "🛰️ Track My Package (Live Radar)", query: "How do I track my package in real-time?" },
-    { label: "🧸 Trending Toys (81 SKUs)", query: "What are the trending toys?" },
-    { label: "🚀 High Margin Items (>58%)", query: "Show me high margin products for resellers" },
-    { label: "⚡ Smart Tech & Electronics", query: "Show me electronics and smart tech gadgets" },
-    { label: "🍳 Kitchen & Utility", query: "Show me popular kitchen and home utility items" },
-    { label: "🚚 Delivery Timelines", query: "What are your delivery timelines?" },
-    { label: "📍 Check City Transit ETA", query: "Check delivery transit time for my city" },
-    { label: "💰 Cost + ₹100 Model", query: "How does your pricing model work?" },
-    { label: "📦 Sample Pack & Bench QA", query: "Can I order 1 piece sample first?" },
-    { label: "🏦 Bank Remittance & UPI QR", query: "What are your verified payment details?" },
-    { label: "👤 Speak with Abdul Darvesh", query: "I want to talk to Abdul Darvesh directly" },
-  ];
+  // Multilingual Quick Action Chips
+  const MULTILINGUAL_CHIPS: Record<"en" | "hi" | "kn" | "ta", { label: string; query: string }[]> = {
+    en: [
+      { label: "🛰️ Track My Package (Live Radar)", query: "How do I track my package in real-time?" },
+      { label: "🧸 Trending Toys (87 SKUs)", query: "What are the trending toys?" },
+      { label: "🚀 High Margin Items (>58%)", query: "Show me high margin products for resellers" },
+      { label: "⚡ Smart Tech & Electronics", query: "Show me electronics and smart tech gadgets" },
+      { label: "🍳 Kitchen & Utility", query: "Show me popular kitchen and home utility items" },
+      { label: "🚚 Delivery Timelines", query: "What are your delivery timelines?" },
+      { label: "📍 Check City Transit ETA", query: "Check delivery transit time for my city" },
+      { label: "💰 Cost + ₹100 Model", query: "How does your pricing model work?" },
+      { label: "📦 Sample Pack & Bench QA", query: "Can I order 1 piece sample first?" },
+      { label: "🏦 Bank Remittance & UPI QR", query: "What are your verified payment details?" },
+      { label: "👤 Speak with Abdul Darvesh", query: "I want to talk to Abdul Darvesh directly" },
+    ],
+    hi: [
+      { label: "🛰️ पार्सल लाइव ट्रैक करें", query: "मेरा पार्सल लाइव कैसे ट्रैक करें?" },
+      { label: "🧸 ट्रेंडिंग खिलौने (87 SKUs)", query: "ट्रेंडिंग खिलौने कौन से हैं?" },
+      { label: "🚀 ज्यादा मुनाफे वाले प्रोडक्ट्स (>58%)", query: "रीसेलर के लिए ज्यादा मुनाफे वाले प्रोडक्ट्स दिखाएं" },
+      { label: "🚚 डिलीवरी का समय व SLA", query: "डिलीवरी का समय और नियम क्या हैं?" },
+      { label: "📦 1 पीस सैंपल ऑर्डर करें", query: "क्या मैं पहले 1 पीस सैंपल मंगा सकता हूँ?" },
+      { label: "🏦 बैंक व UPI QR डिटेल्स", query: "अब्दुल दरवेश का बैंक खाता और UPI डिटेल बताएं" },
+      { label: "👤 अब्दुल दरवेश से बात करें", query: "मुझे अब्दुल दरवेश से सीधे बात करनी है" },
+    ],
+    kn: [
+      { label: "🛰️ ಲೈವ್ ಪಾರ್ಸೆಲ್ ಟ್ರ್ಯಾಕ್ ಮಾಡಿ", query: "ನನ್ನ ಪಾರ್ಸೆಲ್ ಅನ್ನು ಲೈವ್ ಟ್ರ್ಯಾಕ್ ಮಾಡುವುದು ಹೇಗೆ?" },
+      { label: "🧸 ಟ್ರೆಂಡಿಂಗ್ ಆಟಿಕೆಗಳು (87 SKUs)", query: "ಟ್ರೆಂಡಿಂಗ್ ಆಟಿಕೆಗಳನ್ನು ತೋರಿಸಿ" },
+      { label: "🚀 ಅತಿ ಹೆಚ್ಚು ಲಾಭದ ಐಟಂಗಳು", query: "ಹೆಚ್ಚು ಲಾಭದ ಪ್ರಾಡಕ್ಟ್‌ಗಳನ್ನು ತೋರಿಸಿ" },
+      { label: "🚚 ವಿತರಣಾ ಸಮಯ (10-15 ದಿನಗಳು)", query: "ಡೆಲಿವರಿ ಸಮಯ ಎಷ್ಟು ದಿನ?" },
+      { label: "📦 1 ಪೀಸ್ ಸ್ಯಾಂಪಲ್ ಆರ್ಡರ್", query: "ನಾನು ಮೊದಲು 1 ಪೀಸ್ ಸ್ಯಾಂಪಲ್ ಪಡೆಯಬಹುದೇ?" },
+      { label: "🏦 ಬ್ಯಾಂಕ್ & UPI ವಿವರಗಳು", query: "ಅಬ್ದುಲ್ ದರ್ವೇಶ್ ಅವರ ಬ್ಯಾಂಕ್ ವಿವರ ತಿಳಿಸಿ" },
+      { label: "👤 ಅಬ್ದುಲ್ ದರ್ವೇಶ್ ಅವರೊಂದಿಗೆ ಮಾತನಾಡಿ", query: "ನಾನು ನೇರವಾಗಿ ಅಬ್ದುಲ್ ದರ್ವೇಶ್ ಅವರೊಂದಿಗೆ ಮಾತನಾಡಬೇಕು" },
+    ],
+    ta: [
+      { label: "🛰️ பார்சல் லைவ் டிராக்கிங்", query: "எனது பார்சலை லைவாக டிராக்கிங் செய்வது எப்படி?" },
+      { label: "🧸 டிரெண்டிங் பொம்மைகள் (87 SKUs)", query: "டிரெண்டிங் பொம்மைகளைக் காட்டுங்கள்" },
+      { label: "🚀 அதிக லாபம் தரும் பொருட்கள்", query: "அதிக லாபம் தரும் பொருட்களைக் காட்டுங்கள்" },
+      { label: "🚚 டெலிவரி நேரம் & SLA", query: "டெலிவரி கால அளவு என்ன?" },
+      { label: "📦 1 பீஸ் மாதிரி ஆர்டர்", query: "நான் 1 பீஸ் மாதிரி ஆர்டர் செய்யலாமா?" },
+      { label: "🏦 வங்கி & UPI விவரம்", query: "அப்துல் தர்வேஷ் வங்கி மற்றும் UPI விவரங்கள் என்ன?" },
+      { label: "👤 அப்துல் தர்வேஷிடம் பேசவும்", query: "அப்துல் தர்வேஷிடம் நேரடியாக பேச வேண்டும்" },
+    ],
+  };
+
+  const quickChips = MULTILINGUAL_CHIPS[selectedLang] || MULTILINGUAL_CHIPS.en;
 
   // Natural Language Understanding & Answer Generation
   const processQuery = (userQuery: string): Partial<ChatMessage> => {
@@ -796,9 +853,20 @@ export default function AIAssistantAgentModal({
                     </div>
                   )}
 
-                  {/* Copy Text Button */}
+                  {/* Copy & Speech Buttons */}
                   {m.sender === "agent" && (
-                    <div className="mt-2.5 flex items-center justify-end">
+                    <div className="mt-2.5 flex items-center justify-end gap-3">
+                      <button
+                        onClick={() => toggleSpeech(m.id, m.text)}
+                        className={`text-[10px] flex items-center gap-1 transition-colors cursor-pointer ${
+                          speakingId === m.id ? "text-brand-orange font-bold animate-pulse" : "text-slate-500 hover:text-slate-300"
+                        }`}
+                        title="Listen to response (Voice Readout)"
+                      >
+                        {speakingId === m.id ? <VolumeX className="w-3 h-3 text-brand-orange" /> : <Volume2 className="w-3 h-3" />}
+                        <span>{speakingId === m.id ? "Stop Voice" : "Listen"}</span>
+                      </button>
+
                       <button
                         onClick={() => copyToClipboard(m.text, m.id)}
                         className="text-[10px] text-slate-500 hover:text-slate-300 flex items-center gap-1 transition-colors cursor-pointer"
@@ -840,6 +908,37 @@ export default function AIAssistantAgentModal({
           )}
 
           <div ref={messagesEndRef} />
+        </div>
+
+        {/* Multilingual Selector Bar */}
+        <div className="px-4 py-2 border-t border-white/[0.08] bg-obsidian-950/90 flex items-center justify-between gap-2 shrink-0">
+          <div className="flex items-center gap-1.5 text-xs text-slate-400">
+            <Languages className="w-3.5 h-3.5 text-brand-orange" />
+            <span className="font-semibold text-white text-[11px]">AI Language:</span>
+          </div>
+          <div className="flex items-center gap-1.5">
+            {[
+              { id: "en", label: "English" },
+              { id: "hi", label: "हिंदी" },
+              { id: "kn", label: "ಕನ್ನಡ" },
+              { id: "ta", label: "தமிழ்" },
+            ].map((lang) => (
+              <button
+                key={lang.id}
+                onClick={() => {
+                  haptics.selection();
+                  setSelectedLang(lang.id as any);
+                }}
+                className={`px-2.5 py-0.5 rounded-full text-[11px] font-bold transition-all cursor-pointer ${
+                  selectedLang === lang.id
+                    ? "bg-brand-orange text-obsidian-950 shadow-glow-orange"
+                    : "bg-white/[0.04] text-slate-400 hover:text-white border border-white/10"
+                }`}
+              >
+                {lang.label}
+              </button>
+            ))}
+          </div>
         </div>
 
         {/* Quick Suggestion Pills */}

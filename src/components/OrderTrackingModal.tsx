@@ -22,7 +22,8 @@ import {
   Boxes,
   Thermometer,
   Phone,
-  MessageSquare
+  MessageSquare,
+  Share2
 } from "lucide-react";
 
 interface OrderTrackingModalProps {
@@ -141,6 +142,16 @@ export default function OrderTrackingModal({
   const handlePrintManifest = () => {
     haptics.selection();
     window.print();
+  };
+
+  const handleShareTrackingLink = () => {
+    if (!activeTracking) return;
+    haptics.success();
+    const url = typeof window !== "undefined"
+      ? `${window.location.origin}/?track=${encodeURIComponent(activeTracking.orderRef)}`
+      : `https://1aa-store.vercel.app/?track=${encodeURIComponent(activeTracking.orderRef)}`;
+    navigator.clipboard.writeText(url);
+    handleCopy(url, "share_url");
   };
 
   return (
@@ -320,6 +331,15 @@ export default function OrderTrackingModal({
                     }`}>
                       {activeTracking.deliverySpeed === "express" ? "⚡ Express Air (<7 Days)" : "🚛 Surface Freight (10–15 Days)"}
                     </span>
+
+                    <button
+                      onClick={handleShareTrackingLink}
+                      className="px-3 py-1.5 rounded-full bg-white/[0.08] hover:bg-white/[0.15] text-slate-200 hover:text-white border border-white/15 text-xs font-bold font-mono flex items-center gap-1.5 transition-all cursor-pointer"
+                      title="Copy deep tracking link for WhatsApp / SMS"
+                    >
+                      {copiedText === "share_url" ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Share2 className="w-3.5 h-3.5 text-brand-orange" />}
+                      <span>{copiedText === "share_url" ? "Link Copied!" : "Share Link"}</span>
+                    </button>
                   </div>
                 </div>
 

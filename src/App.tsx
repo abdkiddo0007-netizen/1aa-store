@@ -19,6 +19,8 @@ import DeliveryTransitModal from "./components/DeliveryTransitModal";
 import OrderTrackingModal from "./components/OrderTrackingModal";
 import BarcodeLabelGeneratorModal from "./components/BarcodeLabelGeneratorModal";
 import CartonFreightModal from "./components/CartonFreightModal";
+import MasterCartonLabelModal from "./components/MasterCartonLabelModal";
+import { CurrencyCode } from "./utils/currency";
 import { handleImgError } from "./utils/imageFallback";
 import { haptics } from "./utils/haptics";
 import { 
@@ -61,7 +63,9 @@ import {
   VolumeX,
   Navigation,
   Boxes,
-  Printer
+  Printer,
+  Package,
+  Globe
 } from "lucide-react";
 
 export default function OneAAStore() {
@@ -123,6 +127,9 @@ export default function OneAAStore() {
   const [barcodeProduct, setBarcodeProduct] = useState<Product | null>(null);
   const [showFreightModal, setShowFreightModal] = useState(false);
   const [freightProduct, setFreightProduct] = useState<Product | null>(null);
+  const [showCartonLabelModal, setShowCartonLabelModal] = useState(false);
+  const [cartonLabelProduct, setCartonLabelProduct] = useState<Product | null>(null);
+  const [selectedCurrency, setSelectedCurrency] = useState<CurrencyCode>("INR");
 
   const handleOpenTracking = (orderRef?: string) => {
     haptics.light();
@@ -131,6 +138,26 @@ export default function OneAAStore() {
     }
     setShowTrackingModal(true);
   };
+
+  // Deep-link handler: automatically opens tracking modal or product view if URL has ?track=... or ?sku=...
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      try {
+        const params = new URLSearchParams(window.location.search);
+        const trackRef = params.get("track") || params.get("order") || params.get("lr");
+        if (trackRef) {
+          handleOpenTracking(trackRef);
+        }
+        const skuParam = params.get("sku");
+        if (skuParam) {
+          const found = CATALOG_PRODUCTS.find(p => p.sku.toLowerCase() === skuParam.toLowerCase());
+          if (found) {
+            setSelectedProductForModal(found);
+          }
+        }
+      } catch {}
+    }
+  }, []);
 
   // Live Mysore Dispatch Countdown Timer
   const [countdown, setCountdown] = useState({ hours: 4, minutes: 28, seconds: 15 });
@@ -448,6 +475,41 @@ export default function OneAAStore() {
                 <Boxes className="w-2.5 h-2.5 text-brand-blue-light" />
                 <span>CBM & Freight</span>
               </button>
+
+              {/* Master Carton Shipping Box Label & Stencil */}
+              <button
+                onClick={() => {
+                  haptics.light();
+                  setCartonLabelProduct(filteredAndSorted[0] || CATALOG_PRODUCTS[0]);
+                  setShowCartonLabelModal(true);
+                }}
+                className="flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-white/[0.05] hover:bg-white/[0.12] text-slate-300 hover:text-white border border-white/10 text-[10px] font-semibold transition-all cursor-pointer"
+                title="Print 4x6 inch outer master carton shipping labels with handling stencils"
+              >
+                <Package className="w-2.5 h-2.5 text-brand-orange" />
+                <span>Box Shipping Labels</span>
+              </button>
+
+              {/* Multi-Currency Global Sourcing Selector */}
+              <div className="flex items-center gap-1 bg-white/[0.04] px-2 py-0.5 rounded-full border border-white/10 text-[10px]">
+                <Globe className="w-2.5 h-2.5 text-brand-orange" />
+                <select
+                  value={selectedCurrency}
+                  onChange={(e) => {
+                    haptics.selection();
+                    setSelectedCurrency(e.target.value as CurrencyCode);
+                  }}
+                  className="bg-transparent text-white font-mono font-bold text-[10px] outline-none cursor-pointer"
+                  title="Change Currency (INR, USD, AED, SAR, EUR, GBP)"
+                >
+                  <option value="INR" className="bg-obsidian-900 text-white">🇮🇳 INR (₹)</option>
+                  <option value="USD" className="bg-obsidian-900 text-white">🇺🇸 USD ($)</option>
+                  <option value="AED" className="bg-obsidian-900 text-white">🇦🇪 AED (د.إ)</option>
+                  <option value="SAR" className="bg-obsidian-900 text-white">🇸🇦 SAR (ر.س)</option>
+                  <option value="EUR" className="bg-obsidian-900 text-white">🇪🇺 EUR (€)</option>
+                  <option value="GBP" className="bg-obsidian-900 text-white">🇬🇧 GBP (£)</option>
+                </select>
+              </div>
 
               {/* Sound FX Toggle */}
               <button
@@ -1965,6 +2027,17 @@ export default function OneAAStore() {
           haptics.success();
           updateQty(sku, delta);
         }}
+      />
+
+      {/* --- MASTER CARTON SHIPPING BOX LABEL & STENCIL MODAL --- */}
+      <MasterCartonLabelModal
+        isOpen={showCartonLabelModal}
+        onClose={() => {
+          setShowCartonLabelModal(false);
+          setCartonLabelProduct(null);
+        }}
+        product={cartonLabelProduct || filteredAndSorted[0] || CATALOG_PRODUCTS[0]}
+        allProducts={CATALOG_PRODUCTS}
       />
 
       {/* --- FLOATING 1AA SOURCING AI AGENT TRIGGER --- */}
