@@ -1,5 +1,6 @@
 import { Product } from '../types';
 import { handleImgError } from '../utils/imageFallback';
+import { haptics } from '../utils/haptics';
 import { 
   X, 
   ShieldCheck, 
@@ -49,8 +50,11 @@ export default function ProductDetailModal({
         
         {/* Close Button */}
         <button
-          onClick={onClose}
-          className="absolute top-5 right-5 z-10 w-9 h-9 rounded-full bg-white/[0.08] hover:bg-white/[0.15] text-slate-300 hover:text-white flex items-center justify-center border border-white/10 transition-all"
+          onClick={() => {
+            haptics.light();
+            onClose();
+          }}
+          className="absolute top-5 right-5 z-10 w-9 h-9 rounded-full bg-white/[0.08] hover:bg-white/[0.15] text-slate-300 hover:text-white flex items-center justify-center border border-white/10 transition-all cursor-pointer"
           title="Close Modal"
         >
           <X className="w-4 h-4" />
@@ -77,14 +81,28 @@ export default function ProductDetailModal({
             </div>
 
             {/* Quick Assurance Badges */}
-            <div className="grid grid-cols-2 gap-2.5 mt-6 text-[11px]">
-              <div className="p-3 bg-white/[0.03] rounded-2xl border border-white/[0.06] flex items-center gap-2 text-slate-300">
-                <ShieldCheck className="w-4 h-4 text-brand-blue-light shrink-0" />
-                <span>{product.warranty || 'QA Tested'}</span>
+            <div className="space-y-2.5 mt-6">
+              <div className="grid grid-cols-2 gap-2.5 text-[11px]">
+                <div className="p-3 bg-white/[0.03] rounded-2xl border border-white/[0.06] flex items-center gap-2 text-slate-300">
+                  <ShieldCheck className="w-4 h-4 text-brand-blue-light shrink-0" />
+                  <span>{product.warranty || 'QA Tested'}</span>
+                </div>
+                <div className="p-3 bg-white/[0.03] rounded-2xl border border-white/[0.06] flex items-center gap-2 text-slate-300">
+                  <Truck className="w-4 h-4 text-brand-orange shrink-0" />
+                  <span>{product.leadTime || 'Ready Stock'}</span>
+                </div>
               </div>
-              <div className="p-3 bg-white/[0.03] rounded-2xl border border-white/[0.06] flex items-center gap-2 text-slate-300">
-                <Truck className="w-4 h-4 text-brand-orange shrink-0" />
-                <span>{product.leadTime || 'Ready Stock'}</span>
+
+              {/* Delivery Timeline SLA Card */}
+              <div className="p-3.5 rounded-2xl bg-gradient-to-r from-brand-orange/15 via-white/[0.03] to-brand-blue/15 border border-brand-orange/30 space-y-1 text-left">
+                <div className="flex items-center gap-2 text-white font-bold text-xs">
+                  <Truck className="w-4 h-4 text-brand-orange shrink-0" />
+                  <span>Delivery SLA: 10–15 Days</span>
+                  <span className="px-1.5 py-0.5 rounded text-[9px] bg-brand-orange text-obsidian-950 font-black">Express &lt;7d</span>
+                </div>
+                <div className="text-[11px] text-slate-300 leading-snug">
+                  Shipment starts <strong>immediately post payment confirmation</strong>. 100% bench inspected in Mysore prior to dispatch.
+                </div>
               </div>
             </div>
           </div>
@@ -157,8 +175,11 @@ export default function ProductDetailModal({
 
                 {onOpenCalculator && (
                   <button
-                    onClick={() => onOpenCalculator(product)}
-                    className="w-full mt-2 py-2 px-3 rounded-xl bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-500/30 text-emerald-300 font-semibold text-[11px] flex items-center justify-center gap-1.5 transition-colors"
+                    onClick={() => {
+                      haptics.light();
+                      onOpenCalculator(product);
+                    }}
+                    className="w-full mt-2 py-2 px-3 rounded-xl bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-500/30 text-emerald-300 font-semibold text-[11px] flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
                   >
                     <Calculator className="w-3.5 h-3.5 text-emerald-400" />
                     <span>Calculate Reseller Profit & Margins</span>
@@ -218,9 +239,12 @@ export default function ProductDetailModal({
                   <span className="text-xs text-slate-400 font-medium">Quantity:</span>
                   <div className="flex items-center gap-1 bg-white/[0.05] border border-white/10 rounded-full p-1">
                     <button
-                      onClick={() => onUpdateQty(product.sku, -1)}
+                      onClick={() => {
+                        haptics.medium();
+                        onUpdateQty(product.sku, -1);
+                      }}
                       disabled={currentQty === 0}
-                      className="w-8 h-8 rounded-full bg-white/[0.08] hover:bg-white/[0.15] text-white font-bold text-sm disabled:opacity-30 flex items-center justify-center transition-colors"
+                      className="w-8 h-8 rounded-full bg-white/[0.08] hover:bg-white/[0.15] text-white font-bold text-sm disabled:opacity-30 flex items-center justify-center transition-colors cursor-pointer"
                     >
                       -
                     </button>
@@ -228,8 +252,11 @@ export default function ProductDetailModal({
                       {currentQty}
                     </span>
                     <button
-                      onClick={() => onUpdateQty(product.sku, 1)}
-                      className="w-8 h-8 rounded-full bg-brand-orange hover:bg-brand-orange-dark text-obsidian-950 font-black text-sm flex items-center justify-center transition-colors shadow-glow-orange"
+                      onClick={() => {
+                        haptics.medium();
+                        onUpdateQty(product.sku, 1);
+                      }}
+                      className="w-8 h-8 rounded-full bg-brand-orange hover:bg-brand-orange-dark text-obsidian-950 font-black text-sm flex items-center justify-center transition-colors shadow-glow-orange cursor-pointer"
                     >
                       +
                     </button>
@@ -237,8 +264,11 @@ export default function ProductDetailModal({
                 </div>
 
                 <button
-                  onClick={() => onUpdateQty(product.sku, product.cartonSize)}
-                  className="px-4 py-2.5 bg-white/[0.05] hover:bg-brand-orange hover:text-obsidian-950 border border-white/10 hover:border-brand-orange rounded-full text-xs font-semibold text-white transition-all flex items-center gap-1.5"
+                  onClick={() => {
+                    haptics.success();
+                    onUpdateQty(product.sku, product.cartonSize);
+                  }}
+                  className="px-4 py-2.5 bg-white/[0.05] hover:bg-brand-orange hover:text-obsidian-950 border border-white/10 hover:border-brand-orange rounded-full text-xs font-semibold text-white transition-all flex items-center gap-1.5 cursor-pointer"
                 >
                   <Layers className="w-3.5 h-3.5 text-brand-orange" />
                   +1 Carton ({product.cartonSize}x)

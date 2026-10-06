@@ -1,16 +1,17 @@
 import { ActiveOrderItem, OrderMetrics } from '../types';
 import OneAALogo from './OneAALogo';
+import { haptics } from '../utils/haptics';
 import { 
   X, 
   Printer, 
-  ShieldCheck, 
   FileText, 
   Phone, 
   Mail, 
   MapPin, 
   Calendar, 
   CheckCircle2, 
-  Building2 
+  Building2,
+  Truck 
 } from 'lucide-react';
 
 interface ProformaInvoiceModalProps {
@@ -54,15 +55,21 @@ export default function ProformaInvoiceModal({
           </div>
           <div className="flex items-center gap-3">
             <button
-              onClick={() => window.print()}
-              className="px-5 py-2 bg-gradient-to-r from-brand-orange to-brand-orange-light text-obsidian-950 font-bold text-xs rounded-full flex items-center gap-1.5 transition-all shadow-glow-orange hover:brightness-105"
+              onClick={() => {
+                haptics.selection();
+                window.print();
+              }}
+              className="px-5 py-2 bg-gradient-to-r from-brand-orange to-brand-orange-light text-obsidian-950 font-bold text-xs rounded-full flex items-center gap-1.5 transition-all shadow-glow-orange hover:brightness-105 active:scale-95"
             >
               <Printer className="w-3.5 h-3.5" />
               Print / Save PDF
             </button>
             <button
-              onClick={onClose}
-              className="w-8 h-8 rounded-full bg-white/[0.06] hover:bg-white/[0.12] text-slate-400 hover:text-white flex items-center justify-center border border-white/10 transition-colors"
+              onClick={() => {
+                haptics.light();
+                onClose();
+              }}
+              className="w-8 h-8 rounded-full bg-white/[0.06] hover:bg-white/[0.12] text-slate-400 hover:text-white flex items-center justify-center border border-white/10 transition-colors active:scale-90"
             >
               <X className="w-4 h-4" />
             </button>
@@ -121,12 +128,12 @@ export default function ProformaInvoiceModal({
 
             <div className="p-5 bg-white/[0.02] rounded-2xl border border-white/[0.06] space-y-2">
               <div className="font-bold text-white text-xs uppercase tracking-wider flex items-center gap-2 mb-2 text-slate-300">
-                <ShieldCheck className="w-4 h-4 text-brand-orange" />
-                Dispatch Guarantee
+                <Truck className="w-4 h-4 text-brand-orange" />
+                Delivery SLA & Dispatch Terms
               </div>
-              <div className="text-slate-300">Quality Inspection: <strong className="text-emerald-400">100% Pre-Dispatch Verified</strong></div>
-              <div className="text-slate-300">Transit Partner: <strong className="text-white">BlueDart / Delhivery Surface Express</strong></div>
-              <div className="text-slate-300">Insurance: <strong className="text-white">100% Pan-India In-Transit Cover</strong></div>
+              <div className="text-slate-300">Delivery SLA: <strong className="text-brand-orange">10–15 Days Standard (Within 7 Days Express)</strong></div>
+              <div className="text-slate-300">Shipment Status: <strong className="text-emerald-400">Initiates immediately post payment</strong></div>
+              <div className="text-slate-300">Transit Partner: <strong className="text-white">BlueDart / Delhivery Surface & Air Freight</strong></div>
             </div>
           </div>
 
@@ -273,7 +280,7 @@ export default function ProformaInvoiceModal({
               <div>1. Connect via WhatsApp with Quotation Reference (#{invoiceNumber}).</div>
               <div>2. Dedicated Dispatch Officer confirms volumetric weight & transport waybill.</div>
               <div>3. Remit directly to Abdul Darvesh (Axis Bank A/C: 922010002282280, UPI: 7406231167@axisbank).</div>
-              <div>4. Same-day insured dispatch from Mysore Hub with tracking docket shared instantly.</div>
+              <div>4. Delivery SLA: 10–15 Days Standard (Within 7 Days Express) post-payment. Shipment begins immediately once payment is verified.</div>
             </div>
           </div>
 
