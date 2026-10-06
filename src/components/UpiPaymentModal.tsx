@@ -13,7 +13,8 @@ import {
   Mail,
   FileText
 } from "lucide-react";
-import { ActiveOrderItem } from "../types";
+import { ActiveOrderItem, SavedOrder } from "../types";
+import { haptics } from "../utils/haptics";
 
 interface UpiPaymentModalProps {
   isOpen: boolean;
@@ -61,7 +62,39 @@ export default function UpiPaymentModal({
   const phonepeUri = `phonepe://pay?pa=${encodeURIComponent(officialUpiId)}&pn=${encodeURIComponent(primaryAccountHolder)}&am=${finalAmount}&cu=INR&tn=${encodeURIComponent(note)}`;
   const paytmUri = `paytmmp://pay?pa=${encodeURIComponent(officialUpiId)}&pn=${encodeURIComponent(primaryAccountHolder)}&am=${finalAmount}&cu=INR&tn=${encodeURIComponent(note)}`;
 
+  const totalUnits = items.reduce((sum, item) => sum + item.quantity, 0);
+  const totalMarket = items.reduce((sum, item) => sum + item.product.marketPrice * item.quantity, 0);
+  const totalSavings = totalMarket - finalAmount;
+
+  const saveCurrentOrderToHistory = () => {
+    try {
+      if (typeof window !== "undefined") {
+        const raw = localStorage.getItem("1aa_saved_orders");
+        const existing: SavedOrder[] = raw ? JSON.parse(raw) : [];
+        const newOrder: SavedOrder = {
+          id: `order-${Date.now()}`,
+          orderRef,
+          date: new Date().toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" }),
+          items: items.map(i => ({
+            sku: i.product.sku,
+            name: i.product.name,
+            quantity: i.quantity,
+            unitPrice: i.product.fairPrice,
+            total: i.total,
+          })),
+          totalAmount: finalAmount,
+          totalUnits,
+          deliverySpeed: "standard",
+          utrNumber: utrNumber || undefined,
+        };
+        const filtered = existing.filter(o => o.orderRef !== orderRef);
+        localStorage.setItem("1aa_saved_orders", JSON.stringify([newOrder, ...filtered].slice(0, 15)));
+      }
+    } catch {}
+  };
+
   const copyToClipboard = (text: string, isUpi: boolean) => {
+    haptics.selection();
     navigator.clipboard.writeText(text);
     if (isUpi) {
       setCopiedUpi(true);
@@ -71,10 +104,6 @@ export default function UpiPaymentModal({
       setTimeout(() => setCopiedBank(false), 2000);
     }
   };
-
-  const totalUnits = items.reduce((sum, item) => sum + item.quantity, 0);
-  const totalMarket = items.reduce((sum, item) => sum + item.product.marketPrice * item.quantity, 0);
-  const totalSavings = totalMarket - finalAmount;
 
   const itemsText = items.map((item, idx) => 
     `${idx + 1}. *${item.product.name}*\n   • SKU: \`${item.product.sku}\`\n   • Qty: ${item.quantity} units x ₹${item.product.fairPrice} = *₹${item.total.toLocaleString("en-IN")}* (MRP: ~₹${(item.product.marketPrice * item.quantity).toLocaleString("en-IN")}~)`
@@ -93,17 +122,23 @@ export default function UpiPaymentModal({
     `💰 *FINAL INVOICE AMOUNT: ₹${finalAmount.toLocaleString("en-IN")}*\n` +
     `🏷️ Total Savings vs Marketplace MRP: ₹${totalSavings.toLocaleString("en-IN")}\n` +
     `━━━━━━━━━━━━━━━━━━━━\n\n` +
+    `🚚 *DELIVERY TIMELINE & DISPATCH TERMS:*\n` +
+    `• Standard Surface SLA: *10–15 Days* post-payment\n` +
+    `• Express Priority Air SLA: *Within 7 Days* post-payment\n` +
+    `• Dispatch Status: *Shipment initiates immediately once payment is verified*\n` +
+    `• Quality Check: *100% Pre-Dispatch bench tested at Mysore Central Hub*\n` +
+    `━━━━━━━━━━━━━━━━━━━━\n\n` +
     `🏦 *VERIFIED PAYMENT & REMITTANCE:*\n` +
     `• Account Holder: *${primaryAccountHolder}*\n` +
     `• Bank: *${bankName}*\n` +
     `• Account No: *${accountNumber}*\n` +
     `• IFSC Code: *${ifscCode}* (${accountType})\n` +
     `• Official UPI ID: *${officialUpiId}*\n` +
-    `• UPI Ref / UTR No: ${utrNumber ? `*${utrNumber}*` : "Attached in screenshot below"}\n` +
+    `• UPI Ref / UTR No: ${utrNumber ? `*${utrNumber}*` : "Attached in payment screenshot"}\n` +
     `━━━━━━━━━━━━━━━━━━━━\n\n` +
     `📍 *CENTRAL DISPATCH DESTINATION:*\n` +
-    `Mysore Central Hub -> Express Surface / Air Cargo\n` +
-    `Please confirm receipt, verify credit, and release bench QA docket!`;
+    `Mysore Central Hub -> Express BlueDart / Delhivery Surface & Air Cargo\n` +
+    `Please confirm receipt, verify remittance, and release bench QA docket!`;
 
   const whatsappUrl = `https://wa.me/91${selectedHotline}?text=${encodeURIComponent(whatsappInvoiceMessage)}`;
 
@@ -117,6 +152,11 @@ export default function UpiPaymentModal({
     `Date: ${new Date().toLocaleDateString("en-IN")}\n` +
     `Total Units: ${totalUnits} units\n` +
     `Total Invoice Amount: Rs. ${finalAmount.toLocaleString("en-IN")}\n\n` +
+    `DELIVERY SLA & DISPATCH TERMS:\n` +
+    `• Standard Surface: 10–15 Days post-payment\n` +
+    `• Express Priority Air: Within 7 Days post-payment\n` +
+    `• Shipment starts immediately once payment is confirmed.\n` +
+    `• Transit Logistics: BlueDart / Delhivery Surface & Air Freight\n\n` +
     `PAYMENT & REMITTANCE DETAILS:\n` +
     `Account Holder: ${primaryAccountHolder}\n` +
     `Bank Name: ${bankName}\n` +
@@ -132,6 +172,8 @@ export default function UpiPaymentModal({
 
   const handleSendEmail = () => {
     if (!customerEmail) return;
+    haptics.selection();
+    saveCurrentOrderToHistory();
     const mailto = `mailto:${encodeURIComponent(customerEmail)}?subject=${encodeURIComponent(emailSubject)}&body=${encodeURIComponent(emailBody)}`;
     window.location.href = mailto;
     setEmailSent(true);
@@ -455,8 +497,12 @@ export default function UpiPaymentModal({
               href={whatsappUrl}
               target="_blank"
               rel="noreferrer"
-              onClick={onClose}
-              className="w-full py-3.5 px-4 rounded-full bg-gradient-to-r from-emerald-500 via-teal-500 to-emerald-600 hover:brightness-110 text-obsidian-950 font-black text-xs uppercase tracking-wider text-center flex items-center justify-center gap-2 shadow-2xl transition-all cursor-pointer"
+              onClick={() => {
+                haptics.success();
+                saveCurrentOrderToHistory();
+                onClose();
+              }}
+              className="w-full py-3.5 px-4 rounded-full bg-gradient-to-r from-emerald-500 via-teal-500 to-emerald-600 hover:brightness-110 text-obsidian-950 font-black text-xs uppercase tracking-wider text-center flex items-center justify-center gap-2 shadow-2xl transition-all cursor-pointer active:scale-95"
             >
               <span>Get Invoice Receipt & Book Dispatch on WhatsApp</span>
               <ArrowRight className="w-4 h-4" />

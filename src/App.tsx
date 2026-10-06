@@ -11,6 +11,9 @@ import UpiPaymentModal from "./components/UpiPaymentModal";
 import BroadcastStudioModal from "./components/BroadcastStudioModal";
 import BrandIntroReveal from "./components/BrandIntroReveal";
 import AIAssistantAgentModal from "./components/AIAssistantAgentModal";
+import VipLoyaltyModal from "./components/VipLoyaltyModal";
+import ResellerShareModal from "./components/ResellerShareModal";
+import SavedOrdersModal from "./components/SavedOrdersModal";
 import { handleImgError } from "./utils/imageFallback";
 import { haptics } from "./utils/haptics";
 import { 
@@ -45,7 +48,11 @@ import {
   QrCode,
   Share2,
   Play,
-  Bot
+  Bot,
+  Crown,
+  RotateCcw,
+  Volume2,
+  VolumeX
 } from "lucide-react";
 
 export default function OneAAStore() {
@@ -70,6 +77,10 @@ export default function OneAAStore() {
   const [showUpiModal, setShowUpiModal] = useState(false);
   const [showBroadcastModal, setShowBroadcastModal] = useState(false);
   const [showAiAgentModal, setShowAiAgentModal] = useState(false);
+  const [showVipModal, setShowVipModal] = useState(false);
+  const [showSavedOrdersModal, setShowSavedOrdersModal] = useState(false);
+  const [resellerShareProduct, setResellerShareProduct] = useState<Product | null>(null);
+  const [isSoundOn, setIsSoundOn] = useState(() => haptics.isSoundEnabled());
   const [forceShowIntro, setForceShowIntro] = useState(false);
   const [calcProduct, setCalcProduct] = useState<Product | null>(null);
   const [appliedCoupon, setAppliedCoupon] = useState<{ code: string; desc: string; amount: number } | null>(null);
@@ -307,6 +318,24 @@ export default function OneAAStore() {
                 <Play className="w-2.5 h-2.5 fill-brand-orange text-brand-orange" />
                 <span>Brand Intro Reveal</span>
               </button>
+
+              {/* Sound FX Toggle */}
+              <button
+                onClick={() => {
+                  const newState = haptics.toggleSound();
+                  setIsSoundOn(newState);
+                  if (newState) haptics.light();
+                }}
+                className={`flex items-center gap-1 px-2.5 py-0.5 rounded-full border text-[10px] font-semibold transition-all cursor-pointer ${
+                  isSoundOn 
+                    ? "bg-white/[0.08] text-slate-200 border-white/20" 
+                    : "bg-white/[0.02] text-slate-500 border-white/[0.06]"
+                }`}
+                title="Toggle Tactile Haptics & Sound FX"
+              >
+                {isSoundOn ? <Volume2 className="w-3 h-3 text-emerald-400" /> : <VolumeX className="w-3 h-3 text-slate-500" />}
+                <span className="hidden sm:inline">Haptics:</span> {isSoundOn ? "ON" : "OFF"}
+              </button>
               
               {/* Dual Contact Hotlines */}
               <div className="flex items-center gap-3 text-slate-300">
@@ -404,6 +433,32 @@ export default function OneAAStore() {
                   Wholesale (B2B)
                 </button>
               </div>
+
+              {/* 1AA VIP Sourcing Club Trigger */}
+              <button
+                onClick={() => {
+                  haptics.light();
+                  setShowVipModal(true);
+                }}
+                className="hidden lg:flex text-xs px-3.5 py-2 rounded-full border border-amber-500/40 bg-amber-500/10 text-amber-300 hover:bg-amber-500 hover:text-obsidian-950 font-semibold transition-all items-center gap-1.5 shadow-sm cursor-pointer"
+                title="1AA VIP Restock Club & Volume Rebates"
+              >
+                <Crown className="w-3.5 h-3.5 text-amber-400" />
+                <span>VIP Club</span>
+              </button>
+
+              {/* Saved Orders / Quick Re-Order Trigger */}
+              <button
+                onClick={() => {
+                  haptics.light();
+                  setShowSavedOrdersModal(true);
+                }}
+                className="hidden lg:flex text-xs px-3.5 py-2 rounded-full border border-blue-500/40 bg-blue-500/10 text-blue-300 hover:bg-blue-500 hover:text-white font-semibold transition-all items-center gap-1.5 shadow-sm cursor-pointer"
+                title="View Past Invoices & 1-Tap Re-Order"
+              >
+                <RotateCcw className="w-3.5 h-3.5 text-blue-400" />
+                <span>Re-Order</span>
+              </button>
 
               {/* 1AA AI Sourcing Agent Trigger */}
               <button
@@ -934,20 +989,35 @@ export default function OneAAStore() {
                             <span className="line-through">₹{product.marketPrice}</span>
                           </div>
 
-                          {/* Profit Calculator Shortcut Button */}
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              haptics.light();
-                              setCalcProduct(product);
-                              setShowCalcModal(true);
-                            }}
-                            className="w-full mt-1.5 py-1 px-2 rounded-lg bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/25 text-emerald-400 text-[10px] font-semibold flex items-center justify-center gap-1 transition-colors cursor-pointer"
-                            title="Calculate resale margin"
-                          >
-                            <Calculator className="w-3 h-3 text-emerald-400" />
-                            <span>Margin: ₹{product.marketPrice - product.fairPrice}/pc ({Math.round(((product.marketPrice - product.fairPrice) / product.marketPrice) * 100)}% ROI)</span>
-                          </button>
+                          {/* Reseller ROI & Pitch Card Buttons */}
+                          <div className="grid grid-cols-2 gap-1.5 mt-1.5">
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                haptics.light();
+                                setCalcProduct(product);
+                                setShowCalcModal(true);
+                              }}
+                              className="py-1 px-1.5 rounded-lg bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/25 text-emerald-400 text-[10px] font-semibold flex items-center justify-center gap-1 transition-colors cursor-pointer"
+                              title="Calculate resale margin & ROI"
+                            >
+                              <Calculator className="w-3 h-3 text-emerald-400" />
+                              <span>ROI (₹{product.marketPrice - product.fairPrice})</span>
+                            </button>
+
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                haptics.light();
+                                setResellerShareProduct(product);
+                              }}
+                              className="py-1 px-1.5 rounded-lg bg-brand-orange/10 hover:bg-brand-orange/20 border border-brand-orange/25 text-brand-orange text-[10px] font-semibold flex items-center justify-center gap-1 transition-colors cursor-pointer"
+                              title="Generate WhatsApp pitch card for your buyers"
+                            >
+                              <Share2 className="w-3 h-3 text-brand-orange" />
+                              <span>Pitch Card</span>
+                            </button>
+                          </div>
 
                           {/* Delivery SLA Badge on Card */}
                           <div className="flex items-center justify-between text-[10px] text-slate-400 font-mono pt-1 border-t border-white/[0.04]">
@@ -1088,7 +1158,33 @@ export default function OneAAStore() {
             </div>
           </div>
 
-          <div className="flex items-center gap-3 w-full sm:w-auto justify-end">
+          <div className="flex items-center gap-2.5 w-full sm:w-auto justify-end">
+            {/* Re-Order in Dock */}
+            <button
+              onClick={() => {
+                haptics.light();
+                setShowSavedOrdersModal(true);
+              }}
+              className="hidden lg:flex px-3.5 py-2.5 rounded-full bg-blue-500/15 border border-blue-500/30 hover:border-blue-400 text-blue-300 text-xs font-bold items-center gap-1.5 transition-all cursor-pointer"
+              title="View Past Invoices & 1-Tap Re-Order"
+            >
+              <RotateCcw className="w-3.5 h-3.5 text-blue-400" />
+              <span>Re-Order</span>
+            </button>
+
+            {/* VIP Club in Dock */}
+            <button
+              onClick={() => {
+                haptics.light();
+                setShowVipModal(true);
+              }}
+              className="hidden lg:flex px-3.5 py-2.5 rounded-full bg-amber-500/15 border border-amber-500/30 hover:border-amber-400 text-amber-300 text-xs font-bold items-center gap-1.5 transition-all cursor-pointer"
+              title="1AA VIP Restock Club & Volume Rebates"
+            >
+              <Crown className="w-3.5 h-3.5 text-amber-400" />
+              <span>VIP</span>
+            </button>
+
             {/* Ask AI in Dock */}
             <button
               onClick={() => {
@@ -1219,6 +1315,61 @@ export default function OneAAStore() {
             {/* Calculations & Checkout */}
             <div className="border-t border-white/[0.08] pt-5 space-y-4 mt-4">
               
+              {/* VIP Loyalty Restock Rebate Progress Card */}
+              {activeItems.length > 0 && (
+                <div 
+                  onClick={() => {
+                    haptics.light();
+                    setShowVipModal(true);
+                  }}
+                  className="p-3.5 rounded-2xl bg-gradient-to-r from-amber-500/10 via-brand-orange/10 to-amber-500/10 border border-amber-400/30 hover:border-amber-400/60 transition-all cursor-pointer space-y-2 group shadow-sm"
+                  title="Click to view 1AA VIP Sourcing Club & Restock Rebates"
+                >
+                  <div className="flex items-center justify-between text-[11px]">
+                    <span className="flex items-center gap-1.5 font-bold text-amber-300">
+                      <Crown className="w-3.5 h-3.5 text-amber-400" />
+                      <span>1AA VIP Restock Club</span>
+                    </span>
+                    <span className="text-[10px] text-slate-400 group-hover:text-amber-300 transition-colors flex items-center gap-0.5 font-mono">
+                      Perks & Rebates <ChevronRight className="w-3 h-3" />
+                    </span>
+                  </div>
+
+                  {metrics.finalAmount < 5000 ? (
+                    <div>
+                      <div className="w-full h-1.5 bg-black/50 rounded-full overflow-hidden">
+                        <div 
+                          className="h-full bg-gradient-to-r from-brand-orange to-amber-400 rounded-full transition-all duration-300"
+                          style={{ width: `${Math.min(100, (metrics.finalAmount / 5000) * 100)}%` }}
+                        />
+                      </div>
+                      <div className="text-[10px] text-slate-300 mt-1.5 flex justify-between">
+                        <span>Add <strong className="text-emerald-400 font-bold">₹{(5000 - metrics.finalAmount).toLocaleString("en-IN")}</strong> to unlock <strong>Gold Merchant</strong></span>
+                        <span className="text-amber-400 font-mono font-bold">3% Restock Credit</span>
+                      </div>
+                    </div>
+                  ) : metrics.finalAmount < 20000 ? (
+                    <div>
+                      <div className="w-full h-1.5 bg-black/50 rounded-full overflow-hidden">
+                        <div 
+                          className="h-full bg-gradient-to-r from-amber-400 to-cyan-400 rounded-full transition-all duration-300"
+                          style={{ width: `${Math.min(100, ((metrics.finalAmount - 5000) / 15000) * 100)}%` }}
+                        />
+                      </div>
+                      <div className="text-[10px] text-slate-300 mt-1.5 flex justify-between">
+                        <span>Gold Active! Add <strong className="text-cyan-400 font-bold">₹{(20000 - metrics.finalAmount).toLocaleString("en-IN")}</strong> for <strong>Platinum</strong></span>
+                        <span className="text-cyan-300 font-mono font-bold">5% Cash Rebate</span>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="text-[10px] text-cyan-300 font-bold flex items-center gap-1">
+                      <Sparkles className="w-3 h-3 text-cyan-400" />
+                      <span>Platinum Active: 5% Cash Rebate + Dedicated Mysore Officer!</span>
+                    </div>
+                  )}
+                </div>
+              )}
+
               {/* Delivery Speed SLA Selector */}
               {activeItems.length > 0 && (
                 <div className="p-4 bg-white/[0.02] rounded-2xl border border-white/[0.06] space-y-2.5 text-xs">
@@ -1414,6 +1565,7 @@ export default function OneAAStore() {
           setCalcProduct(p);
           setShowCalcModal(true);
         }}
+        onOpenResellerShare={(p) => setResellerShareProduct(p)}
       />
 
       {/* --- PRO-FORMA INVOICE GENERATOR MODAL --- */}
@@ -1453,6 +1605,35 @@ export default function OneAAStore() {
       <BroadcastStudioModal
         isOpen={showBroadcastModal}
         onClose={() => setShowBroadcastModal(false)}
+        selectedHotline={selectedHotline}
+      />
+
+      {/* --- 1AA VIP SOURCING CLUB & REPEAT RESTOCK REBATES MODAL --- */}
+      <VipLoyaltyModal
+        isOpen={showVipModal}
+        onClose={() => setShowVipModal(false)}
+        cartTotal={metrics.finalAmount}
+        onExploreCatalog={() => {
+          setShowOrderDrawer(false);
+          window.scrollTo({ top: 550, behavior: "smooth" });
+        }}
+      />
+
+      {/* --- RESELLER WHATSAPP PITCH STUDIO MODAL --- */}
+      <ResellerShareModal
+        isOpen={!!resellerShareProduct}
+        onClose={() => setResellerShareProduct(null)}
+        product={resellerShareProduct}
+      />
+
+      {/* --- SAVED ORDERS & 1-TAP RE-ORDER MODAL --- */}
+      <SavedOrdersModal
+        isOpen={showSavedOrdersModal}
+        onClose={() => setShowSavedOrdersModal(false)}
+        onReorderCart={(qtyMap) => {
+          setQuantities(qtyMap);
+          setShowOrderDrawer(true);
+        }}
         selectedHotline={selectedHotline}
       />
 

@@ -6,8 +6,15 @@ class HapticFeedback {
   private soundEnabled: boolean = true;
 
   constructor() {
-    // Lazy initialize Web Audio API on first user interaction
     if (typeof window !== "undefined") {
+      try {
+        const saved = localStorage.getItem("1aa_sound_fx");
+        if (saved !== null) {
+          this.soundEnabled = saved === "true";
+        }
+      } catch {}
+
+      // Lazy initialize Web Audio API on first user interaction
       const initAudio = () => {
         try {
           const AudioContextClass = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
@@ -23,6 +30,24 @@ class HapticFeedback {
       window.addEventListener("touchstart", initAudio, { once: true, passive: true });
       window.addEventListener("click", initAudio, { once: true, passive: true });
     }
+  }
+
+  isSoundEnabled(): boolean {
+    return this.soundEnabled;
+  }
+
+  setSoundEnabled(enabled: boolean) {
+    this.soundEnabled = enabled;
+    try {
+      if (typeof window !== "undefined") {
+        localStorage.setItem("1aa_sound_fx", String(enabled));
+      }
+    } catch {}
+  }
+
+  toggleSound(): boolean {
+    this.setSoundEnabled(!this.soundEnabled);
+    return this.soundEnabled;
   }
 
   // Synthesize a very subtle, satisfying physical click (like an Apple mechanical stepper)

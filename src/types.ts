@@ -38,3 +38,14 @@ export interface ActiveOrderItem {
   quantity: number;
   total: number;
 }
+
+export interface SavedOrder {
+  id: string;
+  orderRef: string;
+  date: string;
+  items: { sku: string; name: string; quantity: number; unitPrice: number; total: number }[];
+  totalAmount: number;
+  totalUnits: number;
+  deliverySpeed: 'standard' | 'express';
+  utrNumber?: string;
+}

@@ -13,7 +13,8 @@ import {
   ExternalLink,
   CheckCircle2,
   Calculator,
-  Star
+  Star,
+  Share2
 } from 'lucide-react';
 
 interface ProductDetailModalProps {
@@ -23,6 +24,7 @@ interface ProductDetailModalProps {
   currentQty: number;
   mode: 'retail' | 'b2b';
   onOpenCalculator?: (product: Product) => void;
+  onOpenResellerShare?: (product: Product) => void;
 }
 
 export default function ProductDetailModal({
@@ -32,6 +34,7 @@ export default function ProductDetailModal({
   currentQty,
   mode,
   onOpenCalculator,
+  onOpenResellerShare,
 }: ProductDetailModalProps) {
   if (!product) return null;
 
@@ -275,18 +278,35 @@ export default function ProductDetailModal({
                 </button>
               </div>
 
-              {onOpenCalculator && (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                {onOpenCalculator && (
                   <button
                     type="button"
                     onClick={() => {
+                      haptics.light();
                       onOpenCalculator(product);
                     }}
-                    className="w-full py-2.5 px-4 rounded-full bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 font-semibold text-xs border border-emerald-500/30 flex items-center justify-center gap-2 transition-all cursor-pointer"
+                    className="py-2.5 px-3 rounded-full bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 font-semibold text-[11px] border border-emerald-500/30 flex items-center justify-center gap-1.5 transition-all cursor-pointer"
                   >
                     <Calculator className="w-3.5 h-3.5 text-emerald-400" />
-                    <span>Open Reseller Margin & ROI Calculator</span>
+                    <span>Reseller ROI Calculator</span>
                   </button>
                 )}
+
+                {onOpenResellerShare && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      haptics.light();
+                      onOpenResellerShare(product);
+                    }}
+                    className="py-2.5 px-3 rounded-full bg-brand-orange/10 hover:bg-brand-orange/20 text-brand-orange font-semibold text-[11px] border border-brand-orange/30 flex items-center justify-center gap-1.5 transition-all cursor-pointer"
+                  >
+                    <Share2 className="w-3.5 h-3.5 text-brand-orange" />
+                    <span>Pitch to My Buyers</span>
+                  </button>
+                )}
+              </div>
 
                 <a
                   href={directWhatsAppLink}
