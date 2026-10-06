@@ -12,7 +12,8 @@ import {
   CheckCircle2, 
   Building2,
   Truck,
-  Navigation
+  Navigation,
+  Download
 } from 'lucide-react';
 
 interface ProformaInvoiceModalProps {
@@ -41,6 +42,48 @@ export default function ProformaInvoiceModal({
     day: 'numeric',
   });
 
+  const handleExportCsv = () => {
+    haptics.success();
+    const headers = ["SKU", "Item Name", "Category", "Carton Size (Pcs)", "Units Ordered", "Factory Fair Price (INR)", "Line Total (INR)"];
+    const rows = items.map((i) => [
+      `"${i.product.sku}"`,
+      `"${i.product.name.replace(/"/g, '""')}"`,
+      `"${i.product.category}"`,
+      i.product.cartonSize || 24,
+      i.quantity,
+      i.product.fairPrice,
+      i.quantity * i.product.fairPrice
+    ]);
+
+    const estCartons = items.reduce((acc, i) => acc + Math.ceil(i.quantity / (i.product.cartonSize || 24)), 0);
+
+    const summaryRows = [
+      [],
+      ["Invoice Ref", invoiceNumber],
+      ["Date", currentDate],
+      ["Ordering Mode", mode === 'b2b' ? "B2B Wholesale Master Carton" : "Retail Direct"],
+      ["Total Units", metrics.units],
+      ["Estimated Cartons", estCartons],
+      ["Total Payable (INR)", metrics.finalAmount],
+      ["Delivery SLA", "10-15 Days Standard (Within 7 Days Express)"],
+      ["Verified Bank", "Axis Bank (A/C: 922010002282280, IFSC: UTIB0004543)"],
+      ["Account Holder", "Abdul Darvesh"],
+      ["UPI ID", "7406231167@axisbank"],
+      ["Dispatch Hotline", "+91 75980 77003 / +91 74062 31167"]
+    ];
+
+    const csvContent = "data:text/csv;charset=utf-8," + 
+      [headers.join(","), ...rows.map(e => e.join(",")), ...summaryRows.map(e => e.join(","))].join("\n");
+
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", `1AA-Wholesale-PO-${invoiceNumber}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   return (
     <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-xl flex items-center justify-center p-4 overflow-y-auto animate-in fade-in duration-300">
       <div className="relative w-full max-w-4xl bg-obsidian-900/95 border border-white/10 rounded-3xl shadow-apple-card overflow-hidden my-6 backdrop-blur-2xl">
@@ -57,6 +100,14 @@ export default function ProformaInvoiceModal({
             </div>
           </div>
           <div className="flex items-center gap-3">
+            <button
+              onClick={handleExportCsv}
+              className="px-3.5 py-2 bg-white/[0.08] hover:bg-white/[0.15] text-slate-200 hover:text-white border border-white/15 font-bold text-xs rounded-full flex items-center gap-1.5 transition-all active:scale-95 cursor-pointer"
+              title="Download Purchase Order as CSV for Excel / Tally"
+            >
+              <Download className="w-3.5 h-3.5 text-brand-blue-light" />
+              <span>Export PO (.CSV)</span>
+            </button>
             {onTrackOrder && (
               <button
                 onClick={() => {
@@ -216,6 +267,10 @@ export default function ProformaInvoiceModal({
               <div className="flex justify-between text-emerald-400 text-[11px]">
                 <span>Marketplace Benchmark:</span>
                 <span className="line-through text-slate-500">₹{metrics.marketValue.toLocaleString('en-IN')}</span>
+              </div>
+              <div className="pt-1 border-t border-white/[0.05] text-[10px] text-emerald-400 flex justify-between">
+                <span>GST 18% ITC Claimable:</span>
+                <span className="font-bold">~₹{Math.round(metrics.finalAmount * 0.18 / 1.18).toLocaleString('en-IN')}</span>
               </div>
               <div className="border-t border-white/[0.08] pt-3 flex justify-between items-baseline font-bold text-sm">
                 <span className="text-white font-sans">Payable Total:</span>

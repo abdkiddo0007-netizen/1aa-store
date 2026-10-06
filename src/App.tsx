@@ -17,6 +17,8 @@ import SavedOrdersModal from "./components/SavedOrdersModal";
 import DisplayResolutionModal, { DisplayConfig } from "./components/DisplayResolutionModal";
 import DeliveryTransitModal from "./components/DeliveryTransitModal";
 import OrderTrackingModal from "./components/OrderTrackingModal";
+import BarcodeLabelGeneratorModal from "./components/BarcodeLabelGeneratorModal";
+import CartonFreightModal from "./components/CartonFreightModal";
 import { handleImgError } from "./utils/imageFallback";
 import { haptics } from "./utils/haptics";
 import { 
@@ -57,7 +59,9 @@ import {
   RotateCcw,
   Volume2,
   VolumeX,
-  Navigation
+  Navigation,
+  Boxes,
+  Printer
 } from "lucide-react";
 
 export default function OneAAStore() {
@@ -115,6 +119,10 @@ export default function OneAAStore() {
   const [selectedHotline, setSelectedHotline] = useState<"7598077003" | "7406231167">("7598077003");
   const [showTrackingModal, setShowTrackingModal] = useState(false);
   const [trackingOrderRef, setTrackingOrderRef] = useState<string | null>(null);
+  const [showBarcodeModal, setShowBarcodeModal] = useState(false);
+  const [barcodeProduct, setBarcodeProduct] = useState<Product | null>(null);
+  const [showFreightModal, setShowFreightModal] = useState(false);
+  const [freightProduct, setFreightProduct] = useState<Product | null>(null);
 
   const handleOpenTracking = (orderRef?: string) => {
     haptics.light();
@@ -411,6 +419,34 @@ export default function OneAAStore() {
                 </span>
                 <Navigation className="w-2.5 h-2.5 text-emerald-400" />
                 <span>Track Package Radar</span>
+              </button>
+
+              {/* Wholesale Shelf Barcode Tag Generator */}
+              <button
+                onClick={() => {
+                  haptics.light();
+                  setBarcodeProduct(filteredAndSorted[0] || CATALOG_PRODUCTS[0]);
+                  setShowBarcodeModal(true);
+                }}
+                className="flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-white/[0.05] hover:bg-white/[0.12] text-slate-300 hover:text-white border border-white/10 text-[10px] font-semibold transition-all cursor-pointer"
+                title="Print retail price tags with custom barcode stickers"
+              >
+                <Printer className="w-2.5 h-2.5 text-brand-orange" />
+                <span>Shelf Barcodes</span>
+              </button>
+
+              {/* Master Carton CBM & Freight Calculator */}
+              <button
+                onClick={() => {
+                  haptics.light();
+                  setFreightProduct(filteredAndSorted[0] || CATALOG_PRODUCTS[0]);
+                  setShowFreightModal(true);
+                }}
+                className="flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-white/[0.05] hover:bg-white/[0.12] text-slate-300 hover:text-white border border-white/10 text-[10px] font-semibold transition-all cursor-pointer"
+                title="Calculate master carton volume (CBM), air/surface weight & pallet load"
+              >
+                <Boxes className="w-2.5 h-2.5 text-brand-blue-light" />
+                <span>CBM & Freight</span>
               </button>
 
               {/* Sound FX Toggle */}
@@ -1694,18 +1730,43 @@ export default function OneAAStore() {
                   <ExternalLink className="w-3.5 h-3.5" />
                 </a>
 
-                <div className="grid grid-cols-2 gap-2">
+                <div className="grid grid-cols-3 gap-2">
                   <button
-                    onClick={() => setShowInvoiceModal(true)}
-                    className="py-2.5 px-3 rounded-full bg-white/[0.06] hover:bg-white/[0.12] text-slate-200 font-medium text-xs transition-colors flex items-center justify-center gap-1.5 border border-white/10"
+                    onClick={() => {
+                      haptics.light();
+                      setShowInvoiceModal(true);
+                    }}
+                    className="py-2.5 px-2 rounded-full bg-white/[0.06] hover:bg-white/[0.12] text-slate-200 font-medium text-xs transition-colors flex items-center justify-center gap-1 border border-white/10 cursor-pointer"
+                    title="Generate Commercial Pro-Forma Invoice"
                   >
                     <FileText className="w-3.5 h-3.5 text-brand-orange" />
                     <span>Pro-Forma</span>
                   </button>
 
+                  <a
+                    href={`https://wa.me/?text=${encodeURIComponent(
+                      `*1AA FACTORY SOURCING ORDER QUOTATION*\n` +
+                      `Total Items: ${activeItems.length} SKUs (${metrics.units} pcs)\n` +
+                      `Est. Cartons: ${activeItems.reduce((acc, i) => acc + Math.ceil(i.quantity / (i.product.cartonSize || 24)), 0)} | Order Value: Rs. ${metrics.finalAmount.toLocaleString('en-IN')}\n\n` +
+                      activeItems.map(i => `• ${i.product.name} (SKU: ${i.product.sku}) - ${i.quantity} pcs @ Rs. ${i.product.fairPrice}`).join('\n') +
+                      `\n\nDelivery SLA: 10-15 Days Standard (<7 Days Express) post-payment.\n` +
+                      `Bank: Axis Bank | A/C: 922010002282280 | IFSC: UTIB0004543 | Abdul Darvesh\n` +
+                      `UPI: 7406231167@axisbank\n` +
+                      `Order Online: https://1aa-store.vercel.app/`
+                    )}`}
+                    target="_blank"
+                    rel="noreferrer"
+                    onClick={() => haptics.selection()}
+                    className="py-2.5 px-2 rounded-full bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-300 font-medium text-xs transition-colors flex items-center justify-center gap-1 border border-emerald-500/30 cursor-pointer"
+                    title="Share order summary to WhatsApp"
+                  >
+                    <Share2 className="w-3.5 h-3.5 text-emerald-400" />
+                    <span>Share PO</span>
+                  </a>
+
                   <button
                     onClick={copyOrderSummary}
-                    className="py-2.5 px-3 rounded-full bg-white/[0.06] hover:bg-white/[0.12] text-slate-200 font-medium text-xs transition-colors flex items-center justify-center gap-1.5 border border-white/10"
+                    className="py-2.5 px-2 rounded-full bg-white/[0.06] hover:bg-white/[0.12] text-slate-200 font-medium text-xs transition-colors flex items-center justify-center gap-1 border border-white/10 cursor-pointer"
                   >
                     {copySuccess ? (
                       <>
@@ -1715,7 +1776,7 @@ export default function OneAAStore() {
                     ) : (
                       <>
                         <Copy className="w-3.5 h-3.5 text-brand-blue-light" />
-                        <span>Copy Text</span>
+                        <span>Copy</span>
                       </>
                     )}
                   </button>
@@ -1748,6 +1809,14 @@ export default function OneAAStore() {
           setShowCalcModal(true);
         }}
         onOpenResellerShare={(p) => setResellerShareProduct(p)}
+        onOpenBarcodeGenerator={(p) => {
+          setBarcodeProduct(p);
+          setShowBarcodeModal(true);
+        }}
+        onOpenFreightCalc={(p) => {
+          setFreightProduct(p);
+          setShowFreightModal(true);
+        }}
       />
 
       {/* --- PRO-FORMA INVOICE GENERATOR MODAL --- */}
@@ -1871,6 +1940,31 @@ export default function OneAAStore() {
         }}
         initialOrderRef={trackingOrderRef}
         selectedHotline={selectedHotline}
+      />
+
+      {/* --- WHOLESALE SHELF BARCODE & MRP LABEL GENERATOR --- */}
+      <BarcodeLabelGeneratorModal
+        isOpen={showBarcodeModal}
+        onClose={() => {
+          setShowBarcodeModal(false);
+          setBarcodeProduct(null);
+        }}
+        product={barcodeProduct || filteredAndSorted[0] || CATALOG_PRODUCTS[0]}
+        allProducts={CATALOG_PRODUCTS}
+      />
+
+      {/* --- MASTER CARTON CBM & FREIGHT OPTIMIZER --- */}
+      <CartonFreightModal
+        isOpen={showFreightModal}
+        onClose={() => {
+          setShowFreightModal(false);
+          setFreightProduct(null);
+        }}
+        product={freightProduct || filteredAndSorted[0] || CATALOG_PRODUCTS[0]}
+        onAddToCart={(sku, delta) => {
+          haptics.success();
+          updateQty(sku, delta);
+        }}
       />
 
       {/* --- FLOATING 1AA SOURCING AI AGENT TRIGGER --- */}
