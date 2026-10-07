@@ -119,7 +119,7 @@ export default function RestockBundlesModal({
   const bundleItemsWithProducts = currentBundle.items.map((item) => {
     const prod = CATALOG_PRODUCTS.find((p) => p.sku === item.sku);
     const unitPrice = prod?.fairPrice || 0;
-    const marketPrice = prod?.marketPrice || 0;
+    const marketPrice = prod ? (prod.amazonPrice || prod.marketPrice) : 0;
     const lineTotal = unitPrice * item.quantity;
     const lineMarketTotal = marketPrice * item.quantity;
     return {

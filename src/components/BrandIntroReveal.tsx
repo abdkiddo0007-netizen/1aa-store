@@ -42,30 +42,59 @@ export default function BrandIntroReveal({ onComplete, forceShow = false }: Bran
     setProgress(0);
     setIsPlaying(true);
     setHasVideoError(false);
+    setIsMuted(false); // ALWAYS UNMUTED BY DEFAULT AS REQUESTED
 
-    // Attempt video playback
+    // Attempt unmuted video playback with full volume
     if (videoRef.current) {
       videoRef.current.currentTime = 0;
+      videoRef.current.muted = false; // Keep unmuted always
+      videoRef.current.volume = 1.0;
+      
       const playPromise = videoRef.current.play();
       if (playPromise !== undefined) {
-        playPromise.catch(() => {
-          // Autoplay policy prevented unmuted playback, fallback to muted autoplay
-          if (videoRef.current) {
-            videoRef.current.muted = true;
-            setIsMuted(true);
-            videoRef.current.play().catch(() => {
-              setHasVideoError(true);
-            });
-          }
-        });
+        playPromise
+          .then(() => {
+            setIsMuted(false);
+            haptics.chime();
+          })
+          .catch(() => {
+            // If browser blocks unmuted autoplay without user gesture on cold start,
+            // play muted temporarily so the visual doesn't freeze,
+            // but register an instant document listener to UNMUTE immediately on first tap!
+            if (videoRef.current) {
+              videoRef.current.muted = true;
+              setIsMuted(true);
+              videoRef.current.play().catch(() => {
+                setHasVideoError(true);
+              });
+
+              const handleFirstUserGesture = () => {
+                if (videoRef.current) {
+                  videoRef.current.muted = false;
+                  videoRef.current.volume = 1.0;
+                  setIsMuted(false);
+                  haptics.chime();
+                }
+                window.removeEventListener("pointerdown", handleFirstUserGesture);
+                window.removeEventListener("touchstart", handleFirstUserGesture);
+                window.removeEventListener("click", handleFirstUserGesture);
+                window.removeEventListener("keydown", handleFirstUserGesture);
+              };
+
+              window.addEventListener("pointerdown", handleFirstUserGesture, { once: true });
+              window.addEventListener("touchstart", handleFirstUserGesture, { once: true });
+              window.addEventListener("click", handleFirstUserGesture, { once: true });
+              window.addEventListener("keydown", handleFirstUserGesture, { once: true });
+            }
+          });
       }
     }
 
-    // Play subtle luxury audio chime if sound is enabled
-    if (!isMuted && haptics.isSoundEnabled()) {
+    // Play luxury audio chime
+    if (haptics.isSoundEnabled()) {
       setTimeout(() => {
         haptics.chime();
-      }, 300);
+      }, 350);
     }
 
     // Keyboard ESC listener
@@ -104,6 +133,12 @@ export default function BrandIntroReveal({ onComplete, forceShow = false }: Bran
   const togglePlayPause = () => {
     if (!videoRef.current) return;
     haptics.light();
+    if (isMuted) {
+      videoRef.current.muted = false;
+      videoRef.current.volume = 1.0;
+      setIsMuted(false);
+      haptics.chime();
+    }
     if (videoRef.current.paused) {
       videoRef.current.play();
       setIsPlaying(true);
@@ -117,6 +152,9 @@ export default function BrandIntroReveal({ onComplete, forceShow = false }: Bran
     if (!videoRef.current) return;
     const nextMuted = !isMuted;
     videoRef.current.muted = nextMuted;
+    if (!nextMuted) {
+      videoRef.current.volume = 1.0;
+    }
     setIsMuted(nextMuted);
     haptics.setSoundEnabled(!nextMuted);
     if (!nextMuted) {
@@ -164,13 +202,32 @@ export default function BrandIntroReveal({ onComplete, forceShow = false }: Bran
         <div className="flex items-center gap-2">
           <button
             onClick={toggleAudio}
-            className="p-2 sm:px-3 sm:py-1.5 rounded-full bg-white/[0.08] hover:bg-white/[0.15] border border-white/15 text-slate-200 text-xs flex items-center gap-1.5 transition-colors cursor-pointer shadow-lg"
-            title={isMuted ? "Unmute Audio" : "Mute Audio"}
+            className={`px-3.5 py-1.5 rounded-full border text-xs flex items-center gap-2 transition-all cursor-pointer shadow-lg active:scale-95 ${
+              isMuted 
+                ? "bg-amber-500/20 border-amber-500/40 text-amber-300 hover:bg-amber-500/30" 
+                : "bg-emerald-500/20 border-emerald-500/40 text-emerald-300 hover:bg-emerald-500/30 shadow-glow-emerald"
+            }`}
+            title={isMuted ? "Sound is Muted (Click to Turn ON)" : "Sound is Playing (Click to Switch Off)"}
           >
-            {isMuted ? <VolumeX className="w-4 h-4 text-amber-400" /> : <Volume2 className="w-4 h-4 text-emerald-400" />}
-            <span className="hidden sm:inline text-[11px] font-mono font-bold">
-              {isMuted ? "Audio Muted (Tap to Unmute)" : "Audio On"}
-            </span>
+            {isMuted ? (
+              <>
+                <VolumeX className="w-4 h-4 text-amber-400" />
+                <span className="text-[11px] font-mono font-bold">Sound: OFF (Turn ON)</span>
+              </>
+            ) : (
+              <>
+                <Volume2 className="w-4 h-4 text-emerald-400 animate-pulse" />
+                <span className="flex items-center gap-1.5 text-[11px] font-mono font-bold">
+                  <span>Sound: ON</span>
+                  <span className="flex items-end gap-0.5 h-3">
+                    <span className="w-0.5 h-3 bg-emerald-400 rounded-full animate-bounce" style={{ animationDelay: "0ms" }} />
+                    <span className="w-0.5 h-2 bg-emerald-400 rounded-full animate-bounce" style={{ animationDelay: "150ms" }} />
+                    <span className="w-0.5 h-3 bg-emerald-400 rounded-full animate-bounce" style={{ animationDelay: "300ms" }} />
+                  </span>
+                  <span className="hidden sm:inline text-[9px] text-emerald-400/80">(Tap to Switch Off)</span>
+                </span>
+              </>
+            )}
           </button>
 
           <button
@@ -243,10 +300,15 @@ export default function BrandIntroReveal({ onComplete, forceShow = false }: Bran
 
             <button
               onClick={toggleAudio}
-              className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/10 hover:bg-white/20 text-slate-200 text-xs font-mono transition-colors cursor-pointer"
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-xs font-mono transition-all cursor-pointer ${
+                isMuted 
+                  ? "bg-amber-500/20 border-amber-500/40 text-amber-300" 
+                  : "bg-emerald-500/20 border-emerald-500/40 text-emerald-300 shadow-glow-emerald"
+              }`}
+              title={isMuted ? "Turn Sound ON" : "Switch Sound OFF"}
             >
               {isMuted ? <VolumeX className="w-3.5 h-3.5 text-amber-400" /> : <Volume2 className="w-3.5 h-3.5 text-emerald-400" />}
-              <span className="text-[10px]">{isMuted ? "Unmute" : "Sound On"}</span>
+              <span className="text-[10px] font-bold">{isMuted ? "Sound: OFF (Enable)" : "Sound: ON (Switch Off)"}</span>
             </button>
           </div>
 
@@ -254,10 +316,10 @@ export default function BrandIntroReveal({ onComplete, forceShow = false }: Bran
           {isMuted && (
             <div 
               onClick={toggleAudio}
-              className="absolute top-4 inset-x-auto z-20 px-4 py-1.5 rounded-full bg-brand-orange/90 hover:bg-brand-orange text-obsidian-950 font-black text-xs uppercase tracking-wider flex items-center gap-2 cursor-pointer shadow-glow-orange animate-pulse"
+              className="absolute top-4 inset-x-auto z-20 px-4 py-2 rounded-full bg-gradient-to-r from-brand-orange via-amber-400 to-brand-orange hover:brightness-110 text-obsidian-950 font-black text-xs uppercase tracking-wider flex items-center gap-2 cursor-pointer shadow-glow-orange animate-bounce"
             >
-              <Volume2 className="w-3.5 h-3.5" />
-              <span>Tap to Enable Audio</span>
+              <Volume2 className="w-4 h-4 text-obsidian-950 animate-pulse" />
+              <span>🔊 Tap to Enable Sound</span>
             </div>
           )}
         </div>

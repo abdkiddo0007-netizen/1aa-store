@@ -71,10 +71,31 @@ import {
 } from "lucide-react";
 
 export default function OneAAStore() {
-  const [quantities, setQuantities] = useState<{ [sku: string]: number }>({
-    "1AA-KETL-FOLD": 1,
-    "1AA-VAC-120W": 1,
+  const [quantities, setQuantities] = useState<{ [sku: string]: number }>(() => {
+    if (typeof window !== "undefined") {
+      try {
+        const saved = localStorage.getItem("1aa_active_manifest");
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          if (parsed && typeof parsed === "object" && Object.keys(parsed).length > 0) {
+            return parsed;
+          }
+        }
+      } catch {}
+    }
+    return {
+      "1AA-KETL-FOLD": 1,
+      "1AA-VAC-120W": 1,
+    };
   });
+
+  useEffect(() => {
+    try {
+      if (typeof window !== "undefined") {
+        localStorage.setItem("1aa_active_manifest", JSON.stringify(quantities));
+      }
+    } catch {}
+  }, [quantities]);
 
   const [mode, setMode] = useState<"retail" | "b2b">("retail");
   const [search, setSearch] = useState("");
@@ -430,6 +451,28 @@ export default function OneAAStore() {
     }));
   }, [quantities]);
 
+  const looseItems = useMemo(() => {
+    return activeItems.filter((i) => i.quantity > 0 && (i.quantity % (i.product.cartonSize || 24)) !== 0);
+  }, [activeItems]);
+
+  const totalCartons = useMemo(() => {
+    return activeItems.reduce((acc, i) => acc + Math.ceil(i.quantity / (i.product.cartonSize || 24)), 0);
+  }, [activeItems]);
+
+  const handleRoundAllToCartons = () => {
+    haptics.success();
+    setQuantities((prev) => {
+      const next = { ...prev };
+      activeItems.forEach((item) => {
+        const carton = item.product.cartonSize || 24;
+        if (item.quantity > 0 && item.quantity % carton !== 0) {
+          next[item.product.sku] = Math.ceil(item.quantity / carton) * carton;
+        }
+      });
+      return next;
+    });
+  };
+
   // Filter & Sort Products
   const filteredAndSorted = useMemo(() => {
     const filtered = CATALOG_PRODUCTS.filter((p) => {
@@ -664,15 +707,18 @@ export default function OneAAStore() {
 
               <button
                 onClick={() => {
-                  haptics.light();
+                  haptics.chime();
+                  haptics.setSoundEnabled(true);
+                  setIsSoundOn(true);
                   setIntroSessionKey((k) => k + 1);
                   setForceShowIntro(true);
                 }}
-                className="hidden sm:flex items-center gap-1 px-2.5 py-1 rounded-full bg-brand-orange/10 hover:bg-brand-orange/20 border border-brand-orange/30 text-brand-orange text-[10px] font-bold transition-all cursor-pointer shadow-glow-orange"
-                title="Watch 1AA Cinematic Brand Reveal"
+                className="hidden sm:flex items-center gap-1.5 px-3 py-1 rounded-full bg-brand-orange/15 hover:bg-brand-orange/25 border border-brand-orange/40 text-brand-orange text-[10px] font-bold transition-all cursor-pointer shadow-glow-orange active:scale-95"
+                title="Watch 1AA Cinematic Brand Reveal (With Audio)"
               >
                 <Play className="w-2.5 h-2.5 fill-brand-orange text-brand-orange" />
                 <span>Reveal</span>
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
               </button>
             </div>
 
@@ -1685,7 +1731,9 @@ export default function OneAAStore() {
                 <ShoppingBag className="w-5 h-5 text-brand-orange" />
                 <div>
                   <h3 className="font-bold text-white text-base leading-tight">Procurement Manifest</h3>
-                  <p className="text-[10px] text-slate-400 font-mono">{activeItems.length} SKUs • {metrics.units} Total Units</p>
+                  <p className="text-[10px] text-slate-400 font-mono">
+                    {activeItems.length} SKUs • {metrics.units} Units • ~{totalCartons} Cartons
+                  </p>
                 </div>
               </div>
               <button
@@ -1704,6 +1752,40 @@ export default function OneAAStore() {
 
             {/* Scrollable Middle Body */}
             <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4">
+              
+              {/* Master Carton Optimizer Automation Banner */}
+              {looseItems.length > 0 && (
+                <div className="p-3.5 rounded-2xl bg-gradient-to-r from-brand-orange/15 via-amber-500/10 to-brand-orange/15 border border-brand-orange/30 space-y-2 animate-in fade-in duration-300">
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="flex items-center gap-2">
+                      <div className="w-7 h-7 rounded-lg bg-brand-orange/20 border border-brand-orange/40 flex items-center justify-center text-brand-orange shrink-0">
+                        <Boxes className="w-4 h-4" />
+                      </div>
+                      <div>
+                        <div className="text-xs font-bold text-white flex items-center gap-1.5">
+                          <span>Master Carton Assistant</span>
+                          <span className="px-1.5 py-0.2 bg-brand-orange text-obsidian-950 rounded text-[9px] font-black uppercase">
+                            {looseItems.length} Loose
+                          </span>
+                        </div>
+                        <div className="text-[10px] text-slate-300 leading-tight mt-0.5">
+                          Round to factory master cartons to prevent courier transit breakage & guarantee intact box seal.
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={handleRoundAllToCartons}
+                    className="w-full py-2 px-3 rounded-xl bg-gradient-to-r from-brand-orange to-amber-400 hover:brightness-110 active:scale-98 text-obsidian-950 font-black text-xs uppercase tracking-wider flex items-center justify-center gap-1.5 cursor-pointer shadow-glow-orange transition-all"
+                  >
+                    <Zap className="w-3.5 h-3.5 fill-obsidian-950" />
+                    <span>⚡ 1-Click Round All to Full Cartons</span>
+                  </button>
+                </div>
+              )}
+
               {/* Manifest Items Stepper */}
               <div className="space-y-3">
                 {activeItems.length === 0 ? (
@@ -1722,6 +1804,30 @@ export default function OneAAStore() {
                         <div className="font-medium text-white truncate">{item.product.name}</div>
                         <div className="text-[10px] text-brand-orange font-mono pt-0.5">
                           {item.quantity} x ₹{item.product.fairPrice}
+                        </div>
+                        {/* Carton alignment tag */}
+                        <div className="pt-1">
+                          {item.quantity % (item.product.cartonSize || 24) === 0 ? (
+                            <span className="inline-flex items-center gap-1 px-1.5 py-0.2 rounded bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 text-[9px] font-mono font-bold">
+                              <CheckCircle2 className="w-2.5 h-2.5" />
+                              {item.quantity / (item.product.cartonSize || 24)} Full Box ({item.product.cartonSize || 24} pcs/box)
+                            </span>
+                          ) : (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                haptics.medium();
+                                const carton = item.product.cartonSize || 24;
+                                const target = Math.ceil(item.quantity / carton) * carton;
+                                setDirectQty(item.product.sku, target);
+                              }}
+                              className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/30 text-amber-300 text-[9px] font-mono font-bold cursor-pointer transition-all active:scale-95"
+                              title={`Round up to full carton (${Math.ceil(item.quantity / (item.product.cartonSize || 24)) * (item.product.cartonSize || 24)} pcs)`}
+                            >
+                              <Boxes className="w-2.5 h-2.5 text-amber-400" />
+                              <span>+{((item.product.cartonSize || 24) - (item.quantity % (item.product.cartonSize || 24)))} pcs for Full Carton</span>
+                            </button>
+                          )}
                         </div>
                       </div>
 
@@ -2335,14 +2441,16 @@ export default function OneAAStore() {
             <div className="pt-2 flex flex-wrap gap-2 text-[11px]">
               <button
                 onClick={() => {
-                  haptics.light();
+                  haptics.chime();
+                  haptics.setSoundEnabled(true);
+                  setIsSoundOn(true);
                   setIntroSessionKey((k) => k + 1);
                   setForceShowIntro(true);
                 }}
-                className="px-2.5 py-1 rounded-full bg-white/[0.04] hover:bg-white/[0.08] text-brand-orange border border-brand-orange/30 font-semibold flex items-center gap-1 transition-colors cursor-pointer"
+                className="px-3 py-1 rounded-full bg-brand-orange/10 hover:bg-brand-orange/20 text-brand-orange border border-brand-orange/30 font-semibold flex items-center gap-1.5 transition-colors cursor-pointer"
               >
                 <Play className="w-2.5 h-2.5 fill-brand-orange" />
-                <span>Replay Brand Reveal</span>
+                <span>Replay Brand Reveal (With Audio)</span>
               </button>
 
               <button

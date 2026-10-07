@@ -59,8 +59,9 @@ export default function ProductDetailModal({
 
   if (!product) return null;
 
-  const savings = product.marketPrice - product.fairPrice;
-  const savingsPercent = Math.round((savings / product.marketPrice) * 100);
+  const benchmarkPrice = product.amazonPrice || product.marketPrice;
+  const savings = Math.max(0, benchmarkPrice - product.fairPrice);
+  const savingsPercent = Math.round((savings / benchmarkPrice) * 100);
 
   const directWhatsAppLink = `https://wa.me/917598077003?text=${encodeURIComponent(
     `Hello 1AA Dispatch, I am inquiring about the ${product.name} (SKU: ${product.sku}).\n` +

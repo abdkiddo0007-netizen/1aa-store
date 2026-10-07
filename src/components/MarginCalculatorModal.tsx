@@ -26,8 +26,9 @@ export default function MarginCalculatorModal({
 
   if (!isOpen || !product) return null;
 
+  const benchmarkPrice = product.amazonPrice || product.marketPrice;
   const [quantity, setQuantity] = useState<number>(product.cartonSize || 24);
-  const [resalePrice, setResalePrice] = useState<number>(product.marketPrice);
+  const [resalePrice, setResalePrice] = useState<number>(benchmarkPrice);
 
   const totalCost = quantity * product.fairPrice;
   const totalRevenue = quantity * resalePrice;
@@ -102,9 +103,9 @@ export default function MarginCalculatorModal({
             <div className="flex items-center gap-2 mt-1 text-[11px]">
               <span className="text-brand-orange font-bold">1AA Price: ₹{product.fairPrice}</span>
               <span className="text-slate-500">•</span>
-              <span className="text-slate-400 line-through">Mkt: ₹{product.marketPrice}</span>
+              <span className="text-slate-400 line-through">Amazon/MRP: ₹{benchmarkPrice}</span>
               <span className="px-1.5 py-0.5 rounded bg-emerald-500/15 text-emerald-400 text-[10px] font-bold">
-                Save ₹{product.marketPrice - product.fairPrice} / pc
+                Save ₹{Math.max(0, benchmarkPrice - product.fairPrice)} / pc
               </span>
             </div>
           </div>
@@ -146,7 +147,7 @@ export default function MarginCalculatorModal({
             <input
               type="range"
               min={product.fairPrice}
-              max={Math.max(product.marketPrice * 1.3, product.fairPrice + 100)}
+              max={Math.max(benchmarkPrice * 1.3, product.fairPrice + 100)}
               step={10}
               value={resalePrice}
               onChange={(e) => setResalePrice(Number(e.target.value))}
@@ -154,7 +155,7 @@ export default function MarginCalculatorModal({
             />
             <div className="flex justify-between text-[10px] text-slate-500 mt-1">
               <span>Min Break-Even (₹{product.fairPrice})</span>
-              <span>E-Commerce Avg (₹{product.marketPrice})</span>
+              <span>Amazon / Retail Avg (₹{benchmarkPrice})</span>
               <span>Premium Retail</span>
             </div>
           </div>
