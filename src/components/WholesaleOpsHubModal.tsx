@@ -1,5 +1,6 @@
-import { useEffect } from "react";
+import { useState, useEffect } from "react";
 import { haptics } from "../utils/haptics";
+import SplineInteractiveHero from "./SplineInteractiveHero";
 import {
   X,
   Package,
@@ -12,10 +13,13 @@ import {
   Share2,
   Sliders,
   TrendingUp,
-  ShieldCheck,
   ChevronRight,
   QrCode,
-  Sparkles
+  Sparkles,
+  Rotate3d,
+  Bot,
+  ChevronDown,
+  ChevronUp
 } from "lucide-react";
 
 interface WholesaleOpsHubModalProps {
@@ -33,6 +37,8 @@ interface WholesaleOpsHubModalProps {
   onOpenPriceRadarModal: () => void;
   onOpenUpiModal: () => void;
   onOpenRestockBundles?: () => void;
+  onOpenArModal?: () => void;
+  onOpenAgenticAiModal?: () => void;
   hasItemsInCart: boolean;
 }
 
@@ -51,8 +57,12 @@ export default function WholesaleOpsHubModal({
   onOpenPriceRadarModal,
   onOpenUpiModal,
   onOpenRestockBundles,
+  onOpenArModal,
+  onOpenAgenticAiModal,
   hasItemsInCart,
 }: WholesaleOpsHubModalProps) {
+  const [showSpline3d, setShowSpline3d] = useState(false);
+
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape") onClose();
@@ -60,9 +70,38 @@ export default function WholesaleOpsHubModal({
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [onClose]);
+
   if (!isOpen) return null;
 
   const tools = [
+    {
+      id: "agentic-ai",
+      title: "Agentic AI Operations Fleet",
+      badge: "5 AUTONOMOUS AGENTS",
+      badgeColor: "bg-cyan-500/20 text-cyan-400 border-cyan-500/30",
+      desc: "Admin, Logistics, BPO Support, Finance & QC teams running autonomously with Human-In-The-Loop approvals.",
+      icon: Bot,
+      iconColor: "text-cyan-400",
+      featured: true,
+      action: () => {
+        onClose();
+        if (onOpenAgenticAiModal) onOpenAgenticAiModal();
+      },
+    },
+    {
+      id: "ar-studio",
+      title: "3D AR • Try Before You Buy",
+      badge: "CAMERA AR STUDIO",
+      badgeColor: "bg-purple-500/20 text-purple-300 border-purple-500/30",
+      desc: "360° product inspector and true 1:1 scale room projection to test sizing and build quality before wholesale ordering.",
+      icon: Rotate3d,
+      iconColor: "text-indigo-400",
+      featured: true,
+      action: () => {
+        onClose();
+        if (onOpenArModal) onOpenArModal();
+      },
+    },
     {
       id: "price-radar",
       title: "Real-Time Price Radar",
@@ -225,7 +264,7 @@ export default function WholesaleOpsHubModal({
 
   return (
     <div 
-      className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-black/85 backdrop-blur-xl animate-fade-in overflow-hidden"
+      className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-black/85 backdrop-blur-xl animate-fade-in overflow-hidden select-none"
       onClick={(e) => {
         if (e.target === e.currentTarget) {
           haptics.light();
@@ -233,7 +272,7 @@ export default function WholesaleOpsHubModal({
         }
       }}
     >
-      <div className="relative w-full max-w-3xl bg-obsidian-900 border border-white/15 rounded-2xl sm:rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[92dvh] sm:max-h-[90vh]">
+      <div className="relative w-full max-w-4xl bg-obsidian-900 border border-white/15 rounded-2xl sm:rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[92dvh] sm:max-h-[90vh]">
         
         {/* Header */}
         <div className="sticky top-0 z-30 shrink-0 px-4 py-3 sm:px-6 sm:py-4 bg-obsidian-950/95 backdrop-blur-md border-b border-white/10 flex items-center justify-between">
@@ -248,8 +287,8 @@ export default function WholesaleOpsHubModal({
                   B2B SUITE
                 </span>
               </h2>
-              <p className="text-[11px] text-slate-400">
-                Logistics, labeling, arbitrage intelligence, and order automation
+              <p className="text-[11px] text-slate-400 font-mono">
+                Interactive 3D Experience • AR Camera Preview • Agentic AI Fleet • Logistics & Automation
               </p>
             </div>
           </div>
@@ -268,8 +307,60 @@ export default function WholesaleOpsHubModal({
           </button>
         </div>
 
-        {/* Tools Grid */}
-        <div className="p-5 sm:p-6 space-y-3 overflow-y-auto">
+        {/* Scrollable Body */}
+        <div className="p-4 sm:p-6 space-y-4 overflow-y-auto">
+
+          {/* --- FEATURED SECTION 1: INTERACTIVE 3D SPLINE LOGISTICS CONTAINER --- */}
+          <div className="rounded-2xl sm:rounded-3xl border border-brand-orange/30 bg-gradient-to-br from-brand-orange/10 via-obsidian-950 to-brand-blue/10 p-4 sm:p-5 space-y-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-xl bg-brand-orange/20 border border-brand-orange/40 flex items-center justify-center text-brand-orange">
+                  <Rotate3d className="w-4 h-4" />
+                </div>
+                <div>
+                  <h3 className="text-xs sm:text-sm font-black text-white font-mono flex items-center gap-2">
+                    <span>Interactive 3D Spline Logistics Model</span>
+                    <span className="text-[9px] px-2 py-0.2 rounded-full bg-brand-orange/20 text-brand-orange border border-brand-orange/30 font-bold uppercase">
+                      Relocated to Ops Hub
+                    </span>
+                  </h3>
+                  <p className="text-[11px] text-slate-400">
+                    Interact with the 3D factory sourcing container, rotate orbital angles, and view pricing breakdown.
+                  </p>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => {
+                  haptics.selection();
+                  setShowSpline3d(!showSpline3d);
+                }}
+                className="px-3 py-1.5 rounded-xl bg-white/[0.06] hover:bg-white/[0.12] border border-white/10 text-xs font-mono font-bold text-white flex items-center gap-1.5 transition-all cursor-pointer shrink-0"
+              >
+                <span>{showSpline3d ? "Hide 3D Canvas" : "Launch 3D Canvas"}</span>
+                {showSpline3d ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+              </button>
+            </div>
+
+            {/* Expandable Spline Canvas */}
+            {showSpline3d && (
+              <div className="pt-2 animate-fade-in">
+                <SplineInteractiveHero
+                  onOpenArStudio={() => {
+                    onClose();
+                    if (onOpenArModal) onOpenArModal();
+                  }}
+                  onOpenPriceRadar={() => {
+                    onClose();
+                    onOpenPriceRadarModal();
+                  }}
+                />
+              </div>
+            )}
+          </div>
+
+          {/* Tools Grid */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             {tools.map((t) => {
               const Icon = t.icon;
@@ -284,6 +375,8 @@ export default function WholesaleOpsHubModal({
                   className={`p-4 rounded-2xl border transition-all duration-300 flex flex-col justify-between space-y-3 cursor-pointer group ${
                     t.disabled
                       ? "opacity-50 bg-white/[0.02] border-white/5 cursor-not-allowed"
+                      : t.featured
+                      ? "bg-gradient-to-br from-white/[0.05] via-white/[0.03] to-white/[0.05] border-white/20 hover:border-brand-orange/60 hover:scale-[1.01] shadow-lg"
                       : "bg-white/[0.03] hover:bg-white/[0.07] border-white/10 hover:border-brand-orange/40 hover:scale-[1.01]"
                   }`}
                 >
@@ -301,10 +394,10 @@ export default function WholesaleOpsHubModal({
                         </span>
                       </div>
                     </div>
-                    <ChevronRight className="w-4 h-4 text-slate-500 group-hover:text-white group-hover:translate-x-0.5 transition-all shrink-0" />
+                    <ChevronRight className="w-4 h-4 text-slate-500 group-hover:text-white transition-colors shrink-0 mt-1" />
                   </div>
 
-                  <p className="text-[11px] text-slate-400 leading-snug">
+                  <p className="text-[11px] text-slate-400 leading-relaxed font-sans">
                     {t.desc}
                   </p>
                 </div>
@@ -312,26 +405,15 @@ export default function WholesaleOpsHubModal({
             })}
           </div>
 
-          {/* Mysore Central Hub Assurance Footer */}
-          <div className="p-4 rounded-2xl bg-white/[0.02] border border-white/10 flex items-center gap-3 text-xs text-slate-400 mt-4">
-            <ShieldCheck className="w-5 h-5 text-brand-orange shrink-0" />
-            <div className="leading-relaxed">
-              <strong className="text-white">👑 Customer is King Guarantee (Mysore Central Hub):</strong> Direct factory lines, 100% pre-dispatch bench QA, built-in insured courier allowance, and guaranteed flat 25% transparent margin. No bargaining needed because prices are bottom-dollar factory direct!
-            </div>
-          </div>
         </div>
 
         {/* Footer */}
-        <div className="p-4 sm:p-5 border-t border-white/10 bg-obsidian-950/70 flex justify-end">
-          <button
-            onClick={() => {
-              haptics.light();
-              onClose();
-            }}
-            className="px-5 py-2 rounded-full bg-white/[0.08] hover:bg-white/[0.15] text-slate-200 text-xs font-semibold transition-colors cursor-pointer"
-          >
-            Close
-          </button>
+        <div className="p-3 sm:p-4 bg-obsidian-950/90 border-t border-white/10 flex items-center justify-between text-[11px] text-slate-400 font-mono">
+          <div className="flex items-center gap-2">
+            <span className="w-2 h-2 rounded-full bg-brand-orange animate-pulse" />
+            <span>1AA Mysore Central Facility Active</span>
+          </div>
+          <div>All wholesale tools 100% operational</div>
         </div>
 
       </div>

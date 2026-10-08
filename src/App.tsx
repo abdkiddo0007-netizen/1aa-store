@@ -28,7 +28,7 @@ import AdminLoginModal from "./components/AdminLoginModal";
 import AdminPortal from "./components/AdminPortal";
 import VoiceSearchModal2026 from "./components/VoiceSearchModal2026";
 import ArProductPreviewModal from "./components/ArProductPreviewModal";
-import SplineInteractiveHero from "./components/SplineInteractiveHero";
+import AgenticAIOperationsModal from "./components/AgenticAIOperationsModal";
 import AddressAndLocationModal from "./components/AddressAndLocationModal";
 import OrderFsmTrackerModal from "./components/OrderFsmTrackerModal";
 import { OrderAddressPackage } from "./types/address";
@@ -78,8 +78,7 @@ import {
   Globe,
   Mic,
   User,
-  Rotate3d,
-  Camera
+  Rotate3d
 } from "lucide-react";
 
 export default function OneAAStore() {
@@ -187,6 +186,9 @@ export default function OneAAStore() {
   // AR Product Preview ("Try Before You Buy")
   const [showArModal, setShowArModal] = useState(false);
   const [arProduct, setArProduct] = useState<Product | null>(null);
+
+  // Autonomous Agentic AI Operations Fleet Modal (5 Teams + HITL Approvals)
+  const [showAgenticAiModal, setShowAgenticAiModal] = useState(false);
 
   // Structured Address & Location Data Architecture
   const [showAddressModal, setShowAddressModal] = useState(false);
@@ -998,6 +1000,23 @@ export default function OneAAStore() {
                 {metrics.units > 0 && <span className="w-2 h-2 rounded-full bg-brand-orange animate-pulse" />}
               </button>
 
+              {/* Autonomous Agentic AI Fleet Trigger */}
+              <button
+                onClick={() => {
+                  haptics.light();
+                  setShowAgenticAiModal(true);
+                }}
+                className="flex text-xs px-3.5 py-2 rounded-full border border-cyan-500/40 bg-cyan-500/10 hover:bg-cyan-500 text-cyan-300 hover:text-obsidian-950 font-bold transition-all items-center gap-1.5 shadow-sm cursor-pointer"
+                title="Autonomous Agentic AI Fleet: Admin, Logistics, BPO Support, Finance & QC Agents"
+              >
+                <Bot className="w-3.5 h-3.5 text-cyan-400" />
+                <span className="hidden sm:inline">AI Fleet</span>
+                <span className="text-[9px] px-1.5 py-0.2 rounded-full bg-cyan-500/20 text-cyan-300 font-mono font-bold hidden md:inline">
+                  5 Agents
+                </span>
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping" />
+              </button>
+
               {/* Authorized 1AA Executive Admin Portal Trigger */}
               <button
                 onClick={handleOpenAdminPortal}
@@ -1086,655 +1105,294 @@ export default function OneAAStore() {
         </div>
 
         {/* --- MAIN CATALOG CONTENT --- */}
-        <main className="max-w-7xl mx-auto px-4 sm:px-6 py-10 space-y-12">
+        <main className="max-w-7xl mx-auto px-4 sm:px-6 py-4 sm:py-6 space-y-6">
           
-          {/* HERO DISPLAY (Apple Keynote Style) */}
-          <div className="relative text-center max-w-4xl mx-auto space-y-6 pt-4">
+          {/* COMPACT KEYNOTE HERO STRIP */}
+          <div className="relative text-center max-w-4xl mx-auto space-y-3 pt-2">
             
             {/* Apple Glowing Pill Tag */}
-            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/[0.04] border border-white/10 backdrop-blur-xl text-xs font-semibold text-slate-300 shadow-sm">
+            <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-white/[0.04] border border-white/10 backdrop-blur-xl text-xs font-semibold text-slate-300 shadow-sm">
               <span className="w-2 h-2 rounded-full bg-brand-orange animate-apple-pulse" />
               <span className="text-brand-orange font-bold">1st Available Always</span>
               <span className="text-white/20">•</span>
-              <span>Mysore Central Hub • Flat 25% Margin • Built-In Door Courier</span>
+              <span>Mysore Hub • Flat 25% Margin • Door Courier Included</span>
             </div>
 
-            {/* Apple Cinematic Headline */}
-            <h1 className="text-3xl sm:text-5xl lg:text-6xl font-black tracking-tight text-transparent bg-clip-text bg-gradient-to-b from-white via-slate-100 to-slate-400 leading-[1.12]">
+            {/* Apple Cinematic Headline (Compact & Crisp) */}
+            <h1 className="text-2xl sm:text-4xl lg:text-5xl font-black tracking-tight text-transparent bg-clip-text bg-gradient-to-b from-white via-slate-100 to-slate-400 leading-[1.12]">
               Pro Sourcing. Factory Direct.<br />
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-brand-blue-azure via-brand-blue-light to-brand-orange">
                 Zero Marketplace Markup.
               </span>
             </h1>
 
-            {/* Subtitle */}
-            <p className="text-sm sm:text-base text-slate-400 max-w-2xl mx-auto leading-relaxed font-normal">
-              Direct manufacturing links for Indian retailers, enterprises, and smart shoppers. Every line item is verified in our Mysore central facility, priced at factory cost with built-in courier freight and guaranteed 25% flat transparent margin.
-            </p>
-
-            {/* 👑 CUSTOMER IS KING • NO-BARGAIN FAIR PRICE GUARANTEE BANNER */}
-            <div className="max-w-3xl mx-auto rounded-3xl p-5 bg-gradient-to-r from-amber-500/15 via-brand-orange/15 to-amber-500/10 border-2 border-amber-500/40 shadow-2xl backdrop-blur-xl flex flex-col sm:flex-row items-center justify-between gap-4 text-left">
-              <div className="flex items-center gap-3.5">
-                <div className="w-12 h-12 rounded-2xl bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-amber-300 text-2xl shrink-0 shadow-glow-orange">
-                  👑
-                </div>
-                <div>
-                  <div className="text-sm sm:text-base font-black text-white flex items-center gap-2">
-                    <span>Customer is King: No-Bargain Fair Price Guarantee</span>
-                    <span className="px-2 py-0.5 rounded-full bg-amber-400 text-obsidian-950 font-black text-[10px] uppercase">Zero Haggling</span>
-                  </div>
-                  <div className="text-xs text-slate-300 mt-1 leading-relaxed">
-                    Why bargain when you already get genuine factory-floor prices? We openly reveal our formula: <strong>Factory Cost + Doorstep Courier Freight + Flat 25% 1AA Operating Margin = Final Wholesale Price</strong>. You save 40%–70% vs Amazon/Flipkart while getting 100% pre-dispatch bench tested quality from our Mysore Hub!
-                  </div>
-                </div>
-              </div>
-              <button
-                onClick={() => {
-                  haptics.light();
-                  setPriceCompareProduct(CATALOG_PRODUCTS[0]);
-                  setShowPriceCompareModal(true);
-                }}
-                className="px-4 py-2.5 rounded-full bg-gradient-to-r from-brand-orange to-amber-400 hover:brightness-110 text-obsidian-950 text-xs font-black flex items-center gap-1.5 transition-all shadow-glow-orange shrink-0 cursor-pointer"
-              >
-                <TrendingUp className="w-3.5 h-3.5" />
-                <span>Price Radar</span>
-              </button>
-            </div>
-
-            {/* --- DYNAMIC AI-GENERATED PERSONALIZATION WELCOME BANNER --- */}
-            <div className="max-w-3xl mx-auto rounded-3xl p-5 bg-gradient-to-r from-brand-blue/20 via-obsidian-950 to-brand-orange/20 border border-brand-orange/30 shadow-2xl backdrop-blur-xl text-left">
+            {/* Compact Welcome & Onboarding Strip */}
+            <div className="flex items-center justify-center gap-2 flex-wrap text-xs pt-1">
               {currentUser ? (
-                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                  <div className="flex items-center gap-3.5">
-                    <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-brand-orange to-purple-600 flex items-center justify-center text-obsidian-950 font-black text-xl shrink-0 shadow-glow-orange">
-                      👑
-                    </div>
-                    <div>
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <span className="text-base sm:text-lg font-black text-white">
-                          Welcome back, <span className="text-transparent bg-clip-text bg-gradient-to-r from-brand-orange to-amber-300">{currentUser.username}</span>!
-                        </span>
-                        <span className="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 font-mono font-bold text-[10px] uppercase">
-                          Verified {currentUser.merchantType}
-                        </span>
-                        <span className="px-2 py-0.5 rounded-full bg-white/10 text-slate-300 font-mono text-[10px]">
-                          📍 {currentUser.city}
-                        </span>
-                      </div>
-                      <div className="text-xs text-slate-300 mt-1">
-                        AI Recommended for your business: <strong>Trending STEM Toys & Smart Utility Goods</strong>. Pre-inspected with zero-DOA certification at Mysore Facility.
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center gap-2 shrink-0">
-                    <button
-                      onClick={() => {
-                        haptics.selection();
-                        setArProduct(CATALOG_PRODUCTS[0]);
-                        setShowArModal(true);
-                      }}
-                      className="px-3.5 py-2 rounded-xl bg-indigo-500/20 hover:bg-indigo-500/30 text-indigo-300 hover:text-white border border-indigo-500/30 text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer shadow-glow-purple"
-                    >
-                      <Rotate3d className="w-3.5 h-3.5 text-indigo-400" />
-                      <span>3D AR Studio</span>
-                    </button>
-
-                    <button
-                      onClick={() => {
-                        haptics.selection();
-                        setShowVoiceModal2026(true);
-                      }}
-                      className="px-3.5 py-2 rounded-xl bg-white/[0.06] hover:bg-white/[0.12] text-slate-200 border border-white/15 text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer"
-                    >
-                      <Mic className="w-3.5 h-3.5 text-brand-orange" />
-                      <span>Voice Search</span>
-                    </button>
-
-                    <button
-                      onClick={() => {
-                        haptics.selection();
-                        setShowOnboardingModal(true);
-                      }}
-                      className="p-2 rounded-xl bg-white/[0.04] hover:bg-white/[0.1] text-slate-400 hover:text-white transition-colors cursor-pointer"
-                      title="Edit Profile"
-                    >
-                      <User className="w-4 h-4" />
-                    </button>
-                  </div>
-                </div>
-              ) : (
-                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                  <div className="flex items-center gap-3.5">
-                    <div className="w-12 h-12 rounded-2xl bg-brand-orange/20 border border-brand-orange/30 flex items-center justify-center text-brand-orange text-xl shrink-0">
-                      🚀
-                    </div>
-                    <div>
-                      <div className="text-sm sm:text-base font-black text-white flex items-center gap-2">
-                        <span>New to 1AA? Create Your Merchant Username</span>
-                        <span className="px-2 py-0.5 rounded-full bg-brand-orange text-obsidian-950 font-black text-[10px]">Instant Access</span>
-                      </div>
-                      <div className="text-xs text-slate-300 mt-1">
-                        Register your business name and mobile number to unlock live order tracking, VIP restock rebates, and direct WhatsApp invoice delivery.
-                      </div>
-                    </div>
-                  </div>
-
+                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand-orange/10 border border-brand-orange/30 text-white">
+                  <span>👑 Welcome back, <strong className="text-brand-orange">{currentUser.username}</strong></span>
+                  <span className="text-slate-400">•</span>
+                  <span className="text-emerald-400 font-mono text-[11px]">📍 {currentUser.city}</span>
                   <button
                     onClick={() => {
                       haptics.selection();
                       setShowOnboardingModal(true);
                     }}
-                    className="px-4 py-2.5 rounded-full bg-gradient-to-r from-brand-orange to-brand-orange-light text-obsidian-950 text-xs font-black flex items-center gap-1.5 transition-all shadow-glow-orange shrink-0 cursor-pointer active:scale-95"
+                    className="text-[10px] text-brand-orange hover:underline cursor-pointer"
                   >
-                    <User className="w-3.5 h-3.5" />
-                    <span>Create Username (30s)</span>
+                    Edit
                   </button>
                 </div>
+              ) : (
+                <button
+                  onClick={() => {
+                    haptics.selection();
+                    setShowOnboardingModal(true);
+                  }}
+                  className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-brand-orange/15 hover:bg-brand-orange/25 border border-brand-orange/30 text-brand-orange text-xs font-bold transition-all cursor-pointer shadow-glow-orange active:scale-95"
+                >
+                  <User className="w-3.5 h-3.5" />
+                  <span>New Reseller? Create Merchant Username (30s)</span>
+                </button>
               )}
             </div>
 
-            {/* --- 3D SPLINE INTERACTIVE LOGISTICS HERO --- */}
-            <SplineInteractiveHero
-              onOpenArStudio={() => {
-                haptics.selection();
-                setArProduct(CATALOG_PRODUCTS[0]);
-                setShowArModal(true);
-              }}
-              onOpenPriceRadar={() => {
-                haptics.light();
-                setPriceCompareProduct(CATALOG_PRODUCTS[0]);
-                setShowPriceCompareModal(true);
-              }}
-            />
-
-            {/* Apple-style 3-feature grid */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-2 max-w-3xl mx-auto text-left">
-              
-              <div className="p-4 rounded-2xl apple-glass border border-white/[0.06] space-y-1">
-                <div className="flex items-center gap-2 text-white font-semibold text-xs">
-                  <CheckCircle2 className="w-4 h-4 text-brand-blue-light" />
-                  Courier Included + 25% Margin
-                </div>
-                <div className="text-[11px] text-slate-400">
-                  Landed cost includes door courier + 25% 1AA margin. Save 40%–70% vs Amazon.
+            {/* Quick 3-feature reassurance bar */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 pt-1 text-left">
+              <div className="p-2.5 rounded-xl apple-glass border border-white/[0.06] flex items-center gap-2">
+                <CheckCircle2 className="w-4 h-4 text-brand-blue-light shrink-0" />
+                <div className="text-[11px] text-slate-300">
+                  <strong>Courier Included</strong> + Flat 25% Margin
                 </div>
               </div>
-
-              <div className="p-4 rounded-2xl apple-glass border border-white/[0.06] space-y-1">
-                <div className="flex items-center gap-2 text-white font-semibold text-xs">
-                  <Percent className="w-4 h-4 text-brand-orange" />
-                  5% Volume Rebate
-                </div>
-                <div className="text-[11px] text-slate-400">
-                  Automatic wholesale rebate triggers when order crosses 50 units.
+              <div className="p-2.5 rounded-xl apple-glass border border-white/[0.06] flex items-center gap-2">
+                <Percent className="w-4 h-4 text-brand-orange shrink-0" />
+                <div className="text-[11px] text-slate-300">
+                  <strong>5% Volume Rebate</strong> on 50+ units
                 </div>
               </div>
-
-              <div className="p-4 rounded-2xl apple-glass border border-white/[0.06] space-y-1">
-                <div className="flex items-center gap-2 text-white font-semibold text-xs">
-                  <Truck className="w-4 h-4 text-brand-orange" />
-                  10–15d (<span className="text-brand-orange font-bold">&lt;7d Express</span>)
-                </div>
-                <div className="text-[11px] text-slate-400">
-                  Shipment starts post payment. Insured zero-DOA Mysore dispatch.
-                </div>
-              </div>
-
-            </div>
-
-            {/* GOD-TIER PROMINENT DELIVERY TIMELINE & INTERACTIVE PINCODE ESTIMATOR BAR */}
-            <div className="max-w-3xl mx-auto rounded-3xl p-5 bg-gradient-to-r from-brand-orange/15 via-white/[0.03] to-brand-blue/15 border border-brand-orange/30 shadow-2xl backdrop-blur-xl space-y-4">
-              <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-                <div className="flex items-center gap-3.5 text-left">
-                  <div className="w-12 h-12 rounded-2xl bg-brand-orange/20 border border-brand-orange/40 flex items-center justify-center text-brand-orange shrink-0 shadow-glow-orange">
-                    <Truck className="w-6 h-6" />
-                  </div>
-                  <div>
-                    <div className="text-sm font-bold text-white flex items-center gap-2">
-                      <span>Delivery Timeline: 10–15 Days</span>
-                      <span className="px-2 py-0.5 rounded-full bg-brand-orange text-obsidian-950 font-black text-[10px]">Express: Within 7 Days</span>
-                    </div>
-                    <div className="text-xs text-slate-300 mt-1 leading-snug">
-                      Shipment process commences <strong>immediately post payment confirmation</strong>. 100% pre-dispatch bench tested in Mysore Central Hub.
-                    </div>
-                  </div>
-                </div>
-                <div className="flex items-center gap-2 shrink-0">
-                  <button
-                    onClick={() => {
-                      haptics.light();
-                      setShowTransitModal(true);
-                    }}
-                    className="px-3.5 py-2 rounded-full bg-white/[0.06] hover:bg-white/[0.12] text-slate-200 border border-white/15 text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer"
-                  >
-                    <MapPin className="w-3.5 h-3.5 text-emerald-400" />
-                    <span>City Transit SLA</span>
-                  </button>
-                  <button
-                    onClick={() => {
-                      haptics.light();
-                      setShowAiAgentModal(true);
-                    }}
-                    className="px-4 py-2 rounded-full bg-gradient-to-r from-purple-600 to-indigo-600 hover:brightness-110 text-white border border-white/20 text-xs font-bold flex items-center gap-1.5 transition-all shadow-glow-purple cursor-pointer"
-                  >
-                    <Bot className="w-3.5 h-3.5 text-purple-200" />
-                    <span>Ask AI Agent</span>
-                  </button>
-                </div>
-              </div>
-
-              {/* Real-Time Indian Pincode Delivery SLA Engine */}
-              <div className="pt-3 border-t border-white/[0.08] flex flex-col gap-2.5 text-left">
-                <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
-                  <div className="flex items-center gap-2 w-full sm:w-auto">
-                    <div className="relative flex-1 sm:w-64">
-                      <input
-                        type="text"
-                        maxLength={6}
-                        value={pincodeInput}
-                        onChange={(e) => handlePincodeCheck(e.target.value)}
-                        placeholder="Check Pincode (e.g. 570001)..."
-                        className="w-full bg-black/40 border border-white/15 rounded-xl px-3 py-1.5 text-xs text-white placeholder-slate-500 font-mono focus:outline-none focus:border-brand-orange"
-                      />
-                      <MapPin className="w-3.5 h-3.5 text-brand-orange absolute right-2.5 top-2.5 pointer-events-none" />
-                    </div>
-                  </div>
-
-                  {pincodeResult ? (
-                    <div className="w-full sm:flex-1 p-2 rounded-xl bg-emerald-500/15 border border-emerald-500/30 text-[11px] font-mono flex items-center justify-between gap-2">
-                      <div>
-                        <span className="text-white font-bold">{pincodeResult.city}: </span>
-                        <span className="text-emerald-300 font-bold">{pincodeResult.eta}</span>
-                        <span className="text-slate-400 hidden md:inline"> ({pincodeResult.expressEta})</span>
-                      </div>
-                      <span className="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 text-[10px] font-bold shrink-0">
-                        ✓ Free Door Freight
-                      </span>
-                    </div>
-                  ) : (
-                    <div className="text-[11px] text-slate-400 font-mono flex items-center gap-1.5">
-                      <ShieldCheck className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-                      <span>Mysore Hub: 24h • Bangalore: 1–2d • All-India: 10–15d (&lt;7d Express Priority)</span>
-                    </div>
-                  )}
-                </div>
-
-                {/* Quick 1-Tap City Presets for Fast SLA Lookup */}
-                <div className="flex flex-wrap items-center gap-1.5 pt-0.5">
-                  <span className="text-[10px] text-slate-500 font-mono">1-Tap SLA:</span>
-                  {[
-                    { name: "Mysore", pin: "570001" },
-                    { name: "Bangalore", pin: "560001" },
-                    { name: "Chennai", pin: "600001" },
-                    { name: "Mumbai", pin: "400001" },
-                    { name: "Delhi", pin: "110001" },
-                  ].map((c) => (
-                    <button
-                      key={c.name}
-                      onClick={() => {
-                        haptics.selection();
-                        handlePincodeCheck(c.pin);
-                      }}
-                      className={`px-2 py-0.5 rounded-md text-[10px] font-mono transition-colors cursor-pointer border ${
-                        pincodeInput === c.pin
-                          ? "bg-brand-orange text-obsidian-950 font-bold border-brand-orange shadow-glow-orange"
-                          : "bg-white/[0.04] text-slate-300 hover:text-white border-white/10 hover:border-white/20"
-                      }`}
-                    >
-                      {c.name} ({c.pin})
-                    </button>
-                  ))}
+              <div className="p-2.5 rounded-xl apple-glass border border-white/[0.06] flex items-center gap-2">
+                <Truck className="w-4 h-4 text-brand-orange shrink-0" />
+                <div className="text-[11px] text-slate-300">
+                  <strong>10–15d</strong> (&lt;7d Express Priority)
                 </div>
               </div>
             </div>
 
           </div>
 
-            {/* APPLE DYNAMIC MILESTONE ISLAND (Wholesale Volume Rebate) */}
-            <div className="max-w-4xl mx-auto apple-glass rounded-3xl p-6 sm:p-7 space-y-4 border border-white/[0.08] shadow-apple-card">
+          {/* AMAZON / FLIPKART STYLE DISCOVERY & SEARCH CONSOLE */}
+          <div className="space-y-3 pt-2">
+            
+            <div className="flex flex-col lg:flex-row justify-between items-stretch lg:items-center gap-3">
               
-              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
-                <div className="flex items-center gap-3">
-                  <div className={`w-10 h-10 rounded-2xl flex items-center justify-center ${
-                    metrics.units > 0 
-                      ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30' 
-                      : 'bg-brand-orange/15 text-brand-orange border border-brand-orange/30'
-                  }`}>
-                    <ShieldCheck className="w-5 h-5" />
-                  </div>
-                  
-                  <div>
-                    <div className="text-sm font-bold text-white flex items-center gap-2">
-                      <span>Direct Factory Dispatch</span>
-                      <span className="text-[10px] px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 font-mono font-bold">
-                        No Minimum Order
-                      </span>
-                    </div>
-                    <div className="text-xs text-slate-400 mt-0.5">
-                      Order single sample units or bulk master cartons with verified direct factory pricing.
-                    </div>
-                  </div>
-                </div>
-
-                <div className="text-right font-mono text-xs sm:self-center">
-                  <div className="text-slate-400 text-[11px]">Selected Value:</div>
-                  <div className="text-lg font-black text-brand-orange">
-                    ₹{metrics.finalAmount.toLocaleString('en-IN')}
-                    <span className="text-xs text-slate-400 font-normal"> ({metrics.units} pcs)</span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Progress Bar for 5% Wholesale Rebate */}
-              <div className="w-full bg-obsidian-950 rounded-full h-2 overflow-hidden border border-white/[0.06]">
-                <div 
-                  className={`h-full transition-all duration-700 ease-out rounded-full ${
-                    metrics.units >= 50 
-                      ? 'bg-gradient-to-r from-emerald-500 to-brand-blue shadow-glow-blue' 
-                      : 'bg-gradient-to-r from-brand-orange-dark to-brand-orange shadow-glow-orange'
-                  }`}
-                  style={{ width: `${Math.min(100, (metrics.units / 50) * 100)}%` }}
+              {/* Prominent Capsule Search Bar with Real-Time Voice Search */}
+              <div className="relative flex-1 max-w-xl">
+                <Search className="w-4 h-4 text-slate-400 absolute left-4 top-3.5" />
+                <input
+                  type="text"
+                  placeholder="Search products, SKUs, or voice search (e.g. 'electric kettle', 'RC car', 'toys')..."
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  className="w-full bg-white/[0.06] border border-white/15 rounded-full pl-11 pr-28 py-3 text-xs sm:text-sm text-white placeholder-slate-400 focus:outline-none focus:border-brand-orange focus:ring-1 focus:ring-brand-orange transition-all backdrop-blur-md shadow-inner"
                 />
-              </div>
-
-              {/* Volume Rebate Milestone Banner */}
-              <div className="flex flex-col sm:flex-row justify-between items-center text-xs pt-1 text-slate-400 border-t border-white/[0.06]">
-                <span className="flex items-center gap-2">
-                  <Percent className="w-3.5 h-3.5 text-brand-orange" />
-                  <span>Wholesale Rebate Tier:</span>
-                  <strong className="text-white">{metrics.units} / 50 units for 5% auto rebate</strong>
-                </span>
-
-                {metrics.units >= 50 ? (
-                  <span className="text-emerald-400 font-semibold flex items-center gap-1.5 pt-1 sm:pt-0">
-                    <CheckCircle2 className="w-3.5 h-3.5" />
-                    5% Volume Rebate Active (-₹{metrics.volumeDiscount.toLocaleString('en-IN')})
-                  </span>
-                ) : (
-                  <span className="text-brand-orange pt-1 sm:pt-0">
-                    Add {50 - metrics.units} more pieces for 5% automated discount
-                  </span>
-                )}
-              </div>
-
-            </div>
-
-            {/* --- 🕶️ AR PRODUCT PREVIEW SECTION ("TRY BEFORE YOU BUY") --- */}
-            <div className="max-w-4xl mx-auto rounded-3xl p-6 sm:p-7 bg-gradient-to-br from-indigo-950/40 via-obsidian-950 to-purple-950/40 border border-indigo-500/30 shadow-2xl backdrop-blur-xl relative overflow-hidden">
-              <div className="absolute top-0 right-0 w-80 h-80 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none" />
-              
-              <div className="flex flex-col lg:flex-row items-center justify-between gap-6 relative z-10 text-left">
-                <div className="space-y-3 max-w-xl">
-                  <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-500/20 border border-indigo-500/40 text-indigo-300 text-xs font-bold">
-                    <Rotate3d className="w-3.5 h-3.5 text-indigo-400" />
-                    <span>3D & Augmented Reality • Try Before You Buy</span>
-                  </div>
-
-                  <h2 className="text-xl sm:text-2xl font-black text-white leading-tight">
-                    AR Product Preview: <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 via-purple-300 to-brand-orange">Inspect Before You Procure</span>
-                  </h2>
-
-                  <p className="text-xs sm:text-sm text-slate-300 leading-relaxed">
-                    Test product build quality, exact millimeter sizing, and industrial finishes in 360° rotation before ordering wholesale cartons. Activate your camera to project true 1:1 scale holograms onto your warehouse floor or shop shelf.
-                  </p>
-
-                  <div className="flex flex-wrap items-center gap-2.5 pt-1">
-                    <button
-                      onClick={() => {
-                        haptics.selection();
-                        setArProduct(CATALOG_PRODUCTS.find(p => p.sku === "1AA-KETL-FOLD") || CATALOG_PRODUCTS[0]);
-                        setShowArModal(true);
-                      }}
-                      className="px-4 py-2.5 rounded-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:brightness-110 text-white font-black text-xs flex items-center gap-2 shadow-glow-purple transition-all cursor-pointer active:scale-95"
-                    >
-                      <Camera className="w-4 h-4" />
-                      <span>Launch AR Camera Studio</span>
-                    </button>
-
-                    <button
-                      onClick={() => {
-                        haptics.light();
-                        setArProduct(CATALOG_PRODUCTS.find(p => p.sku === "1AA-RC-DRIFT4WD") || CATALOG_PRODUCTS[1]);
-                        setShowArModal(true);
-                      }}
-                      className="px-3.5 py-2.5 rounded-full bg-white/[0.06] hover:bg-white/[0.12] text-slate-200 border border-white/15 font-bold text-xs flex items-center gap-1.5 transition-all cursor-pointer"
-                    >
-                      <Rotate3d className="w-3.5 h-3.5 text-brand-orange" />
-                      <span>4WD RC Drift Car 3D</span>
-                    </button>
-
-                    <button
-                      onClick={() => {
-                        haptics.light();
-                        setArProduct(CATALOG_PRODUCTS.find(p => p.sku === "1AA-VAC-120W") || CATALOG_PRODUCTS[2]);
-                        setShowArModal(true);
-                      }}
-                      className="px-3.5 py-2.5 rounded-full bg-white/[0.06] hover:bg-white/[0.12] text-slate-200 border border-white/15 font-bold text-xs flex items-center gap-1.5 transition-all cursor-pointer"
-                    >
-                      <Rotate3d className="w-3.5 h-3.5 text-brand-blue-light" />
-                      <span>120W Vacuum 3D</span>
-                    </button>
-                  </div>
-                </div>
-
-                {/* 3D Hologram Stage Card */}
-                <div 
-                  onClick={() => {
-                    haptics.selection();
-                    setArProduct(CATALOG_PRODUCTS[0]);
-                    setShowArModal(true);
-                  }}
-                  className="w-full lg:w-64 p-4 rounded-2xl bg-black/50 border border-white/10 hover:border-indigo-400/60 transition-all cursor-pointer group text-center"
-                >
-                  <div className="flex items-center justify-between text-[10px] font-mono text-indigo-300 font-bold mb-2">
-                    <span>360° Studio</span>
-                    <span className="px-1.5 py-0.2 rounded bg-indigo-500/20 text-indigo-400">Live Orbit</span>
-                  </div>
-                  <div className="w-28 h-28 mx-auto relative flex items-center justify-center my-1">
-                    <img
-                      src={CATALOG_PRODUCTS[0].image}
-                      alt={CATALOG_PRODUCTS[0].name}
-                      className="w-24 h-24 object-cover rounded-xl group-hover:scale-110 group-hover:rotate-6 transition-all duration-500"
-                    />
-                    <div className="absolute inset-0 border-2 border-dashed border-indigo-400/40 rounded-full animate-spin pointer-events-none" style={{ animationDuration: '15s' }} />
-                  </div>
-                  <div className="text-xs font-bold text-white group-hover:text-indigo-300 transition-colors truncate">
-                    {CATALOG_PRODUCTS[0].name}
-                  </div>
-                  <div className="text-[10px] text-slate-400 font-mono mt-0.5">
-                    Click to test 3D & Room AR
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* CONTROLS (Search, Category Pills, Sort) */}
-            <div className="space-y-4">
-              
-              <div className="flex flex-col lg:flex-row justify-between items-stretch lg:items-center gap-4">
-                
-                {/* Apple-style Capsule Search Bar with Voice Input */}
-                <div className="relative flex-1 max-w-md">
-                  <Search className="w-4 h-4 text-slate-400 absolute left-4 top-3.5" />
-                  <input
-                    type="text"
-                    placeholder="Search by product, SKU, or specs..."
-                    value={search}
-                    onChange={(e) => setSearch(e.target.value)}
-                    className="w-full bg-white/[0.04] border border-white/10 rounded-full pl-11 pr-24 py-3 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-brand-orange/80 transition-all backdrop-blur-md shadow-inner"
-                  />
-                  <div className="absolute right-3 top-2 flex items-center gap-1.5">
-                    {search && (
-                      <button 
-                        type="button"
-                        onClick={() => {
-                          haptics.light();
-                          setSearch("");
-                        }}
-                        className="p-1 text-slate-400 hover:text-white rounded-full hover:bg-white/10 transition-colors cursor-pointer"
-                        title="Clear search text"
-                        aria-label="Clear search text"
-                      >
-                        <X className="w-3.5 h-3.5" />
-                      </button>
-                    )}
-                    <button
+                <div className="absolute right-2.5 top-2 flex items-center gap-1.5">
+                  {search && (
+                    <button 
                       type="button"
                       onClick={() => {
-                        haptics.selection();
-                        setShowVoiceModal2026(true);
+                        haptics.light();
+                        setSearch("");
                       }}
-                      className="p-1.5 rounded-full bg-gradient-to-r from-brand-orange/20 to-brand-blue/20 hover:from-brand-orange hover:to-brand-blue text-brand-orange hover:text-obsidian-950 border border-brand-orange/40 transition-all cursor-pointer shadow-glow-orange flex items-center gap-1 text-[10px] font-bold px-2.5"
-                      title="Launch 2026 Voice Search (Sonic Radial Waveform & Smart Intent Parsing)"
-                      aria-label="Voice search"
+                      className="p-1.5 text-slate-400 hover:text-white rounded-full hover:bg-white/10 transition-colors cursor-pointer"
+                      title="Clear search"
+                      aria-label="Clear search"
                     >
-                      <Mic className="w-3.5 h-3.5" />
-                      <span className="hidden sm:inline font-mono">2026 Voice</span>
+                      <X className="w-3.5 h-3.5" />
                     </button>
-                  </div>
-                </div>
-
-                {/* Sort Dropdown */}
-                <div className="flex items-center gap-3">
-                  <div className="text-xs text-slate-400 hidden sm:block">
-                    Showing <span className="text-white font-bold">{filteredAndSorted.length}</span> factory lines
-                  </div>
-
-                  <div className="flex items-center gap-2 bg-white/[0.04] border border-white/10 px-4 py-2 rounded-full text-xs backdrop-blur-md">
-                    <ArrowUpDown className="w-3.5 h-3.5 text-brand-orange" />
-                    <span className="text-slate-400 text-[11px]">Sort:</span>
-                    <select
-                      value={sortBy}
-                      onChange={(e) => setSortBy(e.target.value as any)}
-                      className="bg-transparent text-white text-xs focus:outline-none cursor-pointer"
-                    >
-                      <option value="recommended" className="bg-obsidian-900 text-white">Recommended</option>
-                      <option value="savings" className="bg-obsidian-900 text-white">Highest Savings (₹)</option>
-                      <option value="price-asc" className="bg-obsidian-900 text-white">Price: Low to High</option>
-                      <option value="price-desc" className="bg-obsidian-900 text-white">Price: High to Low</option>
-                      <option value="carton" className="bg-obsidian-900 text-white">Master Carton Size</option>
-                    </select>
-                  </div>
-                </div>
-
-              </div>
-
-              {/* Category Pills with Dynamic Counts */}
-              <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none text-xs">
-                {categories.map((cat) => (
+                  )}
                   <button
-                    key={cat}
+                    type="button"
                     onClick={() => {
                       haptics.selection();
-                      setSelectedCategory(cat);
+                      setShowVoiceModal2026(true);
                     }}
-                    className={`px-4 py-2 rounded-full whitespace-nowrap transition-all duration-300 text-xs font-medium flex items-center gap-1.5 cursor-pointer ${
-                      selectedCategory === cat
-                        ? "bg-brand-orange text-obsidian-950 font-bold shadow-glow-orange scale-[1.02]"
-                        : "bg-white/[0.04] text-slate-300 hover:text-white border border-white/[0.08] hover:border-white/20"
-                    }`}
+                    className="p-1.5 rounded-full bg-gradient-to-r from-brand-orange to-amber-500 hover:brightness-110 text-obsidian-950 border border-brand-orange/50 transition-all cursor-pointer shadow-glow-orange flex items-center gap-1.5 text-xs font-black px-3"
+                    title="Real-Time Streaming Voice Search (Amazon / Flipkart / YouTube Style)"
+                    aria-label="Real-time voice search"
                   >
-                    <span>{cat}</span>
-                    <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-mono ${
-                      selectedCategory === cat ? "bg-black/25 text-obsidian-950 font-black" : "bg-white/10 text-slate-400"
-                    }`}>
-                      {categoryCounts[cat] || 0}
-                    </span>
+                    <Mic className="w-3.5 h-3.5 text-obsidian-950 animate-pulse" />
+                    <span className="font-mono">Voice</span>
                   </button>
-                ))}
+                </div>
               </div>
 
-              {/* High-Converting Quick Filters */}
-              <div className="flex flex-wrap items-center gap-2 pt-1 text-xs">
-                <span className="text-[11px] text-slate-400 font-medium">Quick Filters:</span>
-                <button
-                  onClick={() => {
-                    haptics.selection();
-                    setQuickFilter("all");
-                  }}
-                  className={`px-3 py-1 rounded-full text-[11px] font-semibold transition-all cursor-pointer ${
-                    quickFilter === "all"
-                      ? "bg-white/15 text-white border border-white/30"
-                      : "bg-white/[0.03] text-slate-400 hover:text-white border border-white/[0.06]"
-                  }`}
-                >
-                  All ({CATALOG_PRODUCTS.length})
-                </button>
-                <button
-                  onClick={() => {
-                    haptics.selection();
-                    setQuickFilter("high-margin");
-                  }}
-                  className={`px-3 py-1 rounded-full text-[11px] font-semibold flex items-center gap-1.5 transition-all cursor-pointer ${
-                    quickFilter === "high-margin"
-                      ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 shadow-sm"
-                      : "bg-white/[0.03] text-slate-400 hover:text-emerald-400 border border-white/[0.06]"
-                  }`}
-                >
-                  <TrendingUp className="w-3 h-3 text-emerald-400" />
-                  High Margin (&gt;55% ROI)
-                </button>
-                <button
-                  onClick={() => {
-                    haptics.selection();
-                    setQuickFilter("under-150");
-                  }}
-                  className={`px-3 py-1 rounded-full text-[11px] font-semibold flex items-center gap-1.5 transition-all cursor-pointer ${
-                    quickFilter === "under-150"
-                      ? "bg-brand-orange/20 text-brand-orange border border-brand-orange/40 shadow-sm"
-                      : "bg-white/[0.03] text-slate-400 hover:text-brand-orange border border-white/[0.06]"
-                  }`}
-                >
-                  <Zap className="w-3 h-3 text-brand-orange" />
-                  Under ₹150 Fast Movers
-                </button>
-                <button
-                  onClick={() => {
-                    haptics.selection();
-                    setQuickFilter("top-rated");
-                  }}
-                  className={`px-3 py-1 rounded-full text-[11px] font-semibold flex items-center gap-1.5 transition-all cursor-pointer ${
-                    quickFilter === "top-rated"
-                      ? "bg-amber-500/20 text-amber-400 border border-amber-500/40 shadow-sm"
-                      : "bg-white/[0.03] text-slate-400 hover:text-amber-400 border border-white/[0.06]"
-                  }`}
-                >
-                  <Star className="w-3 h-3 text-amber-400 fill-amber-400" />
-                  Top Rated (4.8★+)
-                </button>
+              {/* Mode Toggle & Sort Dropdown */}
+              <div className="flex items-center gap-2 flex-wrap justify-between lg:justify-end">
+                {/* Retail Sample vs B2B Master Carton Toggle */}
+                <div className="flex items-center p-1 rounded-full bg-white/[0.04] border border-white/10 text-xs">
+                  <button
+                    onClick={() => {
+                      haptics.selection();
+                      setMode("retail");
+                    }}
+                    className={`px-3 py-1 rounded-full text-xs font-bold transition-all cursor-pointer ${
+                      mode === "retail"
+                        ? "bg-brand-orange text-obsidian-950 shadow-glow-orange"
+                        : "text-slate-400 hover:text-white"
+                    }`}
+                  >
+                    Individual Pcs
+                  </button>
+                  <button
+                    onClick={() => {
+                      haptics.selection();
+                      setMode("b2b");
+                    }}
+                    className={`px-3 py-1 rounded-full text-xs font-bold transition-all cursor-pointer ${
+                      mode === "b2b"
+                        ? "bg-brand-orange text-obsidian-950 shadow-glow-orange"
+                        : "text-slate-400 hover:text-white"
+                    }`}
+                  >
+                    Master Cartons (B2B)
+                  </button>
+                </div>
 
-                {/* City Transit SLA Quick Lookup */}
-                <button
-                  onClick={() => {
-                    haptics.light();
-                    setShowTransitModal(true);
-                  }}
-                  className="px-3 py-1 rounded-full text-[11px] font-semibold flex items-center gap-1.5 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 transition-all cursor-pointer"
-                  title="Check transit days for your city"
-                >
-                  <Truck className="w-3 h-3 text-emerald-400" />
-                  <span>City Transit SLA</span>
-                </button>
-
-                {/* View Density Quick Toggle */}
-                <button
-                  onClick={() => {
-                    haptics.light();
-                    setShowDisplayModal(true);
-                  }}
-                  className="px-3 py-1 rounded-full text-[11px] font-semibold flex items-center gap-1.5 bg-white/[0.04] hover:bg-white/[0.08] text-slate-300 border border-white/10 transition-all cursor-pointer"
-                  title="Switch between Compact, Standard, and Retina Ultra HD views"
-                >
-                  <Sliders className="w-3 h-3 text-brand-orange" />
-                  <span>View: <strong className="capitalize text-white">{displayConfig.density}</strong></span>
-                </button>
+                <div className="flex items-center gap-2 bg-white/[0.04] border border-white/10 px-3.5 py-1.5 rounded-full text-xs backdrop-blur-md">
+                  <ArrowUpDown className="w-3.5 h-3.5 text-brand-orange" />
+                  <span className="text-slate-400 text-[11px] hidden sm:inline">Sort:</span>
+                  <select
+                    value={sortBy}
+                    onChange={(e) => setSortBy(e.target.value as any)}
+                    className="bg-transparent text-white text-xs focus:outline-none cursor-pointer"
+                  >
+                    <option value="recommended" className="bg-obsidian-900 text-white">Recommended</option>
+                    <option value="savings" className="bg-obsidian-900 text-white">Highest Savings (₹)</option>
+                    <option value="price-asc" className="bg-obsidian-900 text-white">Price: Low to High</option>
+                    <option value="price-desc" className="bg-obsidian-900 text-white">Price: High to Low</option>
+                    <option value="carton" className="bg-obsidian-900 text-white">Master Carton Size</option>
+                  </select>
+                </div>
               </div>
 
             </div>
 
-            {/* PRODUCT CATALOG GRID (Apple Studio Pedestal Style) */}
-            <div className="catalog-grid grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            {/* Category Pills with Dynamic Counts */}
+            <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none text-xs">
+              {categories.map((cat) => (
+                <button
+                  key={cat}
+                  onClick={() => {
+                    haptics.selection();
+                    setSelectedCategory(cat);
+                  }}
+                  className={`px-3.5 py-1.5 rounded-full whitespace-nowrap transition-all duration-300 text-xs font-medium flex items-center gap-1.5 cursor-pointer ${
+                    selectedCategory === cat
+                      ? "bg-brand-orange text-obsidian-950 font-bold shadow-glow-orange scale-[1.02]"
+                      : "bg-white/[0.04] text-slate-300 hover:text-white border border-white/[0.08] hover:border-white/20"
+                  }`}
+                >
+                  <span>{cat}</span>
+                  <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-mono ${
+                    selectedCategory === cat ? "bg-black/25 text-obsidian-950 font-black" : "bg-white/10 text-slate-400"
+                  }`}>
+                    {categoryCounts[cat] || 0}
+                  </span>
+                </button>
+              ))}
+            </div>
+
+            {/* Quick Filters */}
+            <div className="flex flex-wrap items-center gap-2 pt-0.5 text-xs">
+              <span className="text-[11px] text-slate-400 font-medium">Quick Filters:</span>
+              <button
+                onClick={() => {
+                  haptics.selection();
+                  setQuickFilter("all");
+                }}
+                className={`px-3 py-1 rounded-full text-[11px] font-semibold transition-all cursor-pointer ${
+                  quickFilter === "all"
+                    ? "bg-white/15 text-white border border-white/30"
+                    : "bg-white/[0.03] text-slate-400 hover:text-white border border-white/[0.06]"
+                }`}
+              >
+                All ({CATALOG_PRODUCTS.length})
+              </button>
+              <button
+                onClick={() => {
+                  haptics.selection();
+                  setQuickFilter("high-margin");
+                }}
+                className={`px-3 py-1 rounded-full text-[11px] font-semibold flex items-center gap-1.5 transition-all cursor-pointer ${
+                  quickFilter === "high-margin"
+                    ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 shadow-sm"
+                    : "bg-white/[0.03] text-slate-400 hover:text-emerald-400 border border-white/[0.06]"
+                }`}
+              >
+                <TrendingUp className="w-3 h-3 text-emerald-400" />
+                High Margin (&gt;55% ROI)
+              </button>
+              <button
+                onClick={() => {
+                  haptics.selection();
+                  setQuickFilter("under-150");
+                }}
+                className={`px-3 py-1 rounded-full text-[11px] font-semibold flex items-center gap-1.5 transition-all cursor-pointer ${
+                  quickFilter === "under-150"
+                    ? "bg-brand-orange/20 text-brand-orange border border-brand-orange/40 shadow-sm"
+                    : "bg-white/[0.03] text-slate-400 hover:text-brand-orange border border-white/[0.06]"
+                }`}
+              >
+                <Zap className="w-3 h-3 text-brand-orange" />
+                Under ₹150 Fast Movers
+              </button>
+              <button
+                onClick={() => {
+                  haptics.selection();
+                  setQuickFilter("top-rated");
+                }}
+                className={`px-3 py-1 rounded-full text-[11px] font-semibold flex items-center gap-1.5 transition-all cursor-pointer ${
+                  quickFilter === "top-rated"
+                    ? "bg-amber-500/20 text-amber-400 border border-amber-500/40 shadow-sm"
+                    : "bg-white/[0.03] text-slate-400 hover:text-amber-400 border border-white/[0.06]"
+                }`}
+              >
+                <Star className="w-3 h-3 text-amber-400 fill-amber-400" />
+                Top Rated (4.8★+)
+              </button>
+
+              {/* City Transit SLA Quick Lookup */}
+              <button
+                onClick={() => {
+                  haptics.light();
+                  setShowTransitModal(true);
+                }}
+                className="px-3 py-1 rounded-full text-[11px] font-semibold flex items-center gap-1.5 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 transition-all cursor-pointer"
+                title="Check transit days for your city"
+              >
+                <Truck className="w-3 h-3 text-emerald-400" />
+                <span>City Transit SLA</span>
+              </button>
+
+              {/* View Density Quick Toggle */}
+              <button
+                onClick={() => {
+                  haptics.light();
+                  setShowDisplayModal(true);
+                }}
+                className="px-3 py-1 rounded-full text-[11px] font-semibold flex items-center gap-1.5 bg-white/[0.04] hover:bg-white/[0.08] text-slate-300 border border-white/10 transition-all cursor-pointer"
+                title="Switch between Compact, Standard, and Retina Ultra HD views"
+              >
+                <Sliders className="w-3 h-3 text-brand-orange" />
+                <span>View: <strong className="capitalize text-white">{displayConfig.density}</strong></span>
+              </button>
+            </div>
+
+          </div>
+
+          {/* PRODUCT CATALOG GRID (Immediately Visible Above The Fold!) */}
+          <div id="catalog-products-section" className="catalog-grid grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 pt-2">
               {filteredAndSorted.map((product) => {
                 const qty = quantities[product.sku] || 0;
                 const savings = product.marketPrice - product.fairPrice;
@@ -2067,6 +1725,280 @@ export default function OneAAStore() {
                 </button>
               </div>
             )}
+
+            {/* ================================================================ */}
+            {/* 👑 CUSTOMER IS KING • NO-BARGAIN FAIR PRICE GUARANTEE BANNER     */}
+            {/* (Displayed at the bottom of the page so home page is undisturbed)*/}
+            {/* ================================================================ */}
+            <div className="max-w-4xl mx-auto rounded-3xl p-6 sm:p-7 bg-gradient-to-r from-amber-500/15 via-brand-orange/15 to-amber-500/10 border-2 border-amber-500/40 shadow-2xl backdrop-blur-xl flex flex-col sm:flex-row items-center justify-between gap-5 text-left mt-10">
+              <div className="flex items-start sm:items-center gap-4">
+                <div className="w-14 h-14 rounded-2xl bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-amber-300 text-3xl shrink-0 shadow-glow-orange">
+                  👑
+                </div>
+                <div>
+                  <div className="text-base sm:text-lg font-black text-white flex items-center gap-2 flex-wrap">
+                    <span>Customer is King: No-Bargain Fair Price Guarantee</span>
+                    <span className="px-2.5 py-0.5 rounded-full bg-amber-400 text-obsidian-950 font-black text-[10px] uppercase tracking-wider">
+                      Zero Haggling
+                    </span>
+                  </div>
+                  <div className="text-xs text-slate-300 mt-1.5 leading-relaxed">
+                    Why bargain when you already get genuine factory-floor prices? We openly reveal our formula: <strong className="text-white">Factory Cost + Doorstep Courier Freight + Flat 25% 1AA Operating Margin = Final Wholesale Price</strong>. You save 40%–70% vs Amazon/Flipkart while getting 100% pre-dispatch bench tested quality from our Mysore Hub!
+                  </div>
+                </div>
+              </div>
+              <button
+                onClick={() => {
+                  haptics.light();
+                  setPriceCompareProduct(CATALOG_PRODUCTS[0]);
+                  setShowPriceCompareModal(true);
+                }}
+                className="px-5 py-3 rounded-full bg-gradient-to-r from-brand-orange to-amber-400 hover:brightness-110 text-obsidian-950 text-xs font-black flex items-center gap-2 transition-all shadow-glow-orange shrink-0 cursor-pointer active:scale-95"
+              >
+                <TrendingUp className="w-4 h-4" />
+                <span>Open Price Radar</span>
+              </button>
+            </div>
+
+            {/* GOD-TIER PROMINENT DELIVERY TIMELINE & INTERACTIVE PINCODE ESTIMATOR BAR */}
+            <div className="max-w-4xl mx-auto rounded-3xl p-5 sm:p-6 bg-gradient-to-r from-brand-orange/15 via-white/[0.03] to-brand-blue/15 border border-brand-orange/30 shadow-2xl backdrop-blur-xl space-y-4">
+              <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+                <div className="flex items-center gap-3.5 text-left">
+                  <div className="w-12 h-12 rounded-2xl bg-brand-orange/20 border border-brand-orange/40 flex items-center justify-center text-brand-orange shrink-0 shadow-glow-orange">
+                    <Truck className="w-6 h-6" />
+                  </div>
+                  <div>
+                    <div className="text-sm sm:text-base font-bold text-white flex items-center gap-2">
+                      <span>Delivery Timeline: 10–15 Days</span>
+                      <span className="px-2 py-0.5 rounded-full bg-brand-orange text-obsidian-950 font-black text-[10px]">Express: Within 7 Days</span>
+                    </div>
+                    <div className="text-xs text-slate-300 mt-1 leading-snug">
+                      Shipment process commences <strong>immediately post payment confirmation</strong>. 100% pre-dispatch bench tested in Mysore Central Hub.
+                    </div>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2 shrink-0">
+                  <button
+                    onClick={() => {
+                      haptics.light();
+                      setShowTransitModal(true);
+                    }}
+                    className="px-3.5 py-2 rounded-full bg-white/[0.06] hover:bg-white/[0.12] text-slate-200 border border-white/15 text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer"
+                  >
+                    <MapPin className="w-3.5 h-3.5 text-emerald-400" />
+                    <span>City Transit SLA</span>
+                  </button>
+                  <button
+                    onClick={() => {
+                      haptics.light();
+                      setShowAiAgentModal(true);
+                    }}
+                    className="px-4 py-2 rounded-full bg-gradient-to-r from-purple-600 to-indigo-600 hover:brightness-110 text-white border border-white/20 text-xs font-bold flex items-center gap-1.5 transition-all shadow-glow-purple cursor-pointer"
+                  >
+                    <Bot className="w-3.5 h-3.5 text-purple-200" />
+                    <span>Ask AI Agent</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Real-Time Indian Pincode Delivery SLA Engine */}
+              <div className="pt-3 border-t border-white/[0.08] flex flex-col gap-2.5 text-left">
+                <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
+                  <div className="flex items-center gap-2 w-full sm:w-auto">
+                    <div className="relative flex-1 sm:w-64">
+                      <input
+                        type="text"
+                        maxLength={6}
+                        value={pincodeInput}
+                        onChange={(e) => handlePincodeCheck(e.target.value)}
+                        placeholder="Check Pincode (e.g. 570001)..."
+                        className="w-full bg-black/40 border border-white/15 rounded-xl px-3 py-1.5 text-xs text-white placeholder-slate-500 font-mono focus:outline-none focus:border-brand-orange"
+                      />
+                      <MapPin className="w-3.5 h-3.5 text-brand-orange absolute right-2.5 top-2.5 pointer-events-none" />
+                    </div>
+                  </div>
+
+                  {pincodeResult ? (
+                    <div className="w-full sm:flex-1 p-2 rounded-xl bg-emerald-500/15 border border-emerald-500/30 text-[11px] font-mono flex items-center justify-between gap-2">
+                      <div>
+                        <span className="text-white font-bold">{pincodeResult.city}: </span>
+                        <span className="text-emerald-300 font-bold">{pincodeResult.eta}</span>
+                        <span className="text-slate-400 hidden md:inline"> ({pincodeResult.expressEta})</span>
+                      </div>
+                      <span className="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 text-[10px] font-bold shrink-0">
+                        ✓ Free Door Freight
+                      </span>
+                    </div>
+                  ) : (
+                    <div className="text-[11px] text-slate-400 font-mono flex items-center gap-1.5">
+                      <ShieldCheck className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                      <span>Mysore Hub: 24h • Bangalore: 1–2d • All-India: 10–15d (&lt;7d Express Priority)</span>
+                    </div>
+                  )}
+                </div>
+
+                {/* Quick 1-Tap City Presets for Fast SLA Lookup */}
+                <div className="flex flex-wrap items-center gap-1.5 pt-0.5">
+                  <span className="text-[10px] text-slate-500 font-mono">1-Tap SLA:</span>
+                  {[
+                    { name: "Mysore", pin: "570001" },
+                    { name: "Bangalore", pin: "560001" },
+                    { name: "Chennai", pin: "600001" },
+                    { name: "Mumbai", pin: "400001" },
+                    { name: "Delhi", pin: "110001" },
+                  ].map((c) => (
+                    <button
+                      key={c.name}
+                      onClick={() => {
+                        haptics.selection();
+                        handlePincodeCheck(c.pin);
+                      }}
+                      className={`px-2 py-0.5 rounded-md text-[10px] font-mono transition-colors cursor-pointer border ${
+                        pincodeInput === c.pin
+                          ? "bg-brand-orange text-obsidian-950 font-bold border-brand-orange shadow-glow-orange"
+                          : "bg-white/[0.04] text-slate-300 hover:text-white border-white/10 hover:border-white/20"
+                      }`}
+                    >
+                      {c.name} ({c.pin})
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* APPLE DYNAMIC MILESTONE ISLAND (Wholesale Volume Rebate) */}
+            <div className="max-w-4xl mx-auto apple-glass rounded-3xl p-6 sm:p-7 space-y-4 border border-white/[0.08] shadow-apple-card">
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+                <div className="flex items-center gap-3">
+                  <div className={`w-10 h-10 rounded-2xl flex items-center justify-center ${
+                    metrics.units > 0 
+                      ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30' 
+                      : 'bg-brand-orange/15 text-brand-orange border border-brand-orange/30'
+                  }`}>
+                    <ShieldCheck className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <div className="text-sm font-bold text-white flex items-center gap-2">
+                      <span>Direct Factory Dispatch</span>
+                      <span className="text-[10px] px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 font-mono font-bold">
+                        No Minimum Order
+                      </span>
+                    </div>
+                    <div className="text-xs text-slate-400 mt-0.5">
+                      Order single sample units or bulk master cartons with verified direct factory pricing.
+                    </div>
+                  </div>
+                </div>
+
+                <div className="text-right font-mono text-xs sm:self-center">
+                  <div className="text-slate-400 text-[11px]">Selected Value:</div>
+                  <div className="text-lg font-black text-brand-orange">
+                    ₹{metrics.finalAmount.toLocaleString('en-IN')}
+                    <span className="text-xs text-slate-400 font-normal"> ({metrics.units} pcs)</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Progress Bar for 5% Wholesale Rebate */}
+              <div className="w-full bg-obsidian-950 rounded-full h-2 overflow-hidden border border-white/[0.06]">
+                <div 
+                  className={`h-full transition-all duration-700 ease-out rounded-full ${
+                    metrics.units >= 50 
+                      ? 'bg-gradient-to-r from-emerald-500 to-brand-blue shadow-glow-blue' 
+                      : 'bg-gradient-to-r from-brand-orange-dark to-brand-orange shadow-glow-orange'
+                  }`}
+                  style={{ width: `${Math.min(100, (metrics.units / 50) * 100)}%` }}
+                />
+              </div>
+
+              {/* Volume Rebate Milestone Banner */}
+              <div className="flex flex-col sm:flex-row justify-between items-center text-xs pt-1 text-slate-400 border-t border-white/[0.06]">
+                <span className="flex items-center gap-2">
+                  <Percent className="w-3.5 h-3.5 text-brand-orange" />
+                  <span>Wholesale Rebate Tier:</span>
+                  <strong className="text-white">{metrics.units} / 50 units for 5% auto rebate</strong>
+                </span>
+
+                {metrics.units >= 50 ? (
+                  <span className="text-emerald-400 font-semibold flex items-center gap-1.5 pt-1 sm:pt-0">
+                    <CheckCircle2 className="w-3.5 h-3.5" />
+                    5% Volume Rebate Active (-₹{metrics.volumeDiscount.toLocaleString('en-IN')})
+                  </span>
+                ) : (
+                  <span className="text-brand-orange pt-1 sm:pt-0">
+                    Add {50 - metrics.units} more pieces for 5% automated discount
+                  </span>
+                )}
+              </div>
+            </div>
+
+            {/* --- 🤖 AUTONOMOUS AGENTIC AI FLEET SHOWCASE CARD --- */}
+            <div className="max-w-4xl mx-auto rounded-3xl p-6 sm:p-7 bg-gradient-to-br from-cyan-950/40 via-obsidian-950 to-blue-950/40 border border-cyan-500/30 shadow-2xl backdrop-blur-xl relative overflow-hidden">
+              <div className="flex flex-col lg:flex-row items-center justify-between gap-6 relative z-10 text-left">
+                <div className="space-y-3 max-w-xl">
+                  <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-cyan-500/20 border border-cyan-500/40 text-cyan-300 text-xs font-bold">
+                    <Bot className="w-3.5 h-3.5 text-cyan-400" />
+                    <span>Autonomous Agentic AI Infrastructure Active</span>
+                  </div>
+
+                  <h2 className="text-xl sm:text-2xl font-black text-white leading-tight">
+                    5 Autonomous AI Teams: <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-blue-300 to-brand-orange">Platform Self-Driving Engine</span>
+                  </h2>
+
+                  <p className="text-xs sm:text-sm text-slate-300 leading-relaxed">
+                    Our platform runs in an agentic way: <strong>AI Admin</strong> enforces system integrity, <strong>AI Logistics</strong> monitors carrier routes, <strong>AI Support &amp; BPO</strong> answers queries 24/7, <strong>AI Finance</strong> tracks margins and 18% GST, and <strong>AI Data &amp; QC</strong> audits bench testing. If any urgent bottleneck happens, the owner receives an instant approval request!
+                  </p>
+
+                  <div className="flex flex-wrap items-center gap-3 pt-1">
+                    <button
+                      onClick={() => {
+                        haptics.selection();
+                        setShowAgenticAiModal(true);
+                      }}
+                      className="px-5 py-2.5 rounded-full bg-gradient-to-r from-cyan-500 to-blue-600 hover:brightness-110 text-obsidian-950 font-black text-xs flex items-center gap-2 shadow-glow-blue transition-all cursor-pointer active:scale-95"
+                    >
+                      <Bot className="w-4 h-4" />
+                      <span>Open Agentic AI Control Center</span>
+                    </button>
+                    <button
+                      onClick={() => {
+                        haptics.light();
+                        setShowOpsHubModal(true);
+                      }}
+                      className="px-4 py-2.5 rounded-full bg-white/[0.06] hover:bg-white/[0.12] text-slate-200 border border-white/15 text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer"
+                    >
+                      <Boxes className="w-3.5 h-3.5 text-brand-blue-light" />
+                      <span>Wholesale Ops Hub</span>
+                    </button>
+                  </div>
+                </div>
+
+                <div 
+                  onClick={() => {
+                    haptics.selection();
+                    setShowAgenticAiModal(true);
+                  }}
+                  className="w-full lg:w-64 p-4 rounded-2xl bg-black/60 border border-cyan-500/30 hover:border-cyan-400/60 transition-all cursor-pointer group text-left space-y-2.5 shadow-xl"
+                >
+                  <div className="flex items-center justify-between text-[10px] font-mono text-cyan-300 font-bold">
+                    <span>Live Telemetry</span>
+                    <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
+                  </div>
+                  <div className="text-xs font-bold text-white group-hover:text-cyan-300 transition-colors">
+                    Agentic Decision Pipeline
+                  </div>
+                  <div className="text-[11px] text-slate-400 leading-snug">
+                    • 0 Stockouts Permitted<br/>
+                    • 100% Pre-Dispatch Bench QA<br/>
+                    • HITL Human-In-The-Loop Safety
+                  </div>
+                  <div className="text-[10px] text-cyan-400 font-mono font-bold flex items-center gap-1 pt-1">
+                    <span>Inspect 5 Teams</span>
+                    <ChevronRight className="w-3 h-3 group-hover:translate-x-1 transition-transform" />
+                  </div>
+                </div>
+              </div>
+            </div>
 
           </main>
         </div>
@@ -2842,7 +2774,27 @@ export default function OneAAStore() {
         }}
         onOpenUpiModal={() => setShowUpiModal(true)}
         onOpenRestockBundles={() => setShowRestockBundlesModal(true)}
+        onOpenArModal={() => {
+          setArProduct(filteredAndSorted[0] || CATALOG_PRODUCTS[0]);
+          setShowArModal(true);
+        }}
+        onOpenAgenticAiModal={() => setShowAgenticAiModal(true)}
         hasItemsInCart={metrics.units > 0}
+      />
+
+      {/* --- AUTONOMOUS AGENTIC AI OPERATIONS FLEET MODAL --- */}
+      <AgenticAIOperationsModal
+        isOpen={showAgenticAiModal}
+        onClose={() => setShowAgenticAiModal(false)}
+        onStockRefillRequested={(sku, qty) => {
+          const current = stockOverrides[sku] ?? (CATALOG_PRODUCTS.find(p => p.sku === sku)?.inStock || 0);
+          const updated = { ...stockOverrides, [sku]: current + qty };
+          setStockOverrides(updated);
+          localStorage.setItem("1aa_stock_overrides", JSON.stringify(updated));
+        }}
+        onDispatchOrderRequested={(orderRef) => {
+          handleOpenFsmTracker(orderRef, "MANIFESTED");
+        }}
       />
 
       {/* --- 1-CLICK WHOLESALE RESTOCK BUNDLES MODAL --- */}
@@ -2884,7 +2836,12 @@ export default function OneAAStore() {
           if (category) setSelectedCategory(category);
           if (filter) setQuickFilter(filter);
           setShowVoiceModal2026(false);
-          window.scrollTo({ top: 950, behavior: "smooth" });
+          const el = document.getElementById("catalog-products-section");
+          if (el) {
+            el.scrollIntoView({ behavior: "smooth", block: "start" });
+          } else {
+            window.scrollTo({ top: 200, behavior: "smooth" });
+          }
         }}
         onTrackOrder={handleOpenTracking}
       />
@@ -2961,6 +2918,20 @@ export default function OneAAStore() {
           >
             <Boxes className="w-3.5 h-3.5 text-brand-blue-light" />
             <span className="hidden sm:inline">Ops Hub</span>
+          </button>
+
+          {/* Autonomous AI Fleet Trigger */}
+          <button
+            onClick={() => {
+              haptics.chime();
+              setShowAgenticAiModal(true);
+            }}
+            className="flex items-center gap-1.5 px-3 py-2 rounded-full bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 font-bold text-xs transition-all cursor-pointer border border-emerald-500/30"
+            title="Launch Autonomous 5-Team Agentic AI Fleet & HITL Urgency Feed"
+          >
+            <Bot className="w-3.5 h-3.5 text-emerald-400" />
+            <span className="hidden sm:inline">AI Fleet</span>
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping hidden sm:inline" />
           </button>
 
         </div>

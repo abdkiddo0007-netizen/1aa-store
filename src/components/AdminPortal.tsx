@@ -22,8 +22,14 @@ import {
   Building2, 
   BarChart3, 
   Layers, 
-  Radio
+  Radio,
+  Bot,
+  Phone,
+  Flame,
+  Truck,
+  Cpu
 } from "lucide-react";
+import { OWNER_PHONE, OWNER_NAME } from "../utils/notificationMatrix";
 
 interface AdminPortalProps {
   onLogout: () => void;
@@ -31,7 +37,7 @@ interface AdminPortalProps {
 }
 
 export default function AdminPortal({ onLogout, onSwitchToStore }: AdminPortalProps) {
-  const [activeTab, setActiveTab] = useState<"pnl" | "orders" | "inventory" | "forecasting" | "webhooks">("pnl");
+  const [activeTab, setActiveTab] = useState<"pnl" | "orders" | "inventory" | "forecasting" | "webhooks" | "agentic-ai">("pnl");
   const [timeframe, setTimeframe] = useState<"today" | "week" | "month" | "all">("today");
   
   // Real-time stock overrides state (persisted in localStorage)
@@ -389,6 +395,19 @@ export default function AdminPortal({ onLogout, onSwitchToStore }: AdminPortalPr
         >
           <Radio className="w-3.5 h-3.5" />
           <span>3PL Webhooks & DLQ</span>
+        </button>
+
+        <button
+          onClick={() => { haptics.selection(); setActiveTab("agentic-ai"); }}
+          className={`px-3.5 py-1.5 rounded-xl text-xs font-bold tracking-wide transition-all flex items-center gap-2 cursor-pointer shrink-0 ${
+            activeTab === "agentic-ai"
+              ? "bg-gradient-to-r from-cyan-400 to-blue-500 text-obsidian-950 shadow-glow-blue font-black"
+              : "text-slate-400 hover:text-cyan-300 hover:bg-white/[0.05]"
+          }`}
+        >
+          <Bot className="w-3.5 h-3.5 text-cyan-400" />
+          <span>Agentic AI Fleet (5 Teams)</span>
+          <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
         </button>
       </div>
 
@@ -980,6 +999,301 @@ export default function AdminPortal({ onLogout, onSwitchToStore }: AdminPortalPr
           </div>
         )}
 
+        {/* ================================================================ */}
+        {/* TAB 6: AGENTIC AI FLEET & URGENT HITL APPROVALS                   */}
+        {/* ================================================================ */}
+        {activeTab === "agentic-ai" && (
+          <div className="space-y-6 animate-fade-in">
+            <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-3">
+              <div>
+                <div className="flex items-center gap-2">
+                  <h2 className="text-lg font-black text-white tracking-wide">
+                    Autonomous Multi-Agent AI Operations Fleet
+                  </h2>
+                  <span className="px-2.5 py-0.5 rounded-full bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 text-[10px] font-mono font-bold flex items-center gap-1">
+                    <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-ping" />
+                    5 ACTIVE TEAMS
+                  </span>
+                </div>
+                <p className="text-xs text-slate-400 mt-0.5">
+                  AI Admin, AI Logistics, AI Customer Support & BPO, AI Finance, and AI Data & QC running the platform with Human-In-The-Loop (HITL) safety.
+                </p>
+              </div>
+
+              <div className="flex items-center gap-2 self-start sm:self-auto">
+                <a
+                  href={`https://wa.me/${OWNER_PHONE}?text=${encodeURIComponent(
+                    `🚨 1AA AGENTIC AI ESCALATION\nAttention: ${OWNER_NAME}\nLive Autonomous Agent Fleet reported 3 urgent operations pending your review in Executive Admin HQ.`
+                  )}`}
+                  target="_blank"
+                  rel="noreferrer"
+                  onClick={() => haptics.success()}
+                  className="px-4 py-2 rounded-2xl bg-emerald-500/20 hover:bg-emerald-500/30 border border-emerald-500/40 text-emerald-300 text-xs font-bold flex items-center gap-1.5 transition-all shadow-glow-emerald cursor-pointer"
+                >
+                  <Phone className="w-3.5 h-3.5 text-emerald-400" />
+                  <span>WhatsApp Alert Desk</span>
+                </a>
+              </div>
+            </div>
+
+            {/* 5 Agent Cards Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              
+              {/* Agent 1: AI Admin */}
+              <div className="p-4 rounded-3xl bg-obsidian-900 border border-purple-500/30 text-xs space-y-3 relative overflow-hidden shadow-xl">
+                <div className="flex items-start justify-between">
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-9 h-9 rounded-2xl bg-purple-500/20 border border-purple-500/40 flex items-center justify-center text-purple-400 font-bold">
+                      <Cpu className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <div className="font-bold text-white text-sm">AI Admin Team</div>
+                      <div className="text-[10px] text-purple-300 font-mono">Central Orchestrator</div>
+                    </div>
+                  </div>
+                  <span className="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 text-[10px] font-bold">
+                    Active • 99.8%
+                  </span>
+                </div>
+                <p className="text-[11px] text-slate-300 leading-relaxed">
+                  Monitors system invariants, enforces 12-stage FSM determinism, coordinates sub-agents, and halts high-risk operations.
+                </p>
+                <div className="p-2.5 rounded-2xl bg-black/40 border border-white/5 space-y-1 font-mono text-[10px]">
+                  <div className="text-slate-400">Current Task:</div>
+                  <div className="text-purple-300 truncate">Orchestrating today&apos;s 14:10 Mysore dispatch batch</div>
+                </div>
+              </div>
+
+              {/* Agent 2: AI Logistics */}
+              <div className="p-4 rounded-3xl bg-obsidian-900 border border-brand-orange/30 text-xs space-y-3 relative overflow-hidden shadow-xl">
+                <div className="flex items-start justify-between">
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-9 h-9 rounded-2xl bg-brand-orange/20 border border-brand-orange/40 flex items-center justify-center text-brand-orange font-bold">
+                      <Truck className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <div className="font-bold text-white text-sm">AI Logistics Team</div>
+                      <div className="text-[10px] text-brand-orange font-mono">Carrier Radar & Reroutes</div>
+                    </div>
+                  </div>
+                  <span className="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 text-[10px] font-bold">
+                    Active • 99.4%
+                  </span>
+                </div>
+                <p className="text-[11px] text-slate-300 leading-relaxed">
+                  Tracks consignments across BlueDart, Delhivery, DTDC &amp; Shadowfax; computes real-time pincode SLA transit times.
+                </p>
+                <div className="p-2.5 rounded-2xl bg-black/40 border border-white/5 space-y-1 font-mono text-[10px]">
+                  <div className="text-slate-400">Current Task:</div>
+                  <div className="text-brand-orange truncate">Auditing 14 active AWBs for Hubli &amp; Bangalore</div>
+                </div>
+              </div>
+
+              {/* Agent 3: AI Customer Support & BPO */}
+              <div className="p-4 rounded-3xl bg-obsidian-900 border border-emerald-500/30 text-xs space-y-3 relative overflow-hidden shadow-xl">
+                <div className="flex items-start justify-between">
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-9 h-9 rounded-2xl bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center text-emerald-400 font-bold">
+                      <Bot className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <div className="font-bold text-white text-sm">AI Support &amp; BPO</div>
+                      <div className="text-[10px] text-emerald-300 font-mono">24/7 WhatsApp &amp; Chat</div>
+                    </div>
+                  </div>
+                  <span className="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 text-[10px] font-bold">
+                    Active • 99.1%
+                  </span>
+                </div>
+                <p className="text-[11px] text-slate-300 leading-relaxed">
+                  Handles tier-1 inquiries, resolves GST invoice requests, fixes malformed shipping addresses, and triggers SMS tracking.
+                </p>
+                <div className="p-2.5 rounded-2xl bg-black/40 border border-white/5 space-y-1 font-mono text-[10px]">
+                  <div className="text-slate-400">Current Task:</div>
+                  <div className="text-emerald-300 truncate">Resolving Mysore PIN 570001 landmark ambiguity</div>
+                </div>
+              </div>
+
+              {/* Agent 4: AI Finance Team */}
+              <div className="p-4 rounded-3xl bg-obsidian-900 border border-amber-500/30 text-xs space-y-3 relative overflow-hidden shadow-xl">
+                <div className="flex items-start justify-between">
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-9 h-9 rounded-2xl bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-amber-300 font-bold">
+                      <DollarSign className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <div className="font-bold text-white text-sm">AI Finance Team</div>
+                      <div className="text-[10px] text-amber-300 font-mono">P&amp;L, 18% GST &amp; UTR Matching</div>
+                    </div>
+                  </div>
+                  <span className="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 text-[10px] font-bold">
+                    Active • 99.9%
+                  </span>
+                </div>
+                <p className="text-[11px] text-slate-300 leading-relaxed">
+                  Validates flat 25% margin adherence, verifies Axis Bank UPI UTRs against inbound webhooks, and creates compliant GST tax ledgers.
+                </p>
+                <div className="p-2.5 rounded-2xl bg-black/40 border border-white/5 space-y-1 font-mono text-[10px]">
+                  <div className="text-slate-400">Current Task:</div>
+                  <div className="text-amber-300 truncate">Reconciling ₹43,967 UTR against Axis Bank API</div>
+                </div>
+              </div>
+
+              {/* Agent 5: AI Data & QC Team */}
+              <div className="p-4 rounded-3xl bg-obsidian-900 border border-sky-500/30 text-xs space-y-3 relative overflow-hidden shadow-xl md:col-span-2 lg:col-span-2">
+                <div className="flex items-start justify-between">
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-9 h-9 rounded-2xl bg-sky-500/20 border border-sky-500/40 flex items-center justify-center text-sky-400 font-bold">
+                      <ShieldCheck className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <div className="font-bold text-white text-sm">AI Data &amp; QC Team</div>
+                      <div className="text-[10px] text-sky-300 font-mono">Bench QA &amp; Soft-Lock Audits</div>
+                    </div>
+                  </div>
+                  <span className="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 text-[10px] font-bold">
+                    Active • 99.7%
+                  </span>
+                </div>
+                <p className="text-[11px] text-slate-300 leading-relaxed">
+                  Maintains Mysore Central Hub zero-DOA quality test records, monitors buffer inventory reserves, and executes automatic stock refill alerts before stockouts occur.
+                </p>
+                <div className="p-2.5 rounded-2xl bg-black/40 border border-white/5 flex items-center justify-between font-mono text-[10px]">
+                  <div>
+                    <span className="text-slate-400">Status: </span>
+                    <span className="text-sky-300">Catalog SKUs: 100% Bench QA Validated</span>
+                  </div>
+                  <span className="text-emerald-400 font-bold">0 DOA Reported</span>
+                </div>
+              </div>
+
+            </div>
+
+            {/* HUMAN IN THE LOOP (HITL) URGENT APPROVAL FEED */}
+            <div className="rounded-3xl bg-obsidian-900 border border-amber-500/30 p-5 sm:p-6 space-y-4 shadow-2xl">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-8 h-8 rounded-xl bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-amber-300">
+                    <Flame className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-black text-white flex items-center gap-2">
+                      <span>Human-In-The-Loop (HITL) Urgent Approvals</span>
+                      <span className="px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 text-[10px] font-mono font-bold">
+                        Owner Decision Required
+                      </span>
+                    </h3>
+                    <p className="text-xs text-slate-400">
+                      Autonomous agents pause execution on sensitive thresholds until Abdul Darvesh grants 1-click approval.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Approval Items */}
+              <div className="space-y-3 pt-2">
+                
+                {/* Item 1: Restock Collapsible Kettle */}
+                <div className="p-4 rounded-2xl bg-white/[0.03] border border-amber-500/30 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2">
+                      <span className="px-2 py-0.5 rounded bg-red-500/20 text-red-300 font-mono text-[10px] font-bold">
+                        CRITICAL STOCK
+                      </span>
+                      <span className="text-white font-bold text-xs">
+                        Refill 1AA-KETL-FOLD (Collapsible Travel Electric Kettle)
+                      </span>
+                    </div>
+                    <p className="text-[11px] text-slate-300">
+                      Reported by <strong>AI Data &amp; QC Team</strong>: Mysore stock dropped to 8 units. Automated factory supplier purchase order of +100 units ready.
+                    </p>
+                    <div className="text-[10px] text-slate-400 font-mono">
+                      Impact: ₹28,000 Procurement • Est. Landed Arrival: 48h
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2 shrink-0">
+                    <button
+                      onClick={() => {
+                        handleRefillStock("1AA-KETL-FOLD", 100);
+                        alert("Approved! +100 units added to active inventory for Collapsible Travel Kettle.");
+                      }}
+                      className="px-4 py-2 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:brightness-110 text-obsidian-950 font-black text-xs transition-all shadow-glow-emerald cursor-pointer"
+                    >
+                      Approve &amp; Restock +100
+                    </button>
+                  </div>
+                </div>
+
+                {/* Item 2: Carrier Reroute to BlueDart Priority Air */}
+                <div className="p-4 rounded-2xl bg-white/[0.03] border border-brand-orange/30 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2">
+                      <span className="px-2 py-0.5 rounded bg-brand-orange/20 text-brand-orange font-mono text-[10px] font-bold">
+                        LOGISTICS REROUTE
+                      </span>
+                      <span className="text-white font-bold text-xs">
+                        Reroute Order 1AA-982142 (Bangalore) to BlueDart Air Express
+                      </span>
+                    </div>
+                    <p className="text-[11px] text-slate-300">
+                      Reported by <strong>AI Logistics Team</strong>: Surface highway delay detected on Mysore-Bangalore expressway. Upgrading to BlueDart Express guarantees &lt;24h arrival.
+                    </p>
+                    <div className="text-[10px] text-slate-400 font-mono">
+                      Cost Absorption: ₹0 (absorbed within 25% 1AA Operating Margin)
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2 shrink-0">
+                    <button
+                      onClick={() => {
+                        handleAdvanceOrder("1AA-982142");
+                        alert("Approved! Carrier rerouted to BlueDart Air Express. Tracking updated.");
+                      }}
+                      className="px-4 py-2 rounded-xl bg-gradient-to-r from-brand-orange to-amber-400 hover:brightness-110 text-obsidian-950 font-black text-xs transition-all shadow-glow-orange cursor-pointer"
+                    >
+                      Approve Reroute
+                    </button>
+                  </div>
+                </div>
+
+                {/* Item 3: VIP Rebate Concession */}
+                <div className="p-4 rounded-2xl bg-white/[0.03] border border-blue-500/30 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2">
+                      <span className="px-2 py-0.5 rounded bg-blue-500/20 text-blue-300 font-mono text-[10px] font-bold">
+                        FINANCE REBATE
+                      </span>
+                      <span className="text-white font-bold text-xs">
+                        Grant 5% High-Volume Wholesale Rebate on Order 1AA-771920 (120 units)
+                      </span>
+                    </div>
+                    <p className="text-[11px] text-slate-300">
+                      Reported by <strong>AI Finance Team</strong>: Order exceeds 50 unit threshold. Net operating margin will remain healthy at 21.8% post-rebate.
+                    </p>
+                    <div className="text-[10px] text-slate-400 font-mono">
+                      Rebate Value: -₹1,168 • Verified Axis Bank Remittance
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2 shrink-0">
+                    <button
+                      onClick={() => {
+                        haptics.success();
+                        alert("Approved! 5% Wholesale Rebate credited to customer manifest.");
+                      }}
+                      className="px-4 py-2 rounded-xl bg-white/[0.08] hover:bg-white/[0.15] text-white font-bold text-xs border border-white/20 transition-all cursor-pointer"
+                    >
+                      Approve Concession
+                    </button>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+
+          </div>
+        )}
       </main>
     </div>
   );
