@@ -37,6 +37,11 @@ const DLQ_STORAGE_KEY = "1aa_webhook_dlq";
 const PROCESSED_NONCES_KEY = "1aa_webhook_processed_nonces";
 const WEBHOOK_SECRET = "1aa_mysore_central_secret_k8921";
 
+// In-memory fallbacks when localStorage is unavailable (e.g. Node / SSR / Test runner)
+const inMemoryIdempotencyCache: Record<string, IdempotencyRecord> = {};
+const inMemoryProcessedNonces: Record<string, number> = {};
+let inMemoryDlq: DeadLetterQueueItem[] = [];
+
 /**
  * Generates or extracts unique idempotency key for checkout payment
  */
@@ -49,21 +54,26 @@ export function generateIdempotencyKey(orderRef: string, amount: number): string
  */
 export function checkIdempotency(key: string): IdempotencyRecord | null {
   try {
-    const raw = localStorage.getItem(IDEMPOTENCY_STORAGE_KEY);
-    if (!raw) return null;
-    const cache: Record<string, IdempotencyRecord> = JSON.parse(raw);
-    const existing = cache[key];
+    let cache: Record<string, IdempotencyRecord> = inMemoryIdempotencyCache;
+    if (typeof localStorage !== "undefined") {
+      const raw = localStorage.getItem(IDEMPOTENCY_STORAGE_KEY);
+      if (raw) cache = JSON.parse(raw);
+    }
+    const existing = cache[key] || inMemoryIdempotencyCache[key];
     if (!existing) return null;
 
     // 15-minute TTL check
     if (Date.now() - existing.createdAt > 15 * 60 * 1000) {
       delete cache[key];
-      localStorage.setItem(IDEMPOTENCY_STORAGE_KEY, JSON.stringify(cache));
+      delete inMemoryIdempotencyCache[key];
+      if (typeof localStorage !== "undefined") {
+        localStorage.setItem(IDEMPOTENCY_STORAGE_KEY, JSON.stringify(cache));
+      }
       return null;
     }
     return existing;
   } catch {
-    return null;
+    return inMemoryIdempotencyCache[key] || null;
   }
 }
 
@@ -71,17 +81,22 @@ export function checkIdempotency(key: string): IdempotencyRecord | null {
  * Commits successful response against idempotency key
  */
 export function recordIdempotency(key: string, orderRef: string, response: any, status: IdempotencyRecord["status"] = "completed"): void {
+  const rec: IdempotencyRecord = {
+    key,
+    orderRef,
+    createdAt: Date.now(),
+    response,
+    status,
+  };
+  inMemoryIdempotencyCache[key] = rec;
+
   try {
-    const raw = localStorage.getItem(IDEMPOTENCY_STORAGE_KEY);
-    const cache: Record<string, IdempotencyRecord> = raw ? JSON.parse(raw) : {};
-    cache[key] = {
-      key,
-      orderRef,
-      createdAt: Date.now(),
-      response,
-      status,
-    };
-    localStorage.setItem(IDEMPOTENCY_STORAGE_KEY, JSON.stringify(cache));
+    if (typeof localStorage !== "undefined") {
+      const raw = localStorage.getItem(IDEMPOTENCY_STORAGE_KEY);
+      const cache: Record<string, IdempotencyRecord> = raw ? JSON.parse(raw) : {};
+      cache[key] = rec;
+      localStorage.setItem(IDEMPOTENCY_STORAGE_KEY, JSON.stringify(cache));
+    }
   } catch (err) {
     console.warn("Failed to store idempotency record:", err);
   }
@@ -91,7 +106,6 @@ export function recordIdempotency(key: string, orderRef: string, response: any, 
  * Cryptographic Signature Simulation (HMAC SHA-256 pattern)
  */
 export function generateWebhookSignature(payload: string, secret: string = WEBHOOK_SECRET): string {
-  // Simple deterministic hash simulation for in-browser verification
   let hash = 0;
   const combined = secret + ":" + payload;
   for (let i = 0; i < combined.length; i++) {
@@ -119,15 +133,28 @@ export function checkReplayProtection(timestamp: number, nonce: string): { valid
   }
 
   try {
-    const raw = localStorage.getItem(PROCESSED_NONCES_KEY);
-    const nonces: Record<string, number> = raw ? JSON.parse(raw) : {};
-    if (nonces[nonce]) {
+    let nonces: Record<string, number> = inMemoryProcessedNonces;
+    if (typeof localStorage !== "undefined") {
+      const raw = localStorage.getItem(PROCESSED_NONCES_KEY);
+      if (raw) nonces = JSON.parse(raw);
+    }
+
+    if (nonces[nonce] || inMemoryProcessedNonces[nonce]) {
       return { valid: false, reason: `Replay attack detected: Nonce ${nonce} already processed` };
     }
+
     nonces[nonce] = now;
-    localStorage.setItem(PROCESSED_NONCES_KEY, JSON.stringify(nonces));
+    inMemoryProcessedNonces[nonce] = now;
+
+    if (typeof localStorage !== "undefined") {
+      localStorage.setItem(PROCESSED_NONCES_KEY, JSON.stringify(nonces));
+    }
     return { valid: true };
   } catch {
+    if (inMemoryProcessedNonces[nonce]) {
+      return { valid: false, reason: `Replay attack detected: Nonce ${nonce} already processed` };
+    }
+    inMemoryProcessedNonces[nonce] = now;
     return { valid: true };
   }
 }
@@ -145,12 +172,15 @@ export function pushToDlq(event: WebhookEvent, errorReason: string): DeadLetterQ
     status: "unresolved",
   };
 
+  inMemoryDlq.unshift(dlqItem);
+
   try {
-    const raw = localStorage.getItem(DLQ_STORAGE_KEY);
-    const list: DeadLetterQueueItem[] = raw ? JSON.parse(raw) : [];
-    list.unshift(dlqItem);
-    // Keep max 50 items
-    localStorage.setItem(DLQ_STORAGE_KEY, JSON.stringify(list.slice(0, 50)));
+    if (typeof localStorage !== "undefined") {
+      const raw = localStorage.getItem(DLQ_STORAGE_KEY);
+      const list: DeadLetterQueueItem[] = raw ? JSON.parse(raw) : [];
+      list.unshift(dlqItem);
+      localStorage.setItem(DLQ_STORAGE_KEY, JSON.stringify(list.slice(0, 50)));
+    }
   } catch {}
 
   return dlqItem;
@@ -158,10 +188,13 @@ export function pushToDlq(event: WebhookEvent, errorReason: string): DeadLetterQ
 
 export function getDlqItems(): DeadLetterQueueItem[] {
   try {
-    const raw = localStorage.getItem(DLQ_STORAGE_KEY);
-    return raw ? JSON.parse(raw) : [];
+    if (typeof localStorage !== "undefined") {
+      const raw = localStorage.getItem(DLQ_STORAGE_KEY);
+      if (raw) return JSON.parse(raw);
+    }
+    return inMemoryDlq;
   } catch {
-    return [];
+    return inMemoryDlq;
   }
 }
 
