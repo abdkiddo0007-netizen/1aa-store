@@ -14,7 +14,6 @@ import {
   ShoppingBag,
   ExternalLink,
   MapPin,
-  Calculator,
   CheckCircle2,
   Copy,
   Plus,
@@ -24,7 +23,15 @@ import {
   Radio,
   Volume2,
   VolumeX,
-  Languages
+  Languages,
+  Rotate3d,
+  Maximize2,
+  Minimize2,
+  PanelLeftClose,
+  PanelLeftOpen,
+  Mic,
+  Crown,
+  MessageCirclePlus
 } from "lucide-react";
 
 interface AIAssistantAgentModalProps {
@@ -36,6 +43,13 @@ interface AIAssistantAgentModalProps {
   activeCartTotal?: number;
   activeCartUnits?: number;
   onTrackOrder?: (orderRef: string) => void;
+  onOpenArProduct?: (product: Product) => void;
+  currentUser?: {
+    username: string;
+    mobile: string;
+    city: string;
+    merchantType: string;
+  } | null;
 }
 
 interface ChatMessage {
@@ -44,7 +58,7 @@ interface ChatMessage {
   text: string;
   time: string;
   suggestedProducts?: Product[];
-  actionType?: "escalate" | "delivery" | "payment" | "catalog" | "sample" | "calculator" | "tracking";
+  actionType?: "escalate" | "delivery" | "payment" | "catalog" | "sample" | "calculator" | "tracking" | "ar_preview";
   trackingRef?: string;
   transitInfo?: {
     city: string;
@@ -90,23 +104,46 @@ export default function AIAssistantAgentModal({
   activeCartTotal = 0,
   activeCartUnits = 0,
   onTrackOrder,
+  onOpenArProduct,
+  currentUser,
 }: AIAssistantAgentModalProps) {
   const [input, setInput] = useState("");
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [addedSku, setAddedSku] = useState<string | null>(null);
   const [selectedLang, setSelectedLang] = useState<"en" | "hi" | "kn" | "ta">("en");
   const [speakingId, setSpeakingId] = useState<string | null>(null);
+  const [viewMode, setViewMode] = useState<"modal" | "docked">("modal");
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [selectedModel, setSelectedModel] = useState<"gpt-4.5" | "deepseek-r1" | "gemini-flash">("gpt-4.5");
+  const [isMicListening, setIsMicListening] = useState(false);
+
+  const getWelcomeText = () => {
+    const greeting = currentUser ? `Welcome back, **${currentUser.username}**! 👋` : `Hello & Welcome to 1AA! 👋`;
+    return (
+      `${greeting} I am your **1AA Sourcing AI Copilot** (ChatGPT Style) powered by direct factory feeds from our Mysore Central Facility.\n\n` +
+      `**How I can assist your business today:**\n` +
+      `• 🧸 **Trending Toys & STEM Games** (87 factory SKUs in stock)\n` +
+      `• 🧮 **Wholesale ROI & Carton Profit Calculator**\n` +
+      `• 🚚 **Exact Delivery Transit SLA** for your city\n` +
+      `• 👓 **3D AR Product Tryout** ("Try Before You Buy")\n` +
+      `• 📦 **Pre-dispatch Bench Tested Samples** (100% QA pass)\n` +
+      `• 🏦 **Verified Axis Bank & UPI Remittance** (Abdul Darvesh)\n` +
+      `• 👤 Direct escalation to senior management on WhatsApp`
+    );
+  };
+
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
       id: "welcome-1",
       sender: "agent",
-      text: "Hello! 👋 I am your **1AA Sourcing AI Agent** live from our Mysore Central Facility.\n\nI can help you:\n• Explore **trending toys & STEM games** (87 factory SKUs)\n• Calculate **wholesale carton profits** & margins\n• Check **exact delivery transit times** for your city\n• Arrange **pre-dispatch bench QA tested samples**\n• Verify **Abdul Darvesh (Axis Bank & UPI)** remittance\n• Connect you directly with senior management on WhatsApp",
+      text: getWelcomeText(),
       time: "Just now",
       actionType: "delivery",
     }
   ]);
   const [isTyping, setIsTyping] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const recognitionRef = useRef<any>(null);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -147,6 +184,74 @@ export default function AIAssistantAgentModal({
     }
   }, [messages, isOpen]);
 
+  // Voice dictation in prompt bar
+  const toggleMicInput = () => {
+    haptics.light();
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      alert("Speech recognition is not supported in this browser. Please type your query.");
+      return;
+    }
+
+    if (isMicListening) {
+      if (recognitionRef.current) {
+        recognitionRef.current.stop();
+      }
+      setIsMicListening(false);
+      return;
+    }
+
+    try {
+      const recognition = new SpeechRecognition();
+      recognition.lang = selectedLang === "hi" ? "hi-IN" : selectedLang === "kn" ? "kn-IN" : selectedLang === "ta" ? "ta-IN" : "en-IN";
+      recognition.continuous = false;
+      recognition.interimResults = false;
+
+      recognition.onstart = () => {
+        setIsMicListening(true);
+        haptics.medium();
+      };
+
+      recognition.onresult = (e: any) => {
+        const spoken = e.results?.[0]?.[0]?.transcript;
+        if (spoken) {
+          setInput((prev) => (prev ? `${prev} ${spoken}` : spoken));
+          haptics.success();
+        }
+        setIsMicListening(false);
+      };
+
+      recognition.onerror = () => {
+        setIsMicListening(false);
+      };
+
+      recognition.onend = () => {
+        setIsMicListening(false);
+      };
+
+      recognitionRef.current = recognition;
+      recognition.start();
+    } catch {
+      setIsMicListening(false);
+    }
+  };
+
+  const handleNewChat = () => {
+    haptics.medium();
+    setMessages([
+      {
+        id: `welcome-${Date.now()}`,
+        sender: "agent",
+        text: getWelcomeText(),
+        time: new Date().toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" }),
+        actionType: "delivery",
+      }
+    ]);
+    if (window.innerWidth < 768) {
+      setSidebarOpen(false);
+    }
+  };
+
   if (!isOpen) return null;
 
   // Multilingual Quick Action Chips
@@ -154,13 +259,13 @@ export default function AIAssistantAgentModal({
     en: [
       { label: "🛰️ Track My Package (Live Radar)", query: "How do I track my package in real-time?" },
       { label: "🧸 Trending Toys (87 SKUs)", query: "What are the trending toys?" },
+      { label: "👓 3D AR Product Tryout", query: "Can I inspect products in 3D AR before buying?" },
       { label: "🚀 High Margin Items (>58%)", query: "Show me high margin products for resellers" },
       { label: "⚡ Smart Tech & Electronics", query: "Show me electronics and smart tech gadgets" },
       { label: "🍳 Kitchen & Utility", query: "Show me popular kitchen and home utility items" },
       { label: "🚚 Delivery Timelines", query: "What are your delivery timelines?" },
       { label: "📍 Check City Transit ETA", query: "Check delivery transit time for my city" },
       { label: "👑 25% Margin (Customer is King)", query: "How does your pricing model work and why is there no bargaining?" },
-      { label: "📊 Compare vs Amazon/Flipkart", query: "Compare your pricing real-time against Amazon and Flipkart" },
       { label: "📦 Sample Pack & Bench QA", query: "Can I order 1 piece sample first?" },
       { label: "🏦 Bank Remittance & UPI QR", query: "What are your verified payment details?" },
       { label: "👤 Speak with Abdul Darvesh", query: "I want to talk to Abdul Darvesh directly" },
@@ -168,6 +273,7 @@ export default function AIAssistantAgentModal({
     hi: [
       { label: "🛰️ पार्सल लाइव ट्रैक करें", query: "मेरा पार्सल लाइव कैसे ट्रैक करें?" },
       { label: "🧸 ट्रेंडिंग खिलौने (87 SKUs)", query: "ट्रेंडिंग खिलौने कौन से हैं?" },
+      { label: "👓 3D AR में देखें", query: "क्या मैं प्रोडक्ट्स को 3D AR में देख सकता हूँ?" },
       { label: "🚀 ज्यादा मुनाफे वाले प्रोडक्ट्स (>58%)", query: "रीसेलर के लिए ज्यादा मुनाफे वाले प्रोडक्ट्स दिखाएं" },
       { label: "🚚 डिलीवरी का समय व SLA", query: "डिलीवरी का समय और नियम क्या हैं?" },
       { label: "📦 1 पीस सैंपल ऑर्डर करें", query: "क्या मैं पहले 1 पीस सैंपल मंगा सकता हूँ?" },
@@ -201,7 +307,7 @@ export default function AIAssistantAgentModal({
     const q = userQuery.toLowerCase().trim();
     let replyText = "";
     let suggested: Product[] | undefined = undefined;
-    let action: "escalate" | "delivery" | "payment" | "catalog" | "sample" | "calculator" | "tracking" | undefined = undefined;
+    let action: ChatMessage["actionType"] = undefined;
     let transitInfo: ChatMessage["transitInfo"] = undefined;
     let calcResult: ChatMessage["calcResult"] = undefined;
 
@@ -256,7 +362,24 @@ export default function AIAssistantAgentModal({
       return { text: replyText, actionType: action, trackingRef: matchedRef };
     }
 
-    // 1. Trending Toys & STEM Games (Fix for User Bug)
+    // 0.5. AR Try Before You Buy
+    if (q.includes("ar") || q.includes("3d") || q.includes("try before you buy") || q.includes("camera") || q.includes("inspect")) {
+      suggested = [
+        CATALOG_PRODUCTS.find(p => p.sku === "1AA-KETL-FOLD") || CATALOG_PRODUCTS[0],
+        CATALOG_PRODUCTS.find(p => p.sku === "1AA-RC-DRIFT4WD") || CATALOG_PRODUCTS[1],
+        CATALOG_PRODUCTS.find(p => p.sku === "1AA-VAC-120W") || CATALOG_PRODUCTS[2],
+      ];
+      replyText = 
+        `🕶️ **1AA 3D AR Studio ("Try Before You Buy"):**\n\n` +
+        `You can inspect any product in full **360° interactive 3D orbit** or project it in real size directly onto your desk or warehouse floor using your camera!\n\n` +
+        `• 📐 **Real Dimensional Overlays**: Exact height, width, and volume measurements.\n` +
+        `• 🔬 **Studio / Hologram / Wireframe Modes**: Inspect industrial fit & finish.\n` +
+        `• 📱 **Live AR Camera**: Tap **Inspect in 3D AR** on any product below to start!`;
+      action = "ar_preview";
+      return { text: replyText, suggestedProducts: suggested, actionType: action };
+    }
+
+    // 1. Trending Toys & STEM Games
     if (
       q.includes("toy") ||
       q.includes("kid") ||
@@ -280,9 +403,9 @@ export default function AIAssistantAgentModal({
       ).slice(0, 6);
 
       replyText = 
-        `🧸 **Trending Toys & STEM Games from Mysore Facility (81+ SKUs in Stock):**\n\n` +
+        `🧸 **Trending Toys & STEM Games from Mysore Facility (87+ SKUs in Stock):**\n\n` +
         `Here are **${suggested.length} of our top-selling toys & educational games** with high consumer demand and **40% to 65% retail margins** for shopkeepers.\n\n` +
-        `Every unit is pre-inspected at our Mysore bench facility. Click **Add to Cart** or tap any item to inspect full specs:`;
+        `Every unit is pre-inspected at our Mysore bench facility. Click **Add to Cart**, tap **3D AR** to test in your space, or inspect full specs:`;
       action = "catalog";
     }
     // 2. High margin / Reseller Top Picks
@@ -344,153 +467,73 @@ export default function AIAssistantAgentModal({
         `Popular daily household essentials with proven retail velocity and zero defect returns:`;
       action = "catalog";
     }
-    // 5. Stationery & Desk Supplies
-    else if (
-      q.includes("stationery") ||
-      q.includes("pen") ||
-      q.includes("pencil") ||
-      q.includes("desk") ||
-      q.includes("book") ||
-      q.includes("geometry") ||
-      q.includes("note")
-    ) {
-      suggested = CATALOG_PRODUCTS.filter(
-        (p) => p.category === "Stationery & Desk Supplies"
-      ).slice(0, 6);
+    // 5. Delivery SLA Timelines
+    else if (q.includes("delivery") || q.includes("timeline") || q.includes("how long") || q.includes("when will") || q.includes("dispatch") || q.includes("shipping")) {
       replyText = 
-        `✏️ **Stationery & Desk Supplies (School & Office Wholesale):**\n\n` +
-        `High-volume school and institutional stationery items available at direct factory base rates:`;
-      action = "catalog";
-    }
-    // 6. Jewellery & Accessories
-    else if (
-      q.includes("jewel") ||
-      q.includes("necklace") ||
-      q.includes("earring") ||
-      q.includes("ring") ||
-      q.includes("bangle") ||
-      q.includes("accessories")
-    ) {
-      suggested = CATALOG_PRODUCTS.filter(
-        (p) => p.category === "Jewellery & Accessories"
-      ).slice(0, 6);
-      replyText = 
-        `💎 **Fashion Jewellery & Accessories:**\n\n` +
-        `Top trending fashion jewellery, earrings, and lifestyle accessories direct from primary manufacturers:`;
-      action = "catalog";
-    }
-    // 7. Budget / Under 150 items
-    else if (q.includes("under 150") || q.includes("under 100") || q.includes("cheap") || q.includes("low cost") || q.includes("budget")) {
-      suggested = CATALOG_PRODUCTS.filter((p) => p.fairPrice <= 150).slice(0, 6);
-      replyText = 
-        `⚡ **High-Velocity Fast Movers (Under ₹150):**\n\n` +
-        `These items have ultra-low entry costs, making them perfect for fast counter sales and impulse purchases:`;
-      action = "catalog";
-    }
-    // 8. Delivery timeline inquiry / city check
-    else if (q.includes("delivery") || q.includes("shipping") || q.includes("timeline") || q.includes("how long") || q.includes("days") || q.includes("dispatch") || q.includes("transit") || q.includes("city")) {
-      replyText = 
-        "📦 **Official 1AA Delivery & Shipment Policy:**\n\n" +
-        "• 🚛 **Standard Surface Delivery:** **10 to 15 Days** post-payment confirmation (Insured Heavy Cargo via BlueDart, Delhivery & SafeExpress).\n" +
-        "• ⚡ **Express Priority Air Dispatch:** **Within 7 Days** post-payment confirmation (Priority Air Freight).\n\n" +
-        "⚙️ **Dispatch SLA:** All parcels are dispatched from our **Mysore Central Facility** within 24 hours of payment verification. Every piece passes bench testing with zero dead-on-arrival (DOA) guarantee.\n\n" +
-        "👉 *Type your city name (e.g., Bangalore, Delhi, Mumbai, Hyderabad, Kolkata) to see exact transit days!*";
+        `🚚 **1AA Official Delivery Policy & Timelines:**\n\n` +
+        `• 📦 **Standard Dispatch & Delivery:** **10–15 Days** post-payment confirmation.\n` +
+        `• ⚡ **Express Priority Shipping:** **Within 7 Days** post-payment confirmation.\n` +
+        `• 🏢 **Dispatch Hub:** Mysore Central Facility, Karnataka, India.\n` +
+        `• 🛡️ **Quality Protocol:** Every single box undergoes physical bench QA testing before being taped and handed to BlueDart / Delhivery.\n\n` +
+        `*Would you like to check the exact transit ETA for your specific city? Type your city name (e.g. Bangalore, Delhi, Mumbai, Hyderabad).*`;
       action = "delivery";
     }
-    // 9. Sample pack & quality testing
-    else if (q.includes("sample") || q.includes("1 piece") || q.includes("test") || q.includes("quality") || q.includes("bench") || q.includes("trial")) {
+    // 6. Pricing Model / Customer is King
+    else if (q.includes("bargain") || q.includes("negotiat") || q.includes("discount") || q.includes("pricing") || q.includes("25%") || q.includes("king")) {
       replyText = 
-        "🧪 **1AA Pre-Dispatch Sample Order Protocol:**\n\n" +
-        "• **Single Piece Sample:** You can order a 1-piece sample at the standard transparent Fair Price (inclusive of courier freight and guaranteed quality testing).\n" +
-        "• **Mysore Bench QA Video:** Before sealing the box, our team tests the product (battery, motor, ports, finish) and sends an unboxing test video directly to your WhatsApp.\n" +
-        "• **Carton Restock Rebate:** When you subsequently place a carton order (50+ units), an additional 5% volume rebate is automatically applied on your invoice!";
-      action = "sample";
-    }
-    // 10. Wholesale Carton & Profit Margin Calculation
-    else if (q.includes("calculate") || q.includes("margin") || q.includes("carton") || q.includes("box") || q.includes("profit") || q.includes("roi") || q.includes("bulk")) {
-      const sampleProd = CATALOG_PRODUCTS.find(p => p.sku === "1AA-TY-001") || CATALOG_PRODUCTS[0];
-      const units = 50; // 1 carton
-      const unitPrice = sampleProd.fairPrice - 25; // Tier discount
-      const totalAmount = unitPrice * units;
-      const retailValue = sampleProd.marketPrice * units;
-      const potentialProfit = retailValue - totalAmount;
-      const marginPercent = Math.round((potentialProfit / retailValue) * 100);
-
-      replyText = 
-        `💡 **Sample Wholesale Carton Calculation:**\n\n` +
-        `• **Product:** ${sampleProd.name} [${sampleProd.sku}]\n` +
-        `• **Carton Quantity:** 50 units (1 Master Box)\n` +
-        `• **Factory Fair Price:** ₹${unitPrice}/pc (incl. ₹25/unit B2B Volume Rebate)\n` +
-        `• **Total Procurement Cost:** ₹${totalAmount.toLocaleString("en-IN")}\n` +
-        `• **Retail Value (Flipkart/Amazon MRP):** ₹${retailValue.toLocaleString("en-IN")}\n` +
-        `• **Your Gross Reseller Margin:** **₹${potentialProfit.toLocaleString("en-IN")} (${marginPercent}% Profit)**\n\n` +
-        `Would you like to customize quantities or add items to your cart?`;
-      action = "calculator";
-      calcResult = {
-        productName: sampleProd.name,
-        units,
-        unitPrice,
-        totalAmount,
-        retailValue,
-        potentialProfit,
-        marginPercent,
-      };
-      suggested = [sampleProd];
-    }
-    // 11. Escalation / Speak with Abdul Darvesh
-    else if (q.includes("human") || q.includes("speak") || q.includes("talk") || q.includes("person") || q.includes("abdul") || q.includes("darvesh") || q.includes("call") || q.includes("contact") || q.includes("whatsapp") || q.includes("number")) {
-      replyText = 
-        "🤝 **Direct Escalation to Abdul Darvesh (Mysore Hub):**\n\n" +
-        "You can chat live on WhatsApp or call our facility desks directly. I have prepared an instant escalation button below with your requirements and cart summary pre-attached so Abdul Darvesh has all details immediately:";
-      action = "escalate";
-    }
-    // 12. Payment / Bank / UPI details
-    else if (q.includes("payment") || q.includes("bank") || q.includes("upi") || q.includes("qr") || q.includes("account") || q.includes("pay") || q.includes("axis") || q.includes("scanner")) {
-      replyText = 
-        "🏦 **Official Payment & Remittance Channels (0% Surcharge):**\n\n" +
-        "All remittances go directly to our verified commercial accounts:\n" +
-        "• **Primary Account Holder:** **Abdul Darvesh**\n" +
-        "• **Bank Name:** **Axis Bank**\n" +
-        "• **Account Number:** **`922010002282280`**\n" +
-        "• **IFSC Code:** **`UTIB0004543`** (Savings A/c)\n" +
-        "• **Official UPI ID:** **`7406231167@axisbank`**\n" +
-        "• **PhonePe Verified QR:** Accessible via the **UPI Pay** button.\n\n" +
-        "🧾 Invoices and payment confirmation are transmitted to your WhatsApp & Email within 15 minutes of UTR entry.";
+        `👑 **Customer is King: No-Bargain Fair Price Policy**\n\n` +
+        `At 1AA, we do not artificially inflate prices just to offer fake discounts. Our formula is 100% transparent:\n\n` +
+        `📐 **Factory Base Cost + Doorstep Courier Freight + Flat 25% 1AA Operating Margin = Final Landed Price**\n\n` +
+        `• Why bargain when you are already getting genuine factory-floor wholesale rates?\n` +
+        `• You save **40% to 70%** compared to Amazon, Flipkart, and local middlemen.\n` +
+        `• All items come with guaranteed Zero-DOA pre-dispatch inspection at our Mysore facility.`;
       action = "payment";
     }
-    // 13. Pricing / Courier & 25% Flat Margin / Bargaining / Competitor comparison model
-    else if (q.includes("pricing") || q.includes("cost") || q.includes("margin") || q.includes("courier") || q.includes("amazon") || q.includes("flipkart") || q.includes("compare") || q.includes("bargain") || q.includes("discount") || q.includes("less") || q.includes("rate")) {
+    // 7. Payment / Bank Remittance / UPI Details
+    else if (q.includes("payment") || q.includes("bank") || q.includes("upi") || q.includes("account") || q.includes("qr") || q.includes("axis") || q.includes("pay")) {
       replyText = 
-        "👑 **Customer is King: No-Bargain Fair Price Architecture (1AA Mysore Central Hub):**\n\n" +
-        "• **Why No Bargaining?** Because you are the King! In traditional wholesale markets (Chickpet / Sadar Bazar), traders inflate prices by 100% just to haggle. At 1AA, we give you the genuine bottom-line price upfront with zero games.\n" +
-        "• **Transparent Pricing Formula:** **Factory Cost** + **Doorstep Courier Freight** + **Flat 25% 1AA Wholesale Operating Margin** = **1AA Final Price**.\n" +
-        "• **Built-In Courier Freight:** Every product's price already factors in insured door-to-door courier dispatch from our Mysore Central Hub (zero surprise freight at checkout!).\n" +
-        "• **Customer Direct Savings (40%–70%):** On Amazon & Flipkart, sellers pay 15% referral fees + closing fees + FBA shipping + 18% GST on fees (over 30% platform markup). 1AA bypasses all middlemen!\n" +
-        "• **Reseller ROI in Mysore & Karnataka:** Shopkeepers reselling our SKUs at offline market rates earn **+80% to +140% ROI** on their inventory capital.\n" +
-        "• **Automated Volume Rebate:** Extra 5% automated wholesale volume rebate when your order crosses 50 units!";
-      action = "catalog";
+        `🏦 **1AA Official & Verified Remittance Channels:**\n\n` +
+        `Please transfer order amounts strictly to the following verified business account:\n\n` +
+        `• **Account Holder:** Abdul Darvesh\n` +
+        `• **Bank Name:** Axis Bank\n` +
+        `• **Account Number:** \`922010002282280\`\n` +
+        `• **IFSC Code:** \`UTIB0004543\`\n` +
+        `• **Branch:** Axis Bank Mysore\n` +
+        `• **UPI ID:** \`7406231167@axisbank\`\n` +
+        `• **Direct Hotlines:** +91 75980 77003 / +91 74062 31167\n\n` +
+        `⚠️ *Packing and dispatch SLA begins immediately upon receipt of payment screenshot on WhatsApp.*`;
+      action = "payment";
     }
-    // 14. Fallback search across catalog
+    // 8. Human Escalation / Speak with Abdul Darvesh
+    else if (q.includes("abdul") || q.includes("human") || q.includes("person") || q.includes("talk") || q.includes("call") || q.includes("whatsapp") || q.includes("contact") || q.includes("owner")) {
+      replyText = 
+        `👤 **Direct Escalation to Senior Leadership:**\n\n` +
+        `You can connect directly with **Abdul Darvesh** for bulk container orders, custom brand white-labeling, or credit accounts:\n\n` +
+        `• 📱 **WhatsApp Direct:** +91 75980 77003\n` +
+        `• 📞 **Dispatch Office:** +91 74062 31167\n` +
+        `• ✉️ **Email:** 1aaavailablealways@gmail.com\n\n` +
+        `Tap the button below to start a pre-filled direct WhatsApp discussion.`;
+      action = "escalate";
+    }
+    // 9. Sample Pack Inquiry
+    else if (q.includes("sample") || q.includes("1 piece") || q.includes("one piece") || q.includes("single")) {
+      suggested = CATALOG_PRODUCTS.slice(0, 4);
+      replyText = 
+        `📦 **1AA Sample Order Policy:**\n\n` +
+        `Yes! You can order **1 piece sample** of any product to physically inspect the build quality, retail packaging, and materials before placing full master carton orders.\n\n` +
+        `• Samples include full door courier freight.\n` +
+        `• Tested on our Mysore QA bench before dispatch.\n` +
+        `• Sample costs are credited back to your account when you order full cartons!`;
+      action = "sample";
+    }
+    // Default Fallback
     else {
-      const matched = CATALOG_PRODUCTS.filter(
-        (p) =>
-          p.name.toLowerCase().includes(q) ||
-          p.category.toLowerCase().includes(q) ||
-          p.highlight.toLowerCase().includes(q) ||
-          p.sku.toLowerCase().includes(q)
-      ).slice(0, 6);
-
-      if (matched.length > 0) {
-        suggested = matched;
-        replyText = `🔍 Found **${matched.length} matching items** from our Mysore stock for "${userQuery}":`;
-        action = "catalog";
-      } else {
-        replyText = 
-          `Thank you for asking about "${userQuery}".\n\n` +
-          "Our platform maintains **225 factory-direct SKUs** in Mysore. All shipments take **10-15 days (Standard)** or **within 7 days (Express)** post-payment confirmation to Abdul Darvesh (Axis Bank).\n\n" +
-          "Would you like me to connect you with **Abdul Darvesh** on WhatsApp for specialized procurement or custom volume pricing?";
-        action = "escalate";
-      }
+      suggested = CATALOG_PRODUCTS.slice(0, 4);
+      replyText = 
+        `I understand you're inquiring about **"${userQuery}"**.\n\n` +
+        `As your **1AA Sourcing AI Copilot**, I have real-time access to our 225+ direct factory catalog lines, Mysore inventory levels, and logistics SLA timetables.\n\n` +
+        `Here are quick actions you can take, or ask me for specific categories like **Toys**, **Smart Tech**, **Kitchen Utility**, or **City Delivery ETA**:`;
+      action = "catalog";
     }
 
     return { text: replyText, suggestedProducts: suggested, actionType: action, transitInfo, calcResult };
@@ -538,6 +581,10 @@ export default function AIAssistantAgentModal({
       `Date: ${new Date().toLocaleDateString("en-IN")} ${new Date().toLocaleTimeString("en-IN")}\n\n` +
       `*Customer Question/Need:*\n"${lastUserQuery}"\n\n`;
 
+    if (currentUser) {
+      text += `*Registered Merchant:*\n• Name: ${currentUser.username}\n• Mobile: ${currentUser.mobile}\n• City: ${currentUser.city}\n• Tier: ${currentUser.merchantType}\n\n`;
+    }
+
     if (activeCartUnits > 0) {
       text += `*Active Cart Summary:*\n• Total Units: ${activeCartUnits} pcs\n• Order Total: Rs. ${activeCartTotal.toLocaleString("en-IN")}\n\n`;
     }
@@ -563,439 +610,574 @@ export default function AIAssistantAgentModal({
     haptics.success();
   };
 
+  // Docked vs Modal Container Styles
+  const isDocked = viewMode === "docked";
+
   return (
     <div 
-      className="fixed inset-0 z-50 bg-black/85 backdrop-blur-xl flex items-center justify-center p-2 sm:p-4 overflow-hidden animate-in fade-in duration-200"
+      className={
+        isDocked
+          ? "fixed bottom-3 right-3 sm:bottom-5 sm:right-5 z-50 w-[94vw] sm:w-[460px] h-[640px] max-h-[85vh] rounded-3xl shadow-2xl overflow-hidden flex flex-col border border-white/20 bg-obsidian-950/95 backdrop-blur-2xl animate-in slide-in-from-bottom-5 duration-300"
+          : "fixed inset-0 z-50 bg-black/85 backdrop-blur-xl flex items-center justify-center p-2 sm:p-4 overflow-hidden animate-in fade-in duration-200"
+      }
       onClick={(e) => {
-        if (e.target === e.currentTarget) {
+        if (!isDocked && e.target === e.currentTarget) {
           haptics.light();
           onClose();
         }
       }}
     >
-      <div className="relative w-full max-w-2xl bg-obsidian-900 border border-white/10 rounded-2xl sm:rounded-3xl shadow-2xl overflow-hidden flex flex-col h-[92dvh] sm:h-[88vh] max-h-[780px] backdrop-blur-2xl">
+      <div 
+        className={
+          isDocked
+            ? "w-full h-full flex flex-row overflow-hidden relative"
+            : "relative w-full max-w-4xl bg-obsidian-900 border border-white/10 rounded-2xl sm:rounded-3xl shadow-2xl overflow-hidden flex flex-row h-[92dvh] sm:h-[88vh] max-h-[820px] backdrop-blur-2xl"
+        }
+      >
         
-        {/* Apple-Style Glass Chat Header */}
-        <div className="sticky top-0 z-30 shrink-0 px-4 py-3 sm:px-5 sm:py-3.5 bg-obsidian-950/95 backdrop-blur-md border-b border-white/10 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="relative">
-              <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-brand-blue to-brand-orange p-0.5 shadow-glow-orange shrink-0">
-                <div className="w-full h-full rounded-2xl bg-obsidian-950 flex items-center justify-center text-white">
-                  <Bot className="w-5 h-5 text-brand-orange" />
-                </div>
-              </div>
-              <span className="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-emerald-400 border-2 border-obsidian-950 animate-pulse" />
-            </div>
-
-            <div>
-              <div className="flex items-center gap-2">
-                <h3 className="font-bold text-white text-xs sm:text-sm">1AA Sourcing AI Agent</h3>
-                <span className="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 text-[10px] font-mono font-bold">
-                  Mysore Hub
-                </span>
-              </div>
-              <p className="text-[11px] text-slate-400">225+ Factory SKUs • SLA Delivery • Human Escalation</p>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-2">
-            {/* Quick Human Escalation */}
-            <a
-              href={getEscalationWhatsAppUrl()}
-              target="_blank"
-              rel="noreferrer"
-              onClick={() => haptics.light()}
-              className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-500/30 text-emerald-400 text-xs font-semibold transition-all cursor-pointer"
-              title="Escalate directly to Abdul Darvesh on WhatsApp"
-            >
-              <Phone className="w-3.5 h-3.5" />
-              <span>Talk to Abdul Darvesh</span>
-            </a>
-
+        {/* --- CHATGPT STYLE SIDEBAR --- */}
+        <div 
+          className={`
+            ${sidebarOpen ? "w-64" : "w-0 md:w-64"} 
+            transition-all duration-300 ease-in-out bg-obsidian-950 border-r border-white/10 flex flex-col shrink-0 overflow-hidden
+            ${sidebarOpen ? "absolute inset-y-0 left-0 z-40 md:relative" : "hidden md:flex"}
+          `}
+        >
+          {/* Sidebar Top: New Chat */}
+          <div className="p-3 border-b border-white/10 space-y-2">
             <button
-              type="button"
-              onClick={() => {
-                haptics.light();
-                onClose();
-              }}
-              className="min-w-[40px] min-h-[40px] sm:min-w-[44px] sm:min-h-[44px] rounded-full bg-white/[0.08] hover:bg-white/[0.18] active:scale-95 text-slate-200 hover:text-white flex items-center justify-center border border-white/15 transition-all cursor-pointer shadow-md"
-              title="Close (Esc)"
-              aria-label="Close"
+              onClick={handleNewChat}
+              className="w-full py-2.5 px-3 rounded-xl bg-white/[0.06] hover:bg-white/[0.12] border border-white/10 text-white font-bold text-xs flex items-center justify-between transition-all cursor-pointer group shadow-sm active:scale-95"
             >
-              <X className="w-5 h-5" />
+              <span className="flex items-center gap-2">
+                <MessageCirclePlus className="w-4 h-4 text-brand-orange group-hover:rotate-12 transition-transform" />
+                <span>New Sourcing Chat</span>
+              </span>
+              <span className="text-[10px] text-slate-400 font-mono">⌘K</span>
             </button>
           </div>
-        </div>
 
-        {/* Delivery SLA Header Strip */}
-        <div className="bg-gradient-to-r from-brand-blue/20 via-brand-orange/20 to-brand-blue/20 border-b border-white/[0.08] px-4 py-2 text-center text-[11px] text-slate-300 flex items-center justify-between gap-2 flex-wrap">
-          <div className="flex items-center gap-2">
-            <Truck className="w-3.5 h-3.5 text-brand-orange shrink-0" />
-            <span>
-              <strong>Delivery SLA:</strong> Standard: <span className="text-white font-bold">10-15 Days</span> • Express: <span className="text-brand-orange font-bold">&lt;7 Days</span> (Post-Payment)
-            </span>
+          {/* Quick Discussion Topics / Session Templates */}
+          <div className="flex-1 p-2 space-y-1 overflow-y-auto text-xs">
+            <div className="px-2 py-1 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+              Quick Sourcing Channels
+            </div>
+
+            {[
+              { title: "🧸 Trending Toys (87 SKUs)", query: "What are the trending toys?" },
+              { title: "👓 3D AR Tryout Studio", query: "Can I inspect products in 3D AR before buying?" },
+              { title: "🚀 High Margin Reseller Items", query: "Show me high margin products for resellers" },
+              { title: "🚚 Mysore Delivery SLA", query: "What are your delivery timelines?" },
+              { title: "👑 25% Fair Price Guarantee", query: "How does your pricing model work and why is there no bargaining?" },
+              { title: "📦 1-Piece Sample Pack", query: "Can I order 1 piece sample first?" },
+              { title: "🏦 Axis Bank & UPI Remittance", query: "What are your verified payment details?" },
+              { title: "👤 Speak with Abdul Darvesh", query: "I want to talk to Abdul Darvesh directly" },
+            ].map((topic, idx) => (
+              <button
+                key={idx}
+                onClick={() => {
+                  handleSend(topic.query);
+                  if (window.innerWidth < 768) setSidebarOpen(false);
+                }}
+                className="w-full text-left py-2 px-2.5 rounded-xl hover:bg-white/[0.06] text-slate-300 hover:text-white transition-all truncate flex items-center gap-2 cursor-pointer group"
+              >
+                <span className="w-1.5 h-1.5 rounded-full bg-brand-orange/60 group-hover:bg-brand-orange shrink-0" />
+                <span className="truncate">{topic.title}</span>
+              </button>
+            ))}
           </div>
 
-          {activeCartUnits > 0 && (
-            <div className="text-[10px] font-mono bg-white/[0.08] px-2.5 py-0.5 rounded-full text-slate-200">
-              Cart: <strong>{activeCartUnits} pcs</strong> (₹{activeCartTotal.toLocaleString("en-IN")})
-            </div>
-          )}
+          {/* User Profile Card at Sidebar Bottom */}
+          <div className="p-3 border-t border-white/10 bg-obsidian-900/60">
+            {currentUser ? (
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-brand-orange to-brand-blue flex items-center justify-center text-obsidian-950 font-black text-xs shrink-0">
+                  {currentUser.username.charAt(0).toUpperCase()}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="font-bold text-white text-xs truncate flex items-center gap-1">
+                    <span>{currentUser.username}</span>
+                    <Crown className="w-3 h-3 text-amber-400 shrink-0" />
+                  </div>
+                  <div className="text-[10px] text-slate-400 capitalize truncate">
+                    Verified {currentUser.merchantType} • {currentUser.city}
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="flex items-center gap-2 text-xs text-slate-400">
+                <div className="w-7 h-7 rounded-full bg-white/10 flex items-center justify-center text-slate-300 shrink-0">
+                  <User className="w-3.5 h-3.5" />
+                </div>
+                <div className="text-[11px]">
+                  <span className="text-white font-semibold">Guest Merchant</span>
+                  <div className="text-[9px] text-slate-400">Sign in for VIP rates</div>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
 
-        {/* Message Stream */}
-        <div className="flex-1 p-4 sm:p-6 overflow-y-auto space-y-4">
-          {messages.map((m) => (
-            <div 
-              key={m.id} 
-              className={`flex flex-col ${m.sender === "user" ? "items-end" : "items-start"}`}
-            >
-              <div className="flex items-end gap-2 max-w-[95%] sm:max-w-[88%]">
-                {m.sender === "agent" && (
-                  <div className="w-6 h-6 rounded-full bg-brand-orange/20 border border-brand-orange/40 flex items-center justify-center text-brand-orange shrink-0 mb-1">
-                    <Sparkles className="w-3 h-3" />
+        {/* --- MAIN CHAT PANE --- */}
+        <div className="flex-1 flex flex-col h-full overflow-hidden bg-obsidian-900 relative">
+          
+          {/* Apple-Style Glass Chat Header */}
+          <div className="sticky top-0 z-30 shrink-0 px-3.5 py-2.5 sm:px-5 sm:py-3 bg-obsidian-950/95 backdrop-blur-md border-b border-white/10 flex items-center justify-between gap-2">
+            
+            <div className="flex items-center gap-2.5">
+              {/* Toggle Sidebar Button */}
+              <button
+                onClick={() => setSidebarOpen(!sidebarOpen)}
+                className="p-1.5 rounded-lg bg-white/[0.05] hover:bg-white/[0.1] text-slate-300 hover:text-white transition-colors cursor-pointer"
+                title="Toggle Sidebar"
+              >
+                {sidebarOpen ? <PanelLeftClose className="w-4 h-4" /> : <PanelLeftOpen className="w-4 h-4" />}
+              </button>
+
+              <div className="relative">
+                <div className="w-9 h-9 rounded-2xl bg-gradient-to-tr from-brand-blue to-brand-orange p-0.5 shadow-glow-orange shrink-0">
+                  <div className="w-full h-full rounded-2xl bg-obsidian-950 flex items-center justify-center text-white">
+                    <Bot className="w-4 h-4 text-brand-orange" />
                   </div>
-                )}
+                </div>
+                <span className="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-emerald-400 border-2 border-obsidian-950 animate-pulse" />
+              </div>
 
-                <div 
-                  className={`p-3.5 sm:p-4 rounded-2xl text-xs sm:text-[13px] leading-relaxed whitespace-pre-wrap ${
-                    m.sender === "user"
-                      ? "bg-gradient-to-r from-brand-orange to-brand-orange-light text-obsidian-950 font-medium rounded-br-none shadow-glow-orange"
-                      : "bg-white/[0.05] border border-white/10 text-slate-200 rounded-bl-none shadow-md backdrop-blur-md"
-                  }`}
-                >
-                  {m.text}
+              <div>
+                <div className="flex items-center gap-1.5 flex-wrap">
+                  <span className="font-bold text-white text-xs sm:text-sm">1AA Sourcing Copilot</span>
+                  
+                  {/* Model Selector Dropdown */}
+                  <select
+                    value={selectedModel}
+                    onChange={(e) => {
+                      haptics.selection();
+                      setSelectedModel(e.target.value as any);
+                    }}
+                    className="bg-white/[0.06] hover:bg-white/[0.1] text-emerald-400 font-mono font-bold text-[10px] px-2 py-0.5 rounded-full border border-emerald-500/30 outline-none cursor-pointer"
+                    title="Select AI Model"
+                  >
+                    <option value="gpt-4.5" className="bg-obsidian-900 text-emerald-300">⚡ 1AA Omni-4.5 (Factory Engine)</option>
+                    <option value="deepseek-r1" className="bg-obsidian-900 text-indigo-300">🧠 DeepSeek R1 Wholesale Reasoner</option>
+                    <option value="gemini-flash" className="bg-obsidian-900 text-brand-orange">🌐 Gemini 2.5 Flash Telemetry</option>
+                  </select>
+                </div>
+                <p className="text-[10px] text-slate-400 hidden sm:block">Mysore Central Facility • Live Inventory • Human Escalation</p>
+              </div>
+            </div>
 
-                  {/* Transit Card Component if City Lookup */}
-                  {m.transitInfo && (
-                    <div className="mt-3 p-3 rounded-xl bg-obsidian-950/80 border border-brand-blue/30 space-y-2">
-                      <div className="flex items-center justify-between text-xs font-bold text-white">
-                        <span className="flex items-center gap-1.5 text-brand-orange">
-                          <MapPin className="w-3.5 h-3.5" />
-                          <span>Destination: {m.transitInfo.city}</span>
-                        </span>
-                        <span className="text-[10px] px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-400 font-mono">
-                          Direct Surface / Air Route
-                        </span>
-                      </div>
-                      <div className="grid grid-cols-2 gap-2 text-[11px] font-mono pt-1">
-                        <div className="p-2 rounded-lg bg-white/[0.03] border border-white/10">
-                          <div className="text-slate-400 text-[10px]">Express Air</div>
-                          <div className="text-brand-orange font-bold">{m.transitInfo.expressDays}</div>
-                        </div>
-                        <div className="p-2 rounded-lg bg-white/[0.03] border border-white/10">
-                          <div className="text-slate-400 text-[10px]">Standard Surface</div>
-                          <div className="text-white font-bold">{m.transitInfo.standardDays}</div>
-                        </div>
-                      </div>
-                      <div className="text-[10px] text-slate-500 font-mono">
-                        Courier: {m.transitInfo.courier}
-                      </div>
+            <div className="flex items-center gap-1.5 sm:gap-2">
+              {/* Dual View Dock/Modal Toggle */}
+              <button
+                onClick={() => {
+                  haptics.light();
+                  setViewMode(isDocked ? "modal" : "docked");
+                }}
+                className="hidden sm:flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-white/[0.06] hover:bg-white/[0.12] text-slate-300 hover:text-white text-[11px] font-semibold transition-all cursor-pointer"
+                title={isDocked ? "Expand to Full Modal" : "Dock as Copilot"}
+              >
+                {isDocked ? <Maximize2 className="w-3.5 h-3.5" /> : <Minimize2 className="w-3.5 h-3.5" />}
+                <span>{isDocked ? "Full" : "Dock"}</span>
+              </button>
+
+              {/* Quick Human Escalation */}
+              <a
+                href={getEscalationWhatsAppUrl()}
+                target="_blank"
+                rel="noreferrer"
+                onClick={() => haptics.light()}
+                className="hidden md:flex items-center gap-1 px-3 py-1.5 rounded-full bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-500/30 text-emerald-400 text-xs font-semibold transition-all cursor-pointer"
+                title="Escalate directly to Abdul Darvesh on WhatsApp"
+              >
+                <Phone className="w-3 h-3" />
+                <span>Talk to Owner</span>
+              </a>
+
+              <button
+                type="button"
+                onClick={() => {
+                  haptics.light();
+                  onClose();
+                }}
+                className="w-8 h-8 rounded-full bg-white/[0.08] hover:bg-white/[0.18] active:scale-95 text-slate-200 hover:text-white flex items-center justify-center border border-white/15 transition-all cursor-pointer shadow-md"
+                title="Close (Esc)"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+
+          {/* Delivery SLA Header Strip */}
+          <div className="bg-gradient-to-r from-brand-blue/20 via-brand-orange/20 to-brand-blue/20 border-b border-white/[0.08] px-3.5 py-1.5 text-center text-[10px] sm:text-[11px] text-slate-300 flex items-center justify-between gap-2 flex-wrap shrink-0">
+            <div className="flex items-center gap-2">
+              <Truck className="w-3.5 h-3.5 text-brand-orange shrink-0" />
+              <span>
+                <strong>Delivery Policy:</strong> Standard <span className="text-white font-bold">10-15 Days</span> • Express <span className="text-brand-orange font-bold">&lt;7 Days</span> post-payment
+              </span>
+            </div>
+
+            {activeCartUnits > 0 && (
+              <div className="text-[10px] font-mono bg-white/[0.08] px-2 py-0.5 rounded-full text-slate-200">
+                Cart: <strong>{activeCartUnits} pcs</strong> (₹{activeCartTotal.toLocaleString("en-IN")})
+              </div>
+            )}
+          </div>
+
+          {/* Message Stream */}
+          <div className="flex-1 p-3 sm:p-5 overflow-y-auto space-y-4">
+            {messages.map((m) => (
+              <div 
+                key={m.id} 
+                className={`flex flex-col ${m.sender === "user" ? "items-end" : "items-start"}`}
+              >
+                <div className="flex items-end gap-2 max-w-[96%] sm:max-w-[88%]">
+                  {m.sender === "agent" && (
+                    <div className="w-6 h-6 rounded-full bg-brand-orange/20 border border-brand-orange/40 flex items-center justify-center text-brand-orange shrink-0 mb-1">
+                      <Sparkles className="w-3 h-3" />
                     </div>
                   )}
 
-                  {/* Wholesale Calculation Card */}
-                  {m.calcResult && (
-                    <div className="mt-3 p-3.5 rounded-xl bg-obsidian-950/90 border border-emerald-500/30 space-y-2">
-                      <div className="flex items-center justify-between text-xs font-bold text-emerald-400">
-                        <span className="flex items-center gap-1.5">
-                          <Calculator className="w-3.5 h-3.5" />
-                          <span>Wholesale Bulk ROI Analysis</span>
-                        </span>
-                        <span className="text-[10px] px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 font-mono">
-                          {m.calcResult.marginPercent}% Net Margin
-                        </span>
-                      </div>
-                      <div className="grid grid-cols-2 gap-2 text-xs font-mono pt-1">
-                        <div className="bg-white/[0.04] p-2 rounded-lg">
-                          <div className="text-[10px] text-slate-400">Your Procurement</div>
-                          <div className="text-white font-bold">₹{m.calcResult.totalAmount.toLocaleString("en-IN")}</div>
+                  <div 
+                    className={`p-3.5 sm:p-4 rounded-2xl text-xs sm:text-[13px] leading-relaxed whitespace-pre-wrap ${
+                      m.sender === "user"
+                        ? "bg-gradient-to-r from-brand-orange to-brand-orange-light text-obsidian-950 font-medium rounded-br-none shadow-glow-orange"
+                        : "bg-white/[0.05] border border-white/10 text-slate-200 rounded-bl-none shadow-md backdrop-blur-md"
+                    }`}
+                  >
+                    {m.text}
+
+                    {/* Transit Card Component if City Lookup */}
+                    {m.transitInfo && (
+                      <div className="mt-3 p-3 rounded-xl bg-obsidian-950/80 border border-brand-blue/30 space-y-2">
+                        <div className="flex items-center justify-between text-xs font-bold text-white">
+                          <span className="flex items-center gap-1.5 text-brand-orange">
+                            <MapPin className="w-3.5 h-3.5" />
+                            <span>Destination: {m.transitInfo.city}</span>
+                          </span>
+                          <span className="text-[10px] px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-400 font-mono">
+                            Direct Surface / Air Route
+                          </span>
                         </div>
-                        <div className="bg-white/[0.04] p-2 rounded-lg">
-                          <div className="text-[10px] text-slate-400">Est. Resale Value</div>
-                          <div className="text-emerald-400 font-bold">₹{m.calcResult.retailValue.toLocaleString("en-IN")}</div>
+                        <div className="grid grid-cols-2 gap-2 text-xs font-mono">
+                          <div className="bg-white/[0.04] p-2 rounded-lg">
+                            <div className="text-[10px] text-slate-400">⚡ Express Priority</div>
+                            <div className="text-brand-orange font-bold">{m.transitInfo.expressDays}</div>
+                          </div>
+                          <div className="bg-white/[0.04] p-2 rounded-lg">
+                            <div className="text-[10px] text-slate-400">🚛 Standard Surface</div>
+                            <div className="text-white font-bold">{m.transitInfo.standardDays}</div>
+                          </div>
+                        </div>
+                        <div className="text-[10px] text-slate-400">
+                          Couriers: <span className="text-slate-300 font-medium">{m.transitInfo.courier}</span>
                         </div>
                       </div>
-                      <div className="flex items-center justify-between text-[11px] pt-1 border-t border-white/10 text-slate-300">
-                        <span>Projected Reseller Profit:</span>
-                        <span className="text-emerald-400 font-bold font-mono">+₹{m.calcResult.potentialProfit.toLocaleString("en-IN")}</span>
-                      </div>
-                    </div>
-                  )}
+                    )}
 
-                  {/* Suggested Products Grid */}
-                  {m.suggestedProducts && m.suggestedProducts.length > 0 && (
-                    <div className="mt-3.5 pt-3.5 border-t border-white/10 space-y-2.5">
-                      <div className="flex items-center justify-between text-[11px] text-slate-400">
-                        <span className="font-semibold text-white">Suggested Stock Items ({m.suggestedProducts.length})</span>
-                        <button
-                          onClick={() => handleAddAllToCart(m.suggestedProducts!)}
-                          className="px-2.5 py-1 rounded-full bg-brand-orange/20 hover:bg-brand-orange text-brand-orange hover:text-obsidian-950 font-bold text-[10px] transition-all flex items-center gap-1 cursor-pointer"
-                        >
-                          <Plus className="w-3 h-3" />
-                          <span>Add All ({m.suggestedProducts.length}) to Cart</span>
-                        </button>
-                      </div>
+                    {/* Suggested Products Grid with 3D AR Button */}
+                    {m.suggestedProducts && m.suggestedProducts.length > 0 && (
+                      <div className="mt-3.5 pt-3.5 border-t border-white/10 space-y-2.5">
+                        <div className="flex items-center justify-between text-[11px] text-slate-400">
+                          <span className="font-semibold text-white">Suggested Stock Items ({m.suggestedProducts.length})</span>
+                          <button
+                            onClick={() => handleAddAllToCart(m.suggestedProducts!)}
+                            className="px-2.5 py-1 rounded-full bg-brand-orange/20 hover:bg-brand-orange text-brand-orange hover:text-obsidian-950 font-bold text-[10px] transition-all flex items-center gap-1 cursor-pointer"
+                          >
+                            <Plus className="w-3 h-3" />
+                            <span>Add All ({m.suggestedProducts.length})</span>
+                          </button>
+                        </div>
 
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                        {m.suggestedProducts.map((p) => {
-                          const margin = p.marketPrice - p.fairPrice;
-                          const marginPct = Math.round((margin / p.marketPrice) * 100);
-                          const isJustAdded = addedSku === p.sku;
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                          {m.suggestedProducts.map((p) => {
+                            const margin = p.marketPrice - p.fairPrice;
+                            const marginPct = Math.round((margin / p.marketPrice) * 100);
+                            const isJustAdded = addedSku === p.sku;
 
-                          return (
-                            <div 
-                              key={p.id}
-                              className="p-3 rounded-2xl bg-obsidian-950/80 border border-white/10 flex flex-col justify-between hover:border-brand-orange/50 transition-all group"
-                            >
-                              <div className="flex items-center gap-3">
-                                <img
-                                  src={p.image}
-                                  alt={p.name}
-                                  className="w-14 h-14 rounded-xl object-cover bg-obsidian-900 border border-white/10 shrink-0 cursor-pointer group-hover:scale-105 transition-transform"
-                                  onClick={() => {
-                                    haptics.selection();
-                                    onSelectProduct(p);
-                                  }}
-                                />
-                                <div className="flex-1 min-w-0">
-                                  <div className="flex items-center gap-1 text-[9px] text-brand-orange font-mono font-bold">
-                                    <span>{p.sku}</span>
-                                    <span className="text-white/20">•</span>
-                                    <span className="text-emerald-400">{p.inStock} in stock</span>
-                                  </div>
-                                  <div 
-                                    className="font-bold text-white text-xs truncate group-hover:text-brand-orange transition-colors cursor-pointer mt-0.5"
+                            return (
+                              <div 
+                                key={p.id}
+                                className="p-3 rounded-2xl bg-obsidian-950/80 border border-white/10 flex flex-col justify-between hover:border-brand-orange/50 transition-all group"
+                              >
+                                <div className="flex items-center gap-3">
+                                  <img
+                                    src={p.image}
+                                    alt={p.name}
+                                    className="w-14 h-14 rounded-xl object-cover bg-obsidian-900 border border-white/10 shrink-0 cursor-pointer group-hover:scale-105 transition-transform"
                                     onClick={() => {
                                       haptics.selection();
                                       onSelectProduct(p);
                                     }}
-                                  >
-                                    {p.name}
-                                  </div>
-                                  <div className="flex items-baseline gap-2 mt-1">
-                                    <span className="font-mono font-black text-brand-orange text-xs sm:text-sm">₹{p.fairPrice}</span>
-                                    <span className="text-[10px] text-slate-500 line-through">₹{p.marketPrice}</span>
-                                    <span className="text-[9px] px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-400 font-mono font-bold">
-                                      Save ₹{margin} ({marginPct}%)
-                                    </span>
+                                  />
+                                  <div className="flex-1 min-w-0">
+                                    <div className="flex items-center gap-1 text-[9px] text-brand-orange font-mono font-bold">
+                                      <span>{p.sku}</span>
+                                      <span className="text-white/20">•</span>
+                                      <span className="text-emerald-400">{p.inStock} ready</span>
+                                    </div>
+                                    <div 
+                                      className="font-bold text-white text-xs truncate group-hover:text-brand-orange transition-colors cursor-pointer mt-0.5"
+                                      onClick={() => {
+                                        haptics.selection();
+                                        onSelectProduct(p);
+                                      }}
+                                    >
+                                      {p.name}
+                                    </div>
+                                    <div className="flex items-baseline gap-2 mt-1">
+                                      <span className="font-mono font-black text-brand-orange text-xs sm:text-sm">₹{p.fairPrice}</span>
+                                      <span className="text-[10px] text-slate-500 line-through">₹{p.marketPrice}</span>
+                                      <span className="text-[9px] px-1 py-0.2 rounded bg-emerald-500/20 text-emerald-400 font-mono font-bold">
+                                        Save {marginPct}%
+                                      </span>
+                                    </div>
                                   </div>
                                 </div>
-                              </div>
 
-                              {/* Card Action Buttons */}
-                              <div className="flex items-center gap-2 mt-2.5 pt-2 border-t border-white/[0.06]">
-                                <button
-                                  onClick={() => {
-                                    haptics.selection();
-                                    onSelectProduct(p);
-                                  }}
-                                  className="flex-1 py-1.5 px-2 rounded-xl bg-white/[0.04] hover:bg-white/[0.08] text-slate-300 hover:text-white text-[10px] font-semibold flex items-center justify-center gap-1 transition-colors cursor-pointer"
-                                >
-                                  <Eye className="w-3 h-3" />
-                                  <span>Specs</span>
-                                </button>
-
-                                <button
-                                  onClick={() => {
-                                    haptics.success();
-                                    onAddToCart(p.sku, 1);
-                                    setAddedSku(p.sku);
-                                    setTimeout(() => setAddedSku(null), 1500);
-                                  }}
-                                  className={`flex-1 py-1.5 px-2 rounded-xl text-[10px] font-bold flex items-center justify-center gap-1 transition-all cursor-pointer ${
-                                    isJustAdded 
-                                      ? "bg-emerald-500 text-obsidian-950 font-black shadow-glow-emerald"
-                                      : "bg-brand-orange text-obsidian-950 hover:bg-brand-orange-light shadow-glow-orange"
-                                  }`}
-                                >
-                                  {isJustAdded ? (
-                                    <>
-                                      <Check className="w-3 h-3 stroke-[3]" />
-                                      <span>Added!</span>
-                                    </>
-                                  ) : (
-                                    <>
-                                      <ShoppingBag className="w-3 h-3" />
-                                      <span>+ Add to Cart</span>
-                                    </>
+                                {/* Card Action Buttons with 3D AR Trigger */}
+                                <div className="grid grid-cols-3 gap-1.5 mt-2.5 pt-2 border-t border-white/[0.06]">
+                                  {onOpenArProduct && (
+                                    <button
+                                      onClick={() => {
+                                        haptics.selection();
+                                        onOpenArProduct(p);
+                                      }}
+                                      className="py-1.5 px-1.5 rounded-xl bg-gradient-to-r from-indigo-500/20 to-purple-500/20 hover:from-indigo-500/30 hover:to-purple-500/30 text-indigo-300 hover:text-white border border-indigo-500/30 text-[10px] font-bold flex items-center justify-center gap-1 transition-all cursor-pointer"
+                                      title="Inspect in 3D AR (Try Before You Buy)"
+                                    >
+                                      <Rotate3d className="w-3 h-3 text-indigo-400" />
+                                      <span>3D AR</span>
+                                    </button>
                                   )}
-                                </button>
+
+                                  <button
+                                    onClick={() => {
+                                      haptics.selection();
+                                      onSelectProduct(p);
+                                    }}
+                                    className="py-1.5 px-1.5 rounded-xl bg-white/[0.04] hover:bg-white/[0.08] text-slate-300 hover:text-white text-[10px] font-semibold flex items-center justify-center gap-1 transition-colors cursor-pointer"
+                                  >
+                                    <Eye className="w-3 h-3" />
+                                    <span>Specs</span>
+                                  </button>
+
+                                  <button
+                                    onClick={() => {
+                                      haptics.success();
+                                      onAddToCart(p.sku, 1);
+                                      setAddedSku(p.sku);
+                                      setTimeout(() => setAddedSku(null), 1500);
+                                    }}
+                                    className={`py-1.5 px-1.5 rounded-xl text-[10px] font-bold flex items-center justify-center gap-1 transition-all cursor-pointer ${
+                                      isJustAdded 
+                                        ? "bg-emerald-500 text-obsidian-950 font-black shadow-glow-emerald"
+                                        : "bg-brand-orange text-obsidian-950 hover:bg-brand-orange-light shadow-glow-orange"
+                                    }`}
+                                  >
+                                    {isJustAdded ? (
+                                      <>
+                                        <Check className="w-3 h-3 stroke-[3]" />
+                                        <span>Added!</span>
+                                      </>
+                                    ) : (
+                                      <>
+                                        <ShoppingBag className="w-3 h-3" />
+                                        <span>+ Cart</span>
+                                      </>
+                                    )}
+                                  </button>
+                                </div>
                               </div>
-                            </div>
-                          );
-                        })}
+                            );
+                          })}
+                        </div>
                       </div>
-                    </div>
-                  )}
+                    )}
 
-                  {/* Contextual Action Cards inside Agent Messages */}
-                  {m.actionType === "escalate" && (
-                    <div className="mt-3 pt-3 border-t border-white/10 flex flex-wrap gap-2">
-                      <a
-                        href={getEscalationWhatsAppUrl()}
-                        target="_blank"
-                        rel="noreferrer"
-                        onClick={() => haptics.success()}
-                        className="inline-flex items-center gap-2 px-4 py-2.5 rounded-full bg-emerald-500 hover:bg-emerald-600 text-obsidian-950 font-bold text-xs uppercase tracking-wider transition-all shadow-glow-emerald cursor-pointer"
-                      >
-                        <MessageSquare className="w-3.5 h-3.5" />
-                        <span>Chat Live with Abdul Darvesh (WhatsApp)</span>
-                        <ExternalLink className="w-3 h-3" />
-                      </a>
-                    </div>
-                  )}
-
-                  {/* Tracking Action Card */}
-                  {m.actionType === "tracking" && onTrackOrder && (
-                    <div className="mt-3 p-3.5 rounded-2xl bg-gradient-to-r from-emerald-500/10 via-obsidian-950 to-brand-blue/10 border border-emerald-500/30 space-y-2.5">
-                      <div className="flex items-center justify-between text-xs">
-                        <span className="font-bold text-white flex items-center gap-1.5">
-                          <Navigation className="w-3.5 h-3.5 text-emerald-400" />
-                          <span>Satellite Telemetry Active</span>
-                        </span>
-                        <span className="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 font-mono text-[10px] font-bold">
-                          Live Radar Ready
-                        </span>
+                    {/* Contextual Action Cards inside Agent Messages */}
+                    {m.actionType === "escalate" && (
+                      <div className="mt-3 pt-3 border-t border-white/10 flex flex-wrap gap-2">
+                        <a
+                          href={getEscalationWhatsAppUrl()}
+                          target="_blank"
+                          rel="noreferrer"
+                          onClick={() => haptics.success()}
+                          className="inline-flex items-center gap-2 px-4 py-2.5 rounded-full bg-emerald-500 hover:bg-emerald-600 text-obsidian-950 font-bold text-xs uppercase tracking-wider transition-all shadow-glow-emerald cursor-pointer"
+                        >
+                          <MessageSquare className="w-3.5 h-3.5" />
+                          <span>Chat Live with Abdul Darvesh (WhatsApp)</span>
+                          <ExternalLink className="w-3 h-3" />
+                        </a>
                       </div>
-                      <p className="text-[11px] text-slate-300">
-                        Track the exact 6-stage checkpoint progress, live sensor telemetry, and print your official Lorry Receipt (LR) consignment slip.
-                      </p>
-                      <button
-                        onClick={() => {
-                          haptics.selection();
-                          onTrackOrder(m.trackingRef || "");
-                          onClose();
-                        }}
-                        className="w-full py-2.5 px-4 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:brightness-110 text-obsidian-950 font-black text-xs flex items-center justify-center gap-2 shadow-glow-emerald transition-all cursor-pointer active:scale-95"
-                      >
-                        <Radio className="w-3.5 h-3.5" />
-                        <span>Launch Live Satellite Package Radar</span>
-                      </button>
-                    </div>
-                  )}
+                    )}
 
-                  {/* Copy & Speech Buttons */}
-                  {m.sender === "agent" && (
-                    <div className="mt-2.5 flex items-center justify-end gap-3">
-                      <button
-                        onClick={() => toggleSpeech(m.id, m.text)}
-                        className={`text-[10px] flex items-center gap-1 transition-colors cursor-pointer ${
-                          speakingId === m.id ? "text-brand-orange font-bold animate-pulse" : "text-slate-500 hover:text-slate-300"
-                        }`}
-                        title="Listen to response (Voice Readout)"
-                      >
-                        {speakingId === m.id ? <VolumeX className="w-3 h-3 text-brand-orange" /> : <Volume2 className="w-3 h-3" />}
-                        <span>{speakingId === m.id ? "Stop Voice" : "Listen"}</span>
-                      </button>
+                    {/* Tracking Action Card */}
+                    {m.actionType === "tracking" && onTrackOrder && (
+                      <div className="mt-3 p-3.5 rounded-2xl bg-gradient-to-r from-emerald-500/10 via-obsidian-950 to-brand-blue/10 border border-emerald-500/30 space-y-2.5">
+                        <div className="flex items-center justify-between text-xs">
+                          <span className="font-bold text-white flex items-center gap-1.5">
+                            <Navigation className="w-3.5 h-3.5 text-emerald-400" />
+                            <span>Satellite Telemetry Active</span>
+                          </span>
+                          <span className="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 font-mono text-[10px] font-bold">
+                            Live Radar Ready
+                          </span>
+                        </div>
+                        <p className="text-[11px] text-slate-300">
+                          Track the exact 6-stage checkpoint progress, live sensor telemetry, and print your official Lorry Receipt (LR) consignment slip.
+                        </p>
+                        <button
+                          onClick={() => {
+                            haptics.selection();
+                            onTrackOrder(m.trackingRef || "");
+                            onClose();
+                          }}
+                          className="w-full py-2.5 px-4 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:brightness-110 text-obsidian-950 font-black text-xs flex items-center justify-center gap-2 shadow-glow-emerald transition-all cursor-pointer active:scale-95"
+                        >
+                          <Radio className="w-3.5 h-3.5" />
+                          <span>Launch Live Satellite Package Radar</span>
+                        </button>
+                      </div>
+                    )}
 
-                      <button
-                        onClick={() => copyToClipboard(m.text, m.id)}
-                        className="text-[10px] text-slate-500 hover:text-slate-300 flex items-center gap-1 transition-colors cursor-pointer"
-                      >
-                        {copiedId === m.id ? (
-                          <>
-                            <CheckCircle2 className="w-3 h-3 text-emerald-400" />
-                            <span className="text-emerald-400">Copied</span>
-                          </>
-                        ) : (
-                          <>
-                            <Copy className="w-3 h-3" />
-                            <span>Copy info</span>
-                          </>
-                        )}
-                      </button>
+                    {/* Copy & Speech Buttons */}
+                    {m.sender === "agent" && (
+                      <div className="mt-2.5 flex items-center justify-end gap-3">
+                        <button
+                          onClick={() => toggleSpeech(m.id, m.text)}
+                          className={`text-[10px] flex items-center gap-1 transition-colors cursor-pointer ${
+                            speakingId === m.id ? "text-brand-orange font-bold animate-pulse" : "text-slate-500 hover:text-slate-300"
+                          }`}
+                          title="Listen to response (Voice Readout)"
+                        >
+                          {speakingId === m.id ? <VolumeX className="w-3 h-3 text-brand-orange" /> : <Volume2 className="w-3 h-3" />}
+                          <span>{speakingId === m.id ? "Stop Voice" : "Listen"}</span>
+                        </button>
+
+                        <button
+                          onClick={() => copyToClipboard(m.text, m.id)}
+                          className="text-[10px] text-slate-500 hover:text-slate-300 flex items-center gap-1 transition-colors cursor-pointer"
+                        >
+                          {copiedId === m.id ? (
+                            <>
+                              <CheckCircle2 className="w-3 h-3 text-emerald-400" />
+                              <span className="text-emerald-400">Copied</span>
+                            </>
+                          ) : (
+                            <>
+                              <Copy className="w-3 h-3" />
+                              <span>Copy info</span>
+                            </>
+                          )}
+                        </button>
+                      </div>
+                    )}
+                  </div>
+
+                  {m.sender === "user" && (
+                    <div className="w-6 h-6 rounded-full bg-brand-blue/30 border border-brand-blue/50 flex items-center justify-center text-brand-blue-light shrink-0 mb-1">
+                      <User className="w-3 h-3" />
                     </div>
                   )}
                 </div>
 
-                {m.sender === "user" && (
-                  <div className="w-6 h-6 rounded-full bg-brand-blue/30 border border-brand-blue/50 flex items-center justify-center text-brand-blue-light shrink-0 mb-1">
-                    <User className="w-3 h-3" />
-                  </div>
-                )}
+                <span className="text-[9px] text-slate-500 mt-1 px-1 font-mono">
+                  {m.time}
+                </span>
               </div>
+            ))}
 
-              <span className="text-[9px] text-slate-500 mt-1 px-1 font-mono">
-                {m.time}
-              </span>
-            </div>
-          ))}
+            {isTyping && (
+              <div className="flex items-center gap-2 text-slate-400 text-xs italic">
+                <Bot className="w-4 h-4 text-brand-orange animate-spin" />
+                <span>1AA AI is cross-referencing Mysore dispatch schedules & stock...</span>
+              </div>
+            )}
 
-          {isTyping && (
-            <div className="flex items-center gap-2 text-slate-400 text-xs italic">
-              <Bot className="w-4 h-4 text-brand-orange animate-spin" />
-              <span>1AA AI is cross-referencing Mysore dispatch schedules & stock...</span>
-            </div>
-          )}
-
-          <div ref={messagesEndRef} />
-        </div>
-
-        {/* Multilingual Selector Bar */}
-        <div className="px-4 py-2 border-t border-white/[0.08] bg-obsidian-950/90 flex items-center justify-between gap-2 shrink-0">
-          <div className="flex items-center gap-1.5 text-xs text-slate-400">
-            <Languages className="w-3.5 h-3.5 text-brand-orange" />
-            <span className="font-semibold text-white text-[11px]">AI Language:</span>
+            <div ref={messagesEndRef} />
           </div>
-          <div className="flex items-center gap-1.5">
-            {[
-              { id: "en", label: "English" },
-              { id: "hi", label: "हिंदी" },
-              { id: "kn", label: "ಕನ್ನಡ" },
-              { id: "ta", label: "தமிழ்" },
-            ].map((lang) => (
+
+          {/* Multilingual Selector Bar */}
+          <div className="px-3 py-1.5 border-t border-white/[0.08] bg-obsidian-950/90 flex items-center justify-between gap-2 shrink-0">
+            <div className="flex items-center gap-1.5 text-xs text-slate-400">
+              <Languages className="w-3 h-3 text-brand-orange" />
+              <span className="font-semibold text-white text-[10px]">Language:</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              {[
+                { id: "en", label: "English" },
+                { id: "hi", label: "हिंदी" },
+                { id: "kn", label: "ಕನ್ನಡ" },
+                { id: "ta", label: "தமிழ்" },
+              ].map((lang) => (
+                <button
+                  key={lang.id}
+                  onClick={() => {
+                    haptics.selection();
+                    setSelectedLang(lang.id as any);
+                  }}
+                  className={`px-2 py-0.5 rounded-full text-[10px] font-bold transition-all cursor-pointer ${
+                    selectedLang === lang.id
+                      ? "bg-brand-orange text-obsidian-950 shadow-glow-orange"
+                      : "bg-white/[0.04] text-slate-400 hover:text-white border border-white/10"
+                  }`}
+                >
+                  {lang.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Quick Suggestion Pills */}
+          <div className="px-3 py-1.5 border-t border-white/[0.06] bg-obsidian-950/60 overflow-x-auto flex items-center gap-2 no-scrollbar shrink-0">
+            {quickChips.map((chip, idx) => (
               <button
-                key={lang.id}
-                onClick={() => {
-                  haptics.selection();
-                  setSelectedLang(lang.id as any);
-                }}
-                className={`px-2.5 py-0.5 rounded-full text-[11px] font-bold transition-all cursor-pointer ${
-                  selectedLang === lang.id
-                    ? "bg-brand-orange text-obsidian-950 shadow-glow-orange"
-                    : "bg-white/[0.04] text-slate-400 hover:text-white border border-white/10"
-                }`}
+                key={idx}
+                onClick={() => handleSend(chip.query)}
+                className="py-1 px-2.5 rounded-full bg-white/[0.04] hover:bg-white/[0.1] border border-white/10 hover:border-brand-orange text-[10px] text-slate-300 hover:text-white font-medium whitespace-nowrap transition-all shrink-0 active:scale-95 cursor-pointer"
               >
-                {lang.label}
+                {chip.label}
               </button>
             ))}
           </div>
-        </div>
 
-        {/* Quick Suggestion Pills */}
-        <div className="px-4 py-2 border-t border-white/[0.06] bg-obsidian-950/60 overflow-x-auto flex items-center gap-2 no-scrollbar shrink-0">
-          {quickChips.map((chip, idx) => (
+          {/* Input Bar with Voice Mic Dictation */}
+          <div className="p-2.5 sm:p-3 bg-obsidian-950 border-t border-white/10 flex items-center gap-2 shrink-0">
+            {/* Integrated Mic Button */}
             <button
-              key={idx}
-              onClick={() => handleSend(chip.query)}
-              className="py-1.5 px-3 rounded-full bg-white/[0.04] hover:bg-white/[0.1] border border-white/10 hover:border-brand-orange text-[11px] text-slate-300 hover:text-white font-medium whitespace-nowrap transition-all shrink-0 active:scale-95 cursor-pointer"
+              type="button"
+              onClick={toggleMicInput}
+              className={`p-2.5 rounded-2xl border transition-all cursor-pointer shrink-0 ${
+                isMicListening
+                  ? "bg-rose-500 border-rose-400 text-white animate-pulse shadow-glow-orange"
+                  : "bg-white/[0.06] hover:bg-white/[0.12] border-white/10 text-slate-300 hover:text-white"
+              }`}
+              title={isMicListening ? "Listening... click to stop" : "Speak your sourcing question"}
             >
-              {chip.label}
+              {isMicListening ? <Mic className="w-4 h-4 text-white animate-bounce" /> : <Mic className="w-4 h-4" />}
             </button>
-          ))}
-        </div>
 
-        {/* Input Bar */}
-        <div className="p-3 sm:p-4 bg-obsidian-950 border-t border-white/10 flex items-center gap-2 shrink-0">
-          <input
-            type="text"
-            placeholder="Ask trending toys, city delivery ETA, wholesale margin, or sample pack..."
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") handleSend();
-            }}
-            className="flex-1 py-3 px-4 rounded-2xl bg-white/[0.04] border border-white/10 focus:border-brand-orange text-xs sm:text-sm text-white outline-none placeholder:text-slate-500 transition-colors"
-          />
+            <input
+              type="text"
+              placeholder="Ask trending toys, 3D AR, city ETA, wholesale ROI, sample pack..."
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") handleSend();
+              }}
+              className="flex-1 py-2.5 px-3.5 rounded-2xl bg-white/[0.04] border border-white/10 focus:border-brand-orange text-xs sm:text-sm text-white outline-none placeholder:text-slate-500 transition-colors"
+            />
 
-          <button
-            onClick={() => handleSend()}
-            disabled={!input.trim()}
-            className="w-11 h-11 rounded-2xl bg-gradient-to-r from-brand-orange to-brand-orange-light text-obsidian-950 font-bold flex items-center justify-center transition-all shadow-glow-orange disabled:opacity-40 disabled:pointer-events-none active:scale-95 cursor-pointer shrink-0"
-          >
-            <Send className="w-4 h-4" />
-          </button>
+            <button
+              onClick={() => handleSend()}
+              disabled={!input.trim()}
+              className="w-10 h-10 rounded-2xl bg-gradient-to-r from-brand-orange to-brand-orange-light text-obsidian-950 font-bold flex items-center justify-center transition-all shadow-glow-orange disabled:opacity-40 disabled:pointer-events-none active:scale-95 cursor-pointer shrink-0"
+              title="Send message"
+            >
+              <Send className="w-4 h-4" />
+            </button>
+          </div>
+
         </div>
 
       </div>

@@ -23,6 +23,10 @@ import MasterCartonLabelModal from "./components/MasterCartonLabelModal";
 import PlatformPriceComparisonModal from "./components/PlatformPriceComparisonModal";
 import WholesaleOpsHubModal from "./components/WholesaleOpsHubModal";
 import RestockBundlesModal from "./components/RestockBundlesModal";
+import UserOnboardingModal, { UserProfile } from "./components/UserOnboardingModal";
+import VoiceSearchModal2026 from "./components/VoiceSearchModal2026";
+import ArProductPreviewModal from "./components/ArProductPreviewModal";
+import SplineInteractiveHero from "./components/SplineInteractiveHero";
 import { CurrencyCode } from "./utils/currency";
 import { handleImgError } from "./utils/imageFallback";
 import { haptics } from "./utils/haptics";
@@ -67,7 +71,9 @@ import {
   Boxes,
   Globe,
   Mic,
-  MicOff
+  User,
+  Rotate3d,
+  Camera
 } from "lucide-react";
 
 export default function OneAAStore() {
@@ -156,14 +162,40 @@ export default function OneAAStore() {
   const [priceCompareProduct, setPriceCompareProduct] = useState<Product | null>(null);
   const [showOpsHubModal, setShowOpsHubModal] = useState(false);
   const [showRestockBundlesModal, setShowRestockBundlesModal] = useState(false);
-  const [selectedCurrency, setSelectedCurrency] = useState<CurrencyCode>("INR");
-  const [isListening, setIsListening] = useState(false);
-  const [speechSupported, setSpeechSupported] = useState(() => {
+  
+  // User Onboarding & AI Personalization
+  const [currentUser, setCurrentUser] = useState<UserProfile | null>(() => {
     if (typeof window !== "undefined") {
-      return Boolean((window as any).SpeechRecognition || (window as any).webkitSpeechRecognition);
+      try {
+        const saved = localStorage.getItem("1aa_user_profile");
+        if (saved) return JSON.parse(saved);
+      } catch {}
     }
-    return true;
+    return null;
   });
+  const [showOnboardingModal, setShowOnboardingModal] = useState(false);
+
+  // 2026 Trend Voice Search Modal
+  const [showVoiceModal2026, setShowVoiceModal2026] = useState(false);
+
+  // AR Product Preview ("Try Before You Buy")
+  const [showArModal, setShowArModal] = useState(false);
+  const [arProduct, setArProduct] = useState<Product | null>(null);
+
+  // Auto-launch onboarding on launch if not registered
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const saved = localStorage.getItem("1aa_user_profile");
+      if (!saved) {
+        const timer = setTimeout(() => {
+          setShowOnboardingModal(true);
+        }, 1200);
+        return () => clearTimeout(timer);
+      }
+    }
+  }, []);
+
+  const [selectedCurrency, setSelectedCurrency] = useState<CurrencyCode>("INR");
   const [isDesktopViewport, setIsDesktopViewport] = useState(() => {
     if (typeof window !== "undefined") {
       return window.innerWidth >= 1024;
@@ -316,55 +348,6 @@ export default function OneAAStore() {
       const next = Math.max(0, (prev[sku] || 0) + delta);
       return { ...prev, [sku]: next };
     });
-  };
-
-  const handleToggleVoiceSearch = () => {
-    haptics.light();
-    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-    if (!SpeechRecognition) {
-      setSpeechSupported(false);
-      alert("Voice search is not supported in this browser. Please use Chrome, Safari, or Edge.");
-      return;
-    }
-
-    if (isListening) {
-      setIsListening(false);
-      return;
-    }
-
-    try {
-      const recognition = new SpeechRecognition();
-      recognition.lang = "en-IN";
-      recognition.continuous = false;
-      recognition.interimResults = false;
-
-      recognition.onstart = () => {
-        setIsListening(true);
-        haptics.medium();
-      };
-
-      recognition.onresult = (event: any) => {
-        const transcript = event.results?.[0]?.[0]?.transcript;
-        if (transcript) {
-          setSearch(transcript.trim());
-          haptics.success();
-        }
-        setIsListening(false);
-      };
-
-      recognition.onerror = () => {
-        setIsListening(false);
-      };
-
-      recognition.onend = () => {
-        setIsListening(false);
-      };
-
-      recognition.start();
-    } catch (err) {
-      console.error("Speech recognition error:", err);
-      setIsListening(false);
-    }
   };
 
   const handleLoadBundle = (bundleQuantities: { [sku: string]: number }) => {
@@ -637,8 +620,41 @@ export default function OneAAStore() {
               </a>
             </div>
 
-            {/* Right: Currency, Sound FX, Delivery SLA */}
-            <div className="flex items-center gap-3">
+            {/* Right: Personalization, Currency, Sound FX, Delivery SLA */}
+            <div className="flex flex-wrap items-center gap-2.5">
+              {/* Dynamic AI Personalization Badge */}
+              {currentUser ? (
+                <button
+                  onClick={() => {
+                    haptics.selection();
+                    setShowOnboardingModal(true);
+                  }}
+                  className="flex items-center gap-1.5 px-3 py-0.5 rounded-full bg-gradient-to-r from-brand-orange/20 via-brand-blue/20 to-purple-500/20 border border-brand-orange/40 text-white hover:border-brand-orange transition-all cursor-pointer shadow-glow-orange group"
+                  title="Click to view/edit your 1AA VIP Merchant Profile"
+                >
+                  <Crown className="w-3.5 h-3.5 text-amber-400 group-hover:scale-110 transition-transform" />
+                  <span className="font-bold text-brand-orange text-[11px]">
+                    Welcome back, {currentUser.username}!
+                  </span>
+                  <span className="text-[9px] uppercase px-1.5 py-0.2 rounded bg-white/10 text-slate-300 font-mono hidden sm:inline">
+                    {currentUser.merchantType}
+                  </span>
+                </button>
+              ) : (
+                <button
+                  onClick={() => {
+                    haptics.selection();
+                    setShowOnboardingModal(true);
+                  }}
+                  className="flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-brand-orange/15 hover:bg-brand-orange text-brand-orange hover:text-obsidian-950 border border-brand-orange/30 font-bold text-[10px] transition-all cursor-pointer shadow-glow-orange"
+                >
+                  <User className="w-3 h-3" />
+                  <span>Register Username</span>
+                </button>
+              )}
+
+              <span className="text-white/20 hidden sm:inline">•</span>
+
               <span className="text-brand-orange font-bold flex items-center gap-1.5">
                 <Truck className="w-3.5 h-3.5 text-brand-orange" />
                 <span>Delivery: 10–15 Days (<strong className="text-white font-mono">&lt;7d Express</strong>) post-payment</span>
@@ -753,6 +769,33 @@ export default function OneAAStore() {
                   Wholesale (B2B)
                 </button>
               </div>
+
+              {/* 3D AR Tryout Studio Trigger */}
+              <button
+                onClick={() => {
+                  haptics.selection();
+                  setArProduct(CATALOG_PRODUCTS[0]);
+                  setShowArModal(true);
+                }}
+                className="flex text-xs px-3 py-2 rounded-full border border-indigo-500/40 bg-indigo-500/10 text-indigo-300 hover:bg-indigo-500 hover:text-white font-semibold transition-all items-center gap-1.5 shadow-glow-purple cursor-pointer"
+                title="Open 3D AR Studio (Try Before You Buy in Camera AR)"
+              >
+                <Rotate3d className="w-3.5 h-3.5 text-indigo-400" />
+                <span className="hidden sm:inline">3D AR</span>
+              </button>
+
+              {/* ChatGPT Style AI Copilot Trigger */}
+              <button
+                onClick={() => {
+                  haptics.light();
+                  setShowAiAgentModal(true);
+                }}
+                className="flex text-xs px-3 py-2 rounded-full border border-purple-500/40 bg-purple-500/10 text-purple-300 hover:bg-purple-600 hover:text-white font-semibold transition-all items-center gap-1.5 shadow-glow-purple cursor-pointer"
+                title="Launch 1AA ChatGPT-Style Embedded Sourcing Copilot"
+              >
+                <Bot className="w-3.5 h-3.5 text-purple-300" />
+                <span className="hidden md:inline">AI Copilot</span>
+              </button>
 
               {/* Real-time Cross-Platform Price Radar Trigger */}
               <button
@@ -927,6 +970,113 @@ export default function OneAAStore() {
                 <span>Price Radar</span>
               </button>
             </div>
+
+            {/* --- DYNAMIC AI-GENERATED PERSONALIZATION WELCOME BANNER --- */}
+            <div className="max-w-3xl mx-auto rounded-3xl p-5 bg-gradient-to-r from-brand-blue/20 via-obsidian-950 to-brand-orange/20 border border-brand-orange/30 shadow-2xl backdrop-blur-xl text-left">
+              {currentUser ? (
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                  <div className="flex items-center gap-3.5">
+                    <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-brand-orange to-purple-600 flex items-center justify-center text-obsidian-950 font-black text-xl shrink-0 shadow-glow-orange">
+                      👑
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="text-base sm:text-lg font-black text-white">
+                          Welcome back, <span className="text-transparent bg-clip-text bg-gradient-to-r from-brand-orange to-amber-300">{currentUser.username}</span>!
+                        </span>
+                        <span className="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 font-mono font-bold text-[10px] uppercase">
+                          Verified {currentUser.merchantType}
+                        </span>
+                        <span className="px-2 py-0.5 rounded-full bg-white/10 text-slate-300 font-mono text-[10px]">
+                          📍 {currentUser.city}
+                        </span>
+                      </div>
+                      <div className="text-xs text-slate-300 mt-1">
+                        AI Recommended for your business: <strong>Trending STEM Toys & Smart Utility Goods</strong>. Pre-inspected with zero-DOA certification at Mysore Facility.
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2 shrink-0">
+                    <button
+                      onClick={() => {
+                        haptics.selection();
+                        setArProduct(CATALOG_PRODUCTS[0]);
+                        setShowArModal(true);
+                      }}
+                      className="px-3.5 py-2 rounded-xl bg-indigo-500/20 hover:bg-indigo-500/30 text-indigo-300 hover:text-white border border-indigo-500/30 text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer shadow-glow-purple"
+                    >
+                      <Rotate3d className="w-3.5 h-3.5 text-indigo-400" />
+                      <span>3D AR Studio</span>
+                    </button>
+
+                    <button
+                      onClick={() => {
+                        haptics.selection();
+                        setShowVoiceModal2026(true);
+                      }}
+                      className="px-3.5 py-2 rounded-xl bg-white/[0.06] hover:bg-white/[0.12] text-slate-200 border border-white/15 text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer"
+                    >
+                      <Mic className="w-3.5 h-3.5 text-brand-orange" />
+                      <span>Voice Search</span>
+                    </button>
+
+                    <button
+                      onClick={() => {
+                        haptics.selection();
+                        setShowOnboardingModal(true);
+                      }}
+                      className="p-2 rounded-xl bg-white/[0.04] hover:bg-white/[0.1] text-slate-400 hover:text-white transition-colors cursor-pointer"
+                      title="Edit Profile"
+                    >
+                      <User className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                  <div className="flex items-center gap-3.5">
+                    <div className="w-12 h-12 rounded-2xl bg-brand-orange/20 border border-brand-orange/30 flex items-center justify-center text-brand-orange text-xl shrink-0">
+                      🚀
+                    </div>
+                    <div>
+                      <div className="text-sm sm:text-base font-black text-white flex items-center gap-2">
+                        <span>New to 1AA? Create Your Merchant Username</span>
+                        <span className="px-2 py-0.5 rounded-full bg-brand-orange text-obsidian-950 font-black text-[10px]">Instant Access</span>
+                      </div>
+                      <div className="text-xs text-slate-300 mt-1">
+                        Register your business name and mobile number to unlock live order tracking, VIP restock rebates, and direct WhatsApp invoice delivery.
+                      </div>
+                    </div>
+                  </div>
+
+                  <button
+                    onClick={() => {
+                      haptics.selection();
+                      setShowOnboardingModal(true);
+                    }}
+                    className="px-4 py-2.5 rounded-full bg-gradient-to-r from-brand-orange to-brand-orange-light text-obsidian-950 text-xs font-black flex items-center gap-1.5 transition-all shadow-glow-orange shrink-0 cursor-pointer active:scale-95"
+                  >
+                    <User className="w-3.5 h-3.5" />
+                    <span>Create Username (30s)</span>
+                  </button>
+                </div>
+              )}
+            </div>
+
+            {/* --- 3D SPLINE INTERACTIVE LOGISTICS HERO --- */}
+            <SplineInteractiveHero
+              onOpenArStudio={() => {
+                haptics.selection();
+                setArProduct(CATALOG_PRODUCTS[0]);
+                setShowArModal(true);
+              }}
+              onOpenPriceRadar={() => {
+                haptics.light();
+                setPriceCompareProduct(CATALOG_PRODUCTS[0]);
+                setShowPriceCompareModal(true);
+              }}
+            />
 
             {/* Apple-style 3-feature grid */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-2 max-w-3xl mx-auto text-left">
@@ -1140,6 +1290,95 @@ export default function OneAAStore() {
 
             </div>
 
+            {/* --- 🕶️ AR PRODUCT PREVIEW SECTION ("TRY BEFORE YOU BUY") --- */}
+            <div className="max-w-4xl mx-auto rounded-3xl p-6 sm:p-7 bg-gradient-to-br from-indigo-950/40 via-obsidian-950 to-purple-950/40 border border-indigo-500/30 shadow-2xl backdrop-blur-xl relative overflow-hidden">
+              <div className="absolute top-0 right-0 w-80 h-80 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none" />
+              
+              <div className="flex flex-col lg:flex-row items-center justify-between gap-6 relative z-10 text-left">
+                <div className="space-y-3 max-w-xl">
+                  <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-500/20 border border-indigo-500/40 text-indigo-300 text-xs font-bold">
+                    <Rotate3d className="w-3.5 h-3.5 text-indigo-400" />
+                    <span>3D & Augmented Reality • Try Before You Buy</span>
+                  </div>
+
+                  <h2 className="text-xl sm:text-2xl font-black text-white leading-tight">
+                    AR Product Preview: <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 via-purple-300 to-brand-orange">Inspect Before You Procure</span>
+                  </h2>
+
+                  <p className="text-xs sm:text-sm text-slate-300 leading-relaxed">
+                    Test product build quality, exact millimeter sizing, and industrial finishes in 360° rotation before ordering wholesale cartons. Activate your camera to project true 1:1 scale holograms onto your warehouse floor or shop shelf.
+                  </p>
+
+                  <div className="flex flex-wrap items-center gap-2.5 pt-1">
+                    <button
+                      onClick={() => {
+                        haptics.selection();
+                        setArProduct(CATALOG_PRODUCTS.find(p => p.sku === "1AA-KETL-FOLD") || CATALOG_PRODUCTS[0]);
+                        setShowArModal(true);
+                      }}
+                      className="px-4 py-2.5 rounded-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:brightness-110 text-white font-black text-xs flex items-center gap-2 shadow-glow-purple transition-all cursor-pointer active:scale-95"
+                    >
+                      <Camera className="w-4 h-4" />
+                      <span>Launch AR Camera Studio</span>
+                    </button>
+
+                    <button
+                      onClick={() => {
+                        haptics.light();
+                        setArProduct(CATALOG_PRODUCTS.find(p => p.sku === "1AA-RC-DRIFT4WD") || CATALOG_PRODUCTS[1]);
+                        setShowArModal(true);
+                      }}
+                      className="px-3.5 py-2.5 rounded-full bg-white/[0.06] hover:bg-white/[0.12] text-slate-200 border border-white/15 font-bold text-xs flex items-center gap-1.5 transition-all cursor-pointer"
+                    >
+                      <Rotate3d className="w-3.5 h-3.5 text-brand-orange" />
+                      <span>4WD RC Drift Car 3D</span>
+                    </button>
+
+                    <button
+                      onClick={() => {
+                        haptics.light();
+                        setArProduct(CATALOG_PRODUCTS.find(p => p.sku === "1AA-VAC-120W") || CATALOG_PRODUCTS[2]);
+                        setShowArModal(true);
+                      }}
+                      className="px-3.5 py-2.5 rounded-full bg-white/[0.06] hover:bg-white/[0.12] text-slate-200 border border-white/15 font-bold text-xs flex items-center gap-1.5 transition-all cursor-pointer"
+                    >
+                      <Rotate3d className="w-3.5 h-3.5 text-brand-blue-light" />
+                      <span>120W Vacuum 3D</span>
+                    </button>
+                  </div>
+                </div>
+
+                {/* 3D Hologram Stage Card */}
+                <div 
+                  onClick={() => {
+                    haptics.selection();
+                    setArProduct(CATALOG_PRODUCTS[0]);
+                    setShowArModal(true);
+                  }}
+                  className="w-full lg:w-64 p-4 rounded-2xl bg-black/50 border border-white/10 hover:border-indigo-400/60 transition-all cursor-pointer group text-center"
+                >
+                  <div className="flex items-center justify-between text-[10px] font-mono text-indigo-300 font-bold mb-2">
+                    <span>360° Studio</span>
+                    <span className="px-1.5 py-0.2 rounded bg-indigo-500/20 text-indigo-400">Live Orbit</span>
+                  </div>
+                  <div className="w-28 h-28 mx-auto relative flex items-center justify-center my-1">
+                    <img
+                      src={CATALOG_PRODUCTS[0].image}
+                      alt={CATALOG_PRODUCTS[0].name}
+                      className="w-24 h-24 object-cover rounded-xl group-hover:scale-110 group-hover:rotate-6 transition-all duration-500"
+                    />
+                    <div className="absolute inset-0 border-2 border-dashed border-indigo-400/40 rounded-full animate-spin pointer-events-none" style={{ animationDuration: '15s' }} />
+                  </div>
+                  <div className="text-xs font-bold text-white group-hover:text-indigo-300 transition-colors truncate">
+                    {CATALOG_PRODUCTS[0].name}
+                  </div>
+                  <div className="text-[10px] text-slate-400 font-mono mt-0.5">
+                    Click to test 3D & Room AR
+                  </div>
+                </div>
+              </div>
+            </div>
+
             {/* CONTROLS (Search, Category Pills, Sort) */}
             <div className="space-y-4">
               
@@ -1153,9 +1392,9 @@ export default function OneAAStore() {
                     placeholder="Search by product, SKU, or specs..."
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}
-                    className="w-full bg-white/[0.04] border border-white/10 rounded-full pl-11 pr-20 py-3 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-brand-orange/80 transition-all backdrop-blur-md shadow-inner"
+                    className="w-full bg-white/[0.04] border border-white/10 rounded-full pl-11 pr-24 py-3 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-brand-orange/80 transition-all backdrop-blur-md shadow-inner"
                   />
-                  <div className="absolute right-3 top-2.5 flex items-center gap-1">
+                  <div className="absolute right-3 top-2 flex items-center gap-1.5">
                     {search && (
                       <button 
                         type="button"
@@ -1172,25 +1411,16 @@ export default function OneAAStore() {
                     )}
                     <button
                       type="button"
-                      onClick={handleToggleVoiceSearch}
-                      disabled={!speechSupported}
-                      className={`p-1.5 rounded-full transition-all ${
-                        !speechSupported
-                          ? "text-slate-600 opacity-60 cursor-not-allowed"
-                          : isListening 
-                          ? "bg-red-500 text-white animate-pulse shadow-[0_0_12px_rgba(239,68,68,0.7)] cursor-pointer" 
-                          : "text-slate-400 hover:text-white hover:bg-white/10 cursor-pointer"
-                      }`}
-                      title={!speechSupported ? "Voice search not supported in this browser" : isListening ? "Listening... Speak now" : "Voice Search (Click & speak in English/Hindi)"}
+                      onClick={() => {
+                        haptics.selection();
+                        setShowVoiceModal2026(true);
+                      }}
+                      className="p-1.5 rounded-full bg-gradient-to-r from-brand-orange/20 to-brand-blue/20 hover:from-brand-orange hover:to-brand-blue text-brand-orange hover:text-obsidian-950 border border-brand-orange/40 transition-all cursor-pointer shadow-glow-orange flex items-center gap-1 text-[10px] font-bold px-2.5"
+                      title="Launch 2026 Voice Search (Sonic Radial Waveform & Smart Intent Parsing)"
                       aria-label="Voice search"
                     >
-                      {!speechSupported ? (
-                        <MicOff className="w-3.5 h-3.5 text-slate-500" />
-                      ) : isListening ? (
-                        <Mic className="w-3.5 h-3.5 animate-bounce text-white" />
-                      ) : (
-                        <Mic className="w-3.5 h-3.5" />
-                      )}
+                      <Mic className="w-3.5 h-3.5" />
+                      <span className="hidden sm:inline font-mono">2026 Voice</span>
                     </button>
                   </div>
                 </div>
@@ -1371,6 +1601,21 @@ export default function OneAAStore() {
                         <div className="absolute top-3.5 right-3.5 bg-brand-orange text-obsidian-950 text-[10px] font-black px-2.5 py-1 rounded-full shadow-glow-orange">
                           Save {savingsPercent}%
                         </div>
+
+                        {/* 3D AR Button on Hover */}
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            haptics.selection();
+                            setArProduct(product);
+                            setShowArModal(true);
+                          }}
+                          className="absolute bottom-3.5 right-24 bg-gradient-to-r from-indigo-600/90 to-purple-600/90 hover:from-indigo-600 hover:to-purple-600 text-white text-[10px] font-bold px-2.5 py-1.5 rounded-full border border-indigo-400/40 opacity-0 group-hover:opacity-100 transition-all flex items-center gap-1 shadow-glow-purple cursor-pointer"
+                          title="Inspect in 3D AR (Try Before You Buy)"
+                        >
+                          <Rotate3d className="w-3 h-3 text-indigo-200" />
+                          <span>3D AR</span>
+                        </button>
 
                         {/* Specs Button on Hover */}
                         <button
@@ -2166,6 +2411,11 @@ export default function OneAAStore() {
           setPriceCompareProduct(p);
           setShowPriceCompareModal(true);
         }}
+        onOpenArPreview={(p) => {
+          haptics.selection();
+          setArProduct(p);
+          setShowArModal(true);
+        }}
       />
 
       {/* --- PRO-FORMA INVOICE GENERATOR MODAL --- */}
@@ -2278,6 +2528,11 @@ export default function OneAAStore() {
         activeCartTotal={metrics.finalAmount}
         activeCartUnits={metrics.units}
         onTrackOrder={handleOpenTracking}
+        onOpenArProduct={(p) => {
+          setArProduct(p);
+          setShowArModal(true);
+        }}
+        currentUser={currentUser}
       />
 
       {/* --- REAL-TIME CARGO RADAR & PACKAGE TRACKING MODAL --- */}
@@ -2380,6 +2635,44 @@ export default function OneAAStore() {
         selectedHotline={selectedHotline}
       />
 
+      {/* --- USER ONBOARDING & VERIFIED MERCHANT REGISTRATION MODAL --- */}
+      <UserOnboardingModal
+        isOpen={showOnboardingModal}
+        onClose={() => setShowOnboardingModal(false)}
+        existingProfile={currentUser}
+        onProfileSaved={(profile) => {
+          setCurrentUser(profile);
+          haptics.success();
+        }}
+      />
+
+      {/* --- 2026 TREND SONIC RADIAL VOICE SEARCH MODAL --- */}
+      <VoiceSearchModal2026
+        isOpen={showVoiceModal2026}
+        onClose={() => setShowVoiceModal2026(false)}
+        onApplySearch={(query, category, filter) => {
+          if (query) setSearch(query);
+          if (category) setSelectedCategory(category);
+          if (filter) setQuickFilter(filter);
+          setShowVoiceModal2026(false);
+          window.scrollTo({ top: 950, behavior: "smooth" });
+        }}
+        onTrackOrder={handleOpenTracking}
+      />
+
+      {/* --- AR PRODUCT PREVIEW MODAL ("TRY BEFORE YOU BUY") --- */}
+      <ArProductPreviewModal
+        isOpen={showArModal}
+        onClose={() => {
+          setShowArModal(false);
+          setArProduct(null);
+        }}
+        product={arProduct || filteredAndSorted[0] || CATALOG_PRODUCTS[0]}
+        onAddToCart={(sku, qty) => {
+          updateQty(sku, qty);
+        }}
+      />
+
       {/* --- UNIFIED LUXURY FLOATING INTELLIGENCE DOCK --- */}
       <div className={`fixed ${metrics.units > 0 ? "bottom-24" : "bottom-6"} right-4 sm:right-6 z-30 pointer-events-auto transition-all duration-300`}>
         <div className="flex items-center gap-2 p-1.5 rounded-full bg-obsidian-950/90 backdrop-blur-2xl border border-white/20 shadow-2xl">
@@ -2397,8 +2690,35 @@ export default function OneAAStore() {
               <Bot className="w-3.5 h-3.5 text-white" />
               <span className="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
             </div>
-            <span className="hidden sm:inline">Ask AI Agent</span>
+            <span className="hidden sm:inline">Ask AI Copilot</span>
             <span className="sm:hidden">AI</span>
+          </button>
+
+          {/* 3D AR Studio Trigger */}
+          <button
+            onClick={() => {
+              haptics.selection();
+              setArProduct(CATALOG_PRODUCTS[0]);
+              setShowArModal(true);
+            }}
+            className="flex items-center gap-1.5 px-3 py-2 rounded-full bg-indigo-500/20 hover:bg-indigo-500/30 text-indigo-300 font-bold text-xs transition-all cursor-pointer border border-indigo-500/40 shadow-glow-purple"
+            title="Launch 3D AR Camera Studio"
+          >
+            <Rotate3d className="w-3.5 h-3.5 text-indigo-400" />
+            <span className="hidden sm:inline">3D AR</span>
+          </button>
+
+          {/* Voice Search Floating Trigger */}
+          <button
+            onClick={() => {
+              haptics.selection();
+              setShowVoiceModal2026(true);
+            }}
+            className="flex items-center gap-1.5 px-3 py-2 rounded-full bg-white/[0.08] hover:bg-white/[0.15] text-brand-orange font-bold text-xs transition-all cursor-pointer border border-white/10"
+            title="Launch 2026 Voice Search"
+          >
+            <Mic className="w-3.5 h-3.5 text-brand-orange" />
+            <span className="hidden sm:inline">Voice</span>
           </button>
 
           {/* Wholesale Ops Hub Quick Trigger */}

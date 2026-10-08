@@ -19,7 +19,8 @@ import {
   Boxes,
   Printer,
   Sparkles,
-  PackageCheck
+  PackageCheck,
+  Rotate3d
 } from 'lucide-react';
 
 interface ProductDetailModalProps {
@@ -33,6 +34,7 @@ interface ProductDetailModalProps {
   onOpenBarcodeGenerator?: (product: Product) => void;
   onOpenFreightCalc?: (product: Product) => void;
   onOpenPriceCompare?: (product: Product) => void;
+  onOpenArPreview?: (product: Product) => void;
 }
 
 export default function ProductDetailModal({
@@ -46,6 +48,7 @@ export default function ProductDetailModal({
   onOpenBarcodeGenerator,
   onOpenFreightCalc,
   onOpenPriceCompare,
+  onOpenArPreview,
 }: ProductDetailModalProps) {
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -282,7 +285,21 @@ export default function ProductDetailModal({
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-2">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 mt-2">
+                  {onOpenArPreview && (
+                    <button
+                      onClick={() => {
+                        haptics.selection();
+                        onOpenArPreview(product);
+                      }}
+                      className="py-2 px-3 rounded-xl bg-gradient-to-r from-indigo-500/20 to-purple-500/20 hover:from-indigo-500/30 hover:to-purple-500/30 border border-indigo-500/40 text-indigo-300 font-bold text-[11px] flex items-center justify-center gap-1.5 transition-all cursor-pointer shadow-glow-purple"
+                      title="Inspect in 3D AR Studio (Try Before You Buy)"
+                    >
+                      <Rotate3d className="w-3.5 h-3.5 text-indigo-400" />
+                      <span>3D AR Studio</span>
+                    </button>
+                  )}
+
                   {onOpenPriceCompare && (
                     <button
                       onClick={() => {
@@ -292,7 +309,7 @@ export default function ProductDetailModal({
                       className="py-2 px-3 rounded-xl bg-brand-orange/15 hover:bg-brand-orange/25 border border-brand-orange/30 text-brand-orange font-semibold text-[11px] flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
                     >
                       <TrendingUp className="w-3.5 h-3.5 text-brand-orange" />
-                      <span>Compare vs Amazon/Flipkart</span>
+                      <span>Price Radar</span>
                     </button>
                   )}
 
@@ -305,7 +322,7 @@ export default function ProductDetailModal({
                       className="py-2 px-3 rounded-xl bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-500/30 text-emerald-300 font-semibold text-[11px] flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
                     >
                       <Calculator className="w-3.5 h-3.5 text-emerald-400" />
-                      <span>Reseller ROI Calculator</span>
+                      <span>ROI Calculator</span>
                     </button>
                   )}
                 </div>

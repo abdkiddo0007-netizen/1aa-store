@@ -116,6 +116,16 @@ class HapticFeedback {
     this.playClickSound(800, 0.015, 0.03);
   }
 
+  // Error / Warning haptic for validation errors
+  error() {
+    if (typeof window !== "undefined" && "vibrate" in navigator) {
+      try {
+        navigator.vibrate([30, 50, 30]);
+      } catch {}
+    }
+    this.playClickSound(320, 0.04, 0.05);
+  }
+
   // Luxury ascending chime for Brand Reveal and VIP milestones
   chime() {
     if (!this.soundEnabled || !this.audioCtx) return;
