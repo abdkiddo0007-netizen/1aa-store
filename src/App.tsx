@@ -27,6 +27,10 @@ import UserOnboardingModal, { UserProfile } from "./components/UserOnboardingMod
 import VoiceSearchModal2026 from "./components/VoiceSearchModal2026";
 import ArProductPreviewModal from "./components/ArProductPreviewModal";
 import SplineInteractiveHero from "./components/SplineInteractiveHero";
+import AddressAndLocationModal from "./components/AddressAndLocationModal";
+import OrderFsmTrackerModal from "./components/OrderFsmTrackerModal";
+import { OrderAddressPackage } from "./types/address";
+import { OrderFsmState } from "./types/orderFsm";
 import { CurrencyCode } from "./utils/currency";
 import { handleImgError } from "./utils/imageFallback";
 import { haptics } from "./utils/haptics";
@@ -181,6 +185,30 @@ export default function OneAAStore() {
   // AR Product Preview ("Try Before You Buy")
   const [showArModal, setShowArModal] = useState(false);
   const [arProduct, setArProduct] = useState<Product | null>(null);
+
+  // Structured Address & Location Data Architecture
+  const [showAddressModal, setShowAddressModal] = useState(false);
+  const [orderAddressPackage, setOrderAddressPackage] = useState<OrderAddressPackage | null>(() => {
+    if (typeof window !== "undefined") {
+      try {
+        const saved = localStorage.getItem("1aa_order_address_package");
+        if (saved) return JSON.parse(saved);
+      } catch {}
+    }
+    return null;
+  });
+
+  // Strict Order Finite State Machine (FSM)
+  const [showFsmModal, setShowFsmModal] = useState(false);
+  const [fsmOrderRef, setFsmOrderRef] = useState<string>("1AA-892182");
+  const [fsmInitialState, setFsmInitialState] = useState<OrderFsmState>("ORDER_CONFIRMED");
+
+  const handleOpenFsmTracker = (ref?: string, st?: OrderFsmState) => {
+    haptics.selection();
+    if (ref) setFsmOrderRef(ref);
+    if (st) setFsmInitialState(st);
+    setShowFsmModal(true);
+  };
 
   // Auto-launch onboarding on launch if not registered
   useEffect(() => {
@@ -814,6 +842,36 @@ export default function OneAAStore() {
                 <Navigation className="w-3.5 h-3.5 text-emerald-400" />
                 <span className="hidden sm:inline">Track Package</span>
                 <span className="sm:hidden">Track</span>
+              </button>
+
+              {/* Order Finite State Machine (FSM) Trigger */}
+              <button
+                onClick={() => handleOpenFsmTracker()}
+                className="flex text-xs px-3 py-2 rounded-full border border-indigo-500/40 bg-indigo-500/10 text-indigo-300 hover:bg-indigo-600 hover:text-white font-semibold transition-all items-center gap-1.5 shadow-sm cursor-pointer"
+                title="Order Finite State Machine: 12-Stage Deterministic Lifecycle"
+              >
+                <Layers className="w-3.5 h-3.5 text-indigo-400" />
+                <span className="hidden lg:inline">Order FSM</span>
+              </button>
+
+              {/* Structured Address & Delivery Hub Trigger */}
+              <button
+                onClick={() => {
+                  haptics.light();
+                  setShowAddressModal(true);
+                }}
+                className="flex text-xs px-3 py-2 rounded-full border border-sky-500/40 bg-sky-500/10 text-sky-300 hover:bg-sky-500 hover:text-obsidian-950 font-semibold transition-all items-center gap-1.5 shadow-sm cursor-pointer"
+                title="Structured Shipping & Billing Address Architecture"
+              >
+                <MapPin className="w-3.5 h-3.5 text-sky-400" />
+                <span className="hidden lg:inline">
+                  {orderAddressPackage?.shippingAddress?.postalCode 
+                    ? `PIN: ${orderAddressPackage.shippingAddress.postalCode}` 
+                    : currentUser?.pincode 
+                    ? `PIN: ${currentUser.pincode}` 
+                    : "Address"}
+                </span>
+                <span className="lg:hidden">PIN</span>
               </button>
 
               {/* Wholesale Operations Hub Consolidated Trigger */}
@@ -2290,6 +2348,30 @@ export default function OneAAStore() {
                 </div>
               </div>
 
+              {/* Structured Delivery Destination Pill */}
+              <div 
+                onClick={() => {
+                  haptics.light();
+                  setShowAddressModal(true);
+                }}
+                className="p-3 rounded-2xl bg-white/[0.04] border border-white/10 hover:border-brand-orange/40 transition-all cursor-pointer flex items-center justify-between text-xs"
+              >
+                <div className="flex items-center gap-2.5 min-w-0">
+                  <div className="w-7 h-7 rounded-xl bg-sky-500/15 border border-sky-500/30 flex items-center justify-center text-sky-400 shrink-0">
+                    <MapPin className="w-3.5 h-3.5" />
+                  </div>
+                  <div className="min-w-0">
+                    <div className="text-[10px] text-slate-400 font-mono">DELIVERY HUB & PIN:</div>
+                    <div className="font-bold text-white truncate text-xs">
+                      {orderAddressPackage?.shippingAddress?.city || currentUser?.city || "Mysore"} • PIN: {orderAddressPackage?.shippingAddress?.postalCode || currentUser?.pincode || "570001"}
+                    </div>
+                  </div>
+                </div>
+                <span className="text-[10px] text-brand-orange font-bold hover:underline shrink-0">
+                  {orderAddressPackage ? "Edit" : "Set Address"}
+                </span>
+              </div>
+
               <div className="space-y-2">
                 <button
                   type="button"
@@ -2447,6 +2529,24 @@ export default function OneAAStore() {
         items={activeItems}
         selectedHotline={selectedHotline}
         onTrackOrder={handleOpenTracking}
+        currentUser={currentUser}
+      />
+
+      {/* --- STRUCTURED ADDRESS & LOCATION ARCHITECTURE MODAL --- */}
+      <AddressAndLocationModal
+        isOpen={showAddressModal}
+        onClose={() => setShowAddressModal(false)}
+        currentUser={currentUser}
+        existingPackage={orderAddressPackage}
+        onSaveAddress={(pkg) => setOrderAddressPackage(pkg)}
+      />
+
+      {/* --- 12-STAGE ORDER FINITE STATE MACHINE (FSM) MODAL --- */}
+      <OrderFsmTrackerModal
+        isOpen={showFsmModal}
+        onClose={() => setShowFsmModal(false)}
+        orderRef={fsmOrderRef}
+        initialState={fsmInitialState}
       />
 
       {/* --- WHATSAPP CATALOG BROADCAST STUDIO MODAL --- */}
@@ -2540,6 +2640,7 @@ export default function OneAAStore() {
         }}
         initialOrderRef={trackingOrderRef}
         selectedHotline={selectedHotline}
+        onOpenFsmTracker={handleOpenFsmTracker}
       />
 
       {/* --- WHOLESALE SHELF BARCODE & MRP LABEL GENERATOR --- */}

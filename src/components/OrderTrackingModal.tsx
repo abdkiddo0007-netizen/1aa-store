@@ -23,7 +23,8 @@ import {
   Thermometer,
   Phone,
   MessageSquare,
-  Share2
+  Share2,
+  Layers
 } from "lucide-react";
 
 interface OrderTrackingModalProps {
@@ -31,6 +32,7 @@ interface OrderTrackingModalProps {
   onClose: () => void;
   initialOrderRef?: string | null;
   selectedHotline?: string;
+  onOpenFsmTracker?: (orderRef: string) => void;
 }
 
 export default function OrderTrackingModal({
@@ -38,6 +40,7 @@ export default function OrderTrackingModal({
   onClose,
   initialOrderRef,
   selectedHotline,
+  onOpenFsmTracker,
 }: OrderTrackingModalProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [activeTracking, setActiveTracking] = useState<PackageTrackingInfo | null>(null);
@@ -722,6 +725,20 @@ export default function OrderTrackingModal({
                 <span>Track on {activeTracking.courierPartner.split(" ")[0]} Portal</span>
                 <ExternalLink className="w-3.5 h-3.5" />
               </a>
+
+              {onOpenFsmTracker && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    haptics.selection();
+                    onOpenFsmTracker(activeTracking.orderRef);
+                  }}
+                  className="px-3.5 py-2 rounded-xl bg-brand-blue/20 hover:bg-brand-blue/30 text-brand-blue-light border border-brand-blue/40 text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer"
+                >
+                  <Layers className="w-3.5 h-3.5" />
+                  <span>Order FSM (12 Stages)</span>
+                </button>
+              )}
 
               <a
                 href="tel:+917406231167"

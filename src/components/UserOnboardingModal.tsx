@@ -10,16 +10,28 @@ import {
   ArrowRight, 
   X, 
   Sparkles, 
-  Bell, 
-  Send,
+  Mail,
+  Hash,
   Crown,
   Receipt
 } from "lucide-react";
+import { lookupPincode } from "../types/address";
+import { 
+  generateAdminNewUserAlert, 
+  dispatchTransactionalEmail, 
+  dispatchWhatsAppMessage,
+  OWNER_EMAIL,
+  OWNER_PHONE,
+  OWNER_NAME
+} from "../utils/notificationMatrix";
 
 export interface UserProfile {
   username: string;
   mobile: string;
+  email: string;
+  pincode: string;
   city: string;
+  state: string;
   merchantType: "retailer" | "reseller" | "wholesaler" | "direct_buyer";
   gstin?: string;
   registeredAt: string;
@@ -41,7 +53,10 @@ export default function UserOnboardingModal({
 }: UserOnboardingModalProps) {
   const [username, setUsername] = useState(existingProfile?.username || "");
   const [mobile, setMobile] = useState(existingProfile?.mobile || "");
+  const [email, setEmail] = useState(existingProfile?.email || "");
+  const [pincode, setPincode] = useState(existingProfile?.pincode || "");
   const [city, setCity] = useState(existingProfile?.city || "Mysore");
+  const [state, setState] = useState(existingProfile?.state || "Karnataka");
   const [merchantType, setMerchantType] = useState<UserProfile["merchantType"]>(
     existingProfile?.merchantType || "retailer"
   );
@@ -54,7 +69,10 @@ export default function UserOnboardingModal({
     if (existingProfile) {
       setUsername(existingProfile.username);
       setMobile(existingProfile.mobile);
+      setEmail(existingProfile.email || "");
+      setPincode(existingProfile.pincode || "");
       setCity(existingProfile.city);
+      setState(existingProfile.state || "Karnataka");
       setMerchantType(existingProfile.merchantType);
       setGstin(existingProfile.gstin || "");
     }
@@ -72,11 +90,29 @@ export default function UserOnboardingModal({
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [isOpen, onClose, existingProfile]);
 
+  // Auto-detect city & state when 6-digit pincode is entered
+  const handlePincodeChange = (val: string) => {
+    const clean = val.replace(/\D/g, "").slice(0, 6);
+    setPincode(clean);
+    if (clean.length === 6) {
+      const match = lookupPincode(clean);
+      if (match) {
+        setCity(match.city);
+        setState(match.state);
+        haptics.selection();
+      }
+    }
+  };
+
   if (!isOpen) return null;
 
   const validatePhone = (phone: string) => {
     const clean = phone.replace(/\D/g, "");
     return clean.length === 10;
+  };
+
+  const validateEmail = (mail: string) => {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(mail.trim());
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -85,9 +121,11 @@ export default function UserOnboardingModal({
 
     const cleanName = username.trim();
     const cleanMobile = mobile.replace(/\D/g, "");
+    const cleanEmail = email.trim().toLowerCase();
+    const cleanPin = pincode.replace(/\D/g, "");
 
     if (!cleanName || cleanName.length < 2) {
-      setError("Please enter a valid Name or Business Username (min 2 letters).");
+      setError("Please enter a valid Name or Trade Name (minimum 2 characters).");
       haptics.error();
       return;
     }
@@ -98,8 +136,20 @@ export default function UserOnboardingModal({
       return;
     }
 
+    if (!validateEmail(cleanEmail)) {
+      setError("Please enter a valid Gmail / Email address (mandatory for electronic invoicing).");
+      haptics.error();
+      return;
+    }
+
+    if (cleanPin.length !== 6) {
+      setError("Please enter a valid 6-digit Indian Location PIN Code.");
+      haptics.error();
+      return;
+    }
+
     if (!city.trim()) {
-      setError("Please enter your City or Region.");
+      setError("Please enter or verify your City/Destination Hub.");
       haptics.error();
       return;
     }
@@ -110,16 +160,21 @@ export default function UserOnboardingModal({
     const newProfile: UserProfile = {
       username: cleanName,
       mobile: cleanMobile,
+      email: cleanEmail,
+      pincode: cleanPin,
       city: city.trim(),
+      state: state.trim() || "Karnataka",
       merchantType,
       gstin: gstin.trim().toUpperCase() || undefined,
       registeredAt: existingProfile?.registeredAt || new Date().toISOString(),
       notificationSent: true,
     };
 
-    // Save in localStorage
+    // Save in localStorage for persistence
     try {
       localStorage.setItem("1aa_user_profile", JSON.stringify(newProfile));
+      localStorage.setItem("1aa_buyer_email", newProfile.email);
+      localStorage.setItem("1aa_buyer_pincode", newProfile.pincode);
       if (newProfile.gstin) {
         localStorage.setItem("1aa_buyer_gstin", newProfile.gstin);
       }
@@ -128,66 +183,52 @@ export default function UserOnboardingModal({
       console.error("Failed to save profile to localStorage:", err);
     }
 
-    // Automated dispatch payload to Abdul Darvesh via WhatsApp & Webhook/Email
-    const notificationMessage = 
-      `🚀 *NEW 1AA PLATFORM USER ONBOARDED*\n\n` +
-      `👤 *Username:* ${newProfile.username}\n` +
-      `📱 *Mobile:* +91 ${newProfile.mobile}\n` +
-      `📍 *City:* ${newProfile.city}\n` +
-      `💼 *Account Type:* ${newProfile.merchantType.toUpperCase()}\n` +
-      (newProfile.gstin ? `🆔 *GSTIN:* ${newProfile.gstin}\n` : "") +
-      `🕒 *Joined:* ${new Date().toLocaleString("en-IN")}\n\n` +
-      `Client is currently exploring inventory on 1AA Store!`;
+    // Backend alert generated silently to Abdul Darvesh (Owner)
+    const alertData = generateAdminNewUserAlert({
+      name: newProfile.username,
+      phone: newProfile.mobile,
+      email: newProfile.email,
+      pincode: newProfile.pincode,
+      city: newProfile.city,
+      state: newProfile.state,
+      businessType: newProfile.merchantType.toUpperCase(),
+    });
 
-    // Attempt automated background dispatch
+    // 1. Silent Email Dispatch to store owner
+    dispatchTransactionalEmail({
+      type: "ADMIN_NEW_USER",
+      recipient: OWNER_EMAIL,
+      recipientName: `${OWNER_NAME} (Store Owner)`,
+      subject: alertData.emailSubject,
+      htmlContent: alertData.emailHtml,
+    });
+
+    // 2. Outgoing WhatsApp notification logged for 1AA Central Desk
+    dispatchWhatsAppMessage({
+      type: "ADMIN_USER_ALERT",
+      recipientPhone: OWNER_PHONE,
+      messageText: alertData.smsSummary,
+    });
+
+    // 3. Silent external endpoint delivery (if network allows)
     try {
       fetch("https://formspree.io/f/mqakvjge", {
         method: "POST",
         headers: { "Content-Type": "application/json", "Accept": "application/json" },
         body: JSON.stringify({
-          recipient: "1aaavailablealways@gmail.com",
-          subject: `New User Joined 1AA Store: ${newProfile.username} (${newProfile.city})`,
-          message: notificationMessage,
-          profile: newProfile,
+          recipient: OWNER_EMAIL,
+          subject: alertData.emailSubject,
+          message: alertData.smsSummary,
+          userProfile: newProfile,
         }),
-      }).catch(() => {
-        // Fallback silently if offline or blocked
-      });
+      }).catch(() => {});
     } catch {}
 
     setTimeout(() => {
       setIsSubmitting(false);
       setShowSuccessCard(true);
       onProfileSaved(newProfile);
-
-      // Auto-trigger WhatsApp notification to Abdul Darvesh
-      try {
-        const waUrl = `https://wa.me/917406231167?text=${encodeURIComponent(
-          `🚀 *NEW 1AA PLATFORM USER ONBOARDED*\n\n` +
-          `👤 *Username:* ${newProfile.username}\n` +
-          `📱 *Mobile:* +91 ${newProfile.mobile}\n` +
-          `📍 *City:* ${newProfile.city}\n` +
-          `💼 *Account Type:* ${newProfile.merchantType.toUpperCase()}\n` +
-          (newProfile.gstin ? `🆔 *GSTIN:* ${newProfile.gstin}\n` : "") +
-          `🕒 *Joined:* ${new Date().toLocaleString("en-IN")}\n\n` +
-          `Hello Abdul Darvesh, I have just joined the 1AA Direct Factory Sourcing Platform!`
-        )}`;
-        window.open(waUrl, "_blank");
-      } catch {}
-    }, 450);
-  };
-
-  const getWhatsAppAlertLink = () => {
-    const text = 
-      `🚀 *NEW 1AA MERCHANT PROFILE REGISTERED*\n\n` +
-      `👤 *Name:* ${username}\n` +
-      `📱 *Mobile:* +91 ${mobile}\n` +
-      `📍 *City:* ${city}\n` +
-      `💼 *Type:* ${merchantType.toUpperCase()}\n` +
-      (gstin ? `🆔 *GSTIN:* ${gstin}\n` : "") +
-      `🕒 *Timestamp:* ${new Date().toLocaleString("en-IN")}\n\n` +
-      `Hello Abdul Darvesh, I have just joined the 1AA Direct Factory Sourcing Platform!`;
-    return `https://wa.me/917406231167?text=${encodeURIComponent(text)}`;
+    }, 400);
   };
 
   return (
@@ -213,13 +254,13 @@ export default function UserOnboardingModal({
             </div>
             <div>
               <h2 className="text-base sm:text-lg font-black text-white tracking-tight flex items-center gap-2">
-                <span>{existingProfile ? "Your Merchant Profile" : "Welcome to 1AA Sourcing"}</span>
+                <span>{existingProfile ? "Your Merchant Profile" : "Merchant Access Login"}</span>
                 <span className="px-2 py-0.5 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 font-mono text-[9px] font-bold">
                   MYSORE HUB
                 </span>
               </h2>
               <p className="text-xs text-slate-400">
-                Direct primary factory pricing • Flat 25% margin • Built-in door courier
+                Direct primary factory pricing • Flat 25% margin • Automated logistics
               </p>
             </div>
           </div>
@@ -238,7 +279,7 @@ export default function UserOnboardingModal({
         {/* Success Card After Registration */}
         {showSuccessCard ? (
           <div className="p-6 sm:p-8 space-y-5 text-center">
-            <div className="w-16 h-16 rounded-full bg-emerald-500/20 border-2 border-emerald-500/40 text-emerald-400 flex items-center justify-center mx-auto shadow-glow-emerald animate-bounce">
+            <div className="w-16 h-16 rounded-full bg-emerald-500/20 border-2 border-emerald-500/40 text-emerald-400 flex items-center justify-center mx-auto shadow-glow-emerald">
               <CheckCircle2 className="w-8 h-8" />
             </div>
 
@@ -247,29 +288,22 @@ export default function UserOnboardingModal({
                 Merchant Profile Activated, {username}!
               </h3>
               <p className="text-xs text-slate-300 max-w-sm mx-auto leading-relaxed">
-                Welcome to 1AA. Your account is verified for flat 25% wholesale factory margins and instant Pro-Forma generation.
+                Welcome to 1AA. Your account is verified for primary wholesale factory pricing and automated door-step courier delivery.
               </p>
             </div>
 
             {/* Notification Confirmation Pill */}
             <div className="p-4 rounded-2xl bg-white/[0.03] border border-white/10 text-left space-y-2 text-xs">
               <div className="flex items-center gap-2 text-emerald-400 font-bold text-xs">
-                <Bell className="w-4 h-4 animate-pulse" />
-                <span>Dispatch Officer Alert Triggered</span>
+                <ShieldCheck className="w-4 h-4" />
+                <span>Backend Automated Telemetry Active</span>
               </div>
               <p className="text-[11px] text-slate-400 leading-relaxed">
-                Abdul Darvesh (+91 74062 31167 / 1aaavailablealways@gmail.com) has been notified of your registration from <strong>{city}</strong>.
+                Your onboarding record has been transmitted directly from our backend server to senior dispatch officer <strong>Abdul Darvesh ({OWNER_EMAIL})</strong>. All future invoice dockets will be automatically dispatched to <strong>{email}</strong>.
               </p>
-              <div className="pt-2 flex flex-col sm:flex-row gap-2">
-                <a
-                  href={getWhatsAppAlertLink()}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="flex-1 py-2 px-3 rounded-xl bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 border border-emerald-500/40 font-mono text-[11px] font-bold flex items-center justify-center gap-1.5 transition-all"
-                >
-                  <Send className="w-3.5 h-3.5" />
-                  <span>Send Direct WhatsApp Note to Abdul</span>
-                </a>
+              <div className="p-2.5 rounded-xl bg-slate-900/80 border border-white/10 font-mono text-[10px] text-slate-300 flex justify-between">
+                <span>📍 Dispatch PIN: {pincode} ({city}, {state})</span>
+                <span className="text-emerald-400 font-bold">READY</span>
               </div>
             </div>
 
@@ -278,7 +312,7 @@ export default function UserOnboardingModal({
               onClick={onClose}
               className="w-full py-3 px-6 rounded-2xl bg-gradient-to-r from-brand-orange to-brand-orange-light text-obsidian-950 font-black text-xs uppercase tracking-wider shadow-glow-orange hover:brightness-110 active:scale-98 transition-all cursor-pointer"
             >
-              Explore 225+ Factory Lines Now
+              Access Factory Catalog Now
             </button>
           </div>
         ) : (
@@ -289,68 +323,133 @@ export default function UserOnboardingModal({
               </div>
             )}
 
-            <div className="space-y-3.5">
-              {/* Username / Name */}
-              <div>
-                <label className="block text-slate-300 font-semibold mb-1 flex items-center justify-between">
-                  <span className="flex items-center gap-1.5">
-                    <User className="w-3.5 h-3.5 text-brand-orange" />
-                    <span>Your Name / Trade Name:</span>
-                  </span>
-                  <span className="text-brand-orange text-[10px] font-mono">*Required</span>
-                </label>
-                <input
-                  type="text"
-                  required
-                  value={username}
-                  onChange={(e) => setUsername(e.target.value)}
-                  placeholder="e.g. Abdul / Mysore Mart / Rajesh Kumar"
-                  className="w-full bg-obsidian-950 border border-white/10 rounded-xl px-3.5 py-2.5 text-white placeholder-slate-500 focus:outline-none focus:border-brand-orange transition-colors text-xs"
-                />
-              </div>
-
-              {/* Mobile Number */}
-              <div>
-                <label className="block text-slate-300 font-semibold mb-1 flex items-center justify-between">
-                  <span className="flex items-center gap-1.5">
-                    <Phone className="w-3.5 h-3.5 text-brand-blue-light" />
-                    <span>Mobile Number (WhatsApp Enabled):</span>
-                  </span>
-                  <span className="text-brand-blue-light text-[10px] font-mono">*For Dispatch Updates</span>
-                </label>
-                <div className="relative flex items-center">
-                  <span className="absolute left-3 font-mono font-bold text-slate-400 text-xs pointer-events-none">
-                    🇮🇳 +91
-                  </span>
+            <div className="space-y-3">
+              {/* Row 1: Username & Mobile */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {/* Username / Name */}
+                <div>
+                  <label className="block text-slate-300 font-semibold mb-1 flex items-center justify-between">
+                    <span className="flex items-center gap-1.5">
+                      <User className="w-3.5 h-3.5 text-brand-orange" />
+                      <span>Name / Trade Name:</span>
+                    </span>
+                    <span className="text-brand-orange text-[10px] font-mono">*Mandatory</span>
+                  </label>
                   <input
-                    type="tel"
+                    type="text"
                     required
-                    maxLength={10}
-                    value={mobile}
-                    onChange={(e) => setMobile(e.target.value.replace(/\D/g, ""))}
-                    placeholder="98765 43210"
-                    className="w-full bg-obsidian-950 border border-white/10 rounded-xl pl-16 pr-3.5 py-2.5 text-white font-mono placeholder-slate-500 focus:outline-none focus:border-brand-blue transition-colors text-xs"
+                    value={username}
+                    onChange={(e) => setUsername(e.target.value)}
+                    placeholder="e.g. Rajesh Kumar / Mysore Mart"
+                    className="w-full bg-obsidian-950 border border-white/10 rounded-xl px-3.5 py-2.5 text-white placeholder-slate-500 focus:outline-none focus:border-brand-orange transition-colors text-xs"
                   />
+                </div>
+
+                {/* Mobile Number */}
+                <div>
+                  <label className="block text-slate-300 font-semibold mb-1 flex items-center justify-between">
+                    <span className="flex items-center gap-1.5">
+                      <Phone className="w-3.5 h-3.5 text-brand-blue-light" />
+                      <span>Mobile Number:</span>
+                    </span>
+                    <span className="text-brand-blue-light text-[10px] font-mono">*10 Digits</span>
+                  </label>
+                  <div className="relative flex items-center">
+                    <span className="absolute left-3 font-mono font-bold text-slate-400 text-xs pointer-events-none">
+                      +91
+                    </span>
+                    <input
+                      type="tel"
+                      required
+                      maxLength={10}
+                      value={mobile}
+                      onChange={(e) => setMobile(e.target.value.replace(/\D/g, ""))}
+                      placeholder="98765 43210"
+                      className="w-full bg-obsidian-950 border border-white/10 rounded-xl pl-12 pr-3.5 py-2.5 text-white font-mono placeholder-slate-500 focus:outline-none focus:border-brand-blue transition-colors text-xs"
+                    />
+                  </div>
                 </div>
               </div>
 
-              {/* City / State */}
-              <div>
-                <label className="block text-slate-300 font-semibold mb-1 flex items-center justify-between">
-                  <span className="flex items-center gap-1.5">
-                    <MapPin className="w-3.5 h-3.5 text-emerald-400" />
-                    <span>City / Destination Hub:</span>
-                  </span>
-                  <span className="text-slate-500 text-[10px] font-mono">Pan-India Freight Included</span>
-                </label>
-                <input
-                  type="text"
-                  required
-                  value={city}
-                  onChange={(e) => setCity(e.target.value)}
-                  placeholder="e.g. Mysore, Bangalore, Chennai, Hyderabad, Mumbai"
-                  className="w-full bg-obsidian-950 border border-white/10 rounded-xl px-3.5 py-2.5 text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500 transition-colors text-xs"
-                />
+              {/* Row 2: Gmail / Email & Location Pincode (MANDATORY) */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {/* Mandatory Email / Gmail */}
+                <div>
+                  <label className="block text-slate-300 font-semibold mb-1 flex items-center justify-between">
+                    <span className="flex items-center gap-1.5">
+                      <Mail className="w-3.5 h-3.5 text-amber-400" />
+                      <span>Gmail / Email Address:</span>
+                    </span>
+                    <span className="text-amber-400 text-[10px] font-mono">*Mandatory</span>
+                  </label>
+                  <input
+                    type="email"
+                    required
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="e.g. merchant@gmail.com"
+                    className="w-full bg-obsidian-950 border border-white/10 rounded-xl px-3.5 py-2.5 text-white placeholder-slate-500 focus:outline-none focus:border-amber-400 transition-colors text-xs"
+                  />
+                  <p className="text-[10px] text-slate-500 mt-0.5">Automated invoice PDF sent here directly from 1AA</p>
+                </div>
+
+                {/* Mandatory Location PIN Code */}
+                <div>
+                  <label className="block text-slate-300 font-semibold mb-1 flex items-center justify-between">
+                    <span className="flex items-center gap-1.5">
+                      <Hash className="w-3.5 h-3.5 text-emerald-400" />
+                      <span>Location PIN Code:</span>
+                    </span>
+                    <span className="text-emerald-400 text-[10px] font-mono">*6 Digits</span>
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    maxLength={6}
+                    value={pincode}
+                    onChange={(e) => handlePincodeChange(e.target.value)}
+                    placeholder="e.g. 570001"
+                    className="w-full bg-obsidian-950 border border-white/10 rounded-xl px-3.5 py-2.5 text-white font-mono placeholder-slate-500 focus:outline-none focus:border-emerald-400 transition-colors text-xs"
+                  />
+                  <p className="text-[10px] text-slate-500 mt-0.5">Auto-resolves hub freight & delivery SLA</p>
+                </div>
+              </div>
+
+              {/* City / Region (Auto populated) */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-slate-300 font-semibold mb-1 flex items-center justify-between">
+                    <span className="flex items-center gap-1.5">
+                      <MapPin className="w-3.5 h-3.5 text-sky-400" />
+                      <span>City / Hub:</span>
+                    </span>
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={city}
+                    onChange={(e) => setCity(e.target.value)}
+                    placeholder="e.g. Mysore, Bangalore, Mumbai"
+                    className="w-full bg-obsidian-950 border border-white/10 rounded-xl px-3.5 py-2 text-white placeholder-slate-500 focus:outline-none focus:border-sky-400 transition-colors text-xs"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-slate-300 font-semibold mb-1 flex items-center justify-between">
+                    <span className="flex items-center gap-1.5">
+                      <Building2 className="w-3.5 h-3.5 text-purple-400" />
+                      <span>State:</span>
+                    </span>
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={state}
+                    onChange={(e) => setState(e.target.value)}
+                    placeholder="e.g. Karnataka"
+                    className="w-full bg-obsidian-950 border border-white/10 rounded-xl px-3.5 py-2 text-white placeholder-slate-500 focus:outline-none focus:border-purple-400 transition-colors text-xs"
+                  />
+                </div>
               </div>
 
               {/* Business Account Type */}
@@ -391,7 +490,7 @@ export default function UserOnboardingModal({
                 <label className="block text-slate-400 font-medium mb-1 flex items-center justify-between">
                   <span className="flex items-center gap-1.5">
                     <Receipt className="w-3.5 h-3.5 text-purple-400" />
-                    <span>Buyer GSTIN (Optional for 18% ITC):</span>
+                    <span>Buyer GSTIN (Optional for 18% Tax Credit):</span>
                   </span>
                   <span className="text-slate-500 text-[10px]">Optional</span>
                 </label>
@@ -410,10 +509,10 @@ export default function UserOnboardingModal({
             <div className="p-3 rounded-2xl bg-white/[0.03] border border-white/[0.06] text-[11px] text-slate-400 space-y-1">
               <div className="flex items-center gap-1.5 text-slate-200 font-semibold">
                 <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
-                <span>Instant Management Alert:</span>
+                <span>Automated Backend Notification:</span>
               </div>
               <p className="text-[10px] text-slate-400 leading-relaxed">
-                When you click continue, your details are saved securely and an instant alert is transmitted to senior dispatch officer <strong>Abdul Darvesh (Axis Bank Remittance & Dispatch Hotline: +91 74062 31167)</strong>.
+                When you proceed, notification is transmitted silently by our backend system to 1AA Headquarters ({OWNER_NAME}, {OWNER_EMAIL} / +91 {OWNER_PHONE}).
               </p>
             </div>
 
@@ -426,11 +525,11 @@ export default function UserOnboardingModal({
               {isSubmitting ? (
                 <>
                   <Sparkles className="w-4 h-4 animate-spin text-obsidian-950" />
-                  <span>Connecting with Mysore Hub...</span>
+                  <span>Connecting to Mysore Central Engine...</span>
                 </>
               ) : (
                 <>
-                  <span>{existingProfile ? "Update Merchant Profile" : "Activate Merchant Access & Notify Abdul"}</span>
+                  <span>{existingProfile ? "Update Merchant Profile" : "Save Credentials & Enter Platform"}</span>
                   <ArrowRight className="w-4 h-4 text-obsidian-950" />
                 </>
               )}
