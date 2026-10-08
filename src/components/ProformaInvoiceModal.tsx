@@ -156,7 +156,7 @@ export default function ProformaInvoiceModal({
       ["Verified Bank", "Axis Bank (A/C: 922010002282280, IFSC: UTIB0004543)"],
       ["Account Holder", "Abdul Darvesh"],
       ["UPI ID", "7406231167@axisbank"],
-      ["Dispatch Hotline", "+91 75980 77003 / +91 74062 31167"]
+      ["Dispatch Hotline", "+91 74062 31167"]
     ];
 
     const csvContent = "data:text/csv;charset=utf-8," + 
@@ -199,9 +199,9 @@ export default function ProformaInvoiceModal({
     text += `• Account No: *\`922010002282280\`*\n`;
     text += `• IFSC: *\`UTIB0004543\`*\n`;
     text += `• UPI ID: *\`7406231167@axisbank\`*\n\n`;
-    text += `Dispatch Hotline: +91 75980 77003 / +91 74062 31167\n`;
+    text += `Dispatch Hotline: +91 74062 31167\n`;
     text += `Dispatch initiates immediately upon receipt verification.`;
-    return `https://wa.me/917598077003?text=${encodeURIComponent(text)}`;
+    return `https://wa.me/917406231167?text=${encodeURIComponent(text)}`;
   };
 
   return (
@@ -340,7 +340,7 @@ export default function ProformaInvoiceModal({
                 <div className="flex flex-wrap items-center gap-4 text-slate-300 pt-0.5">
                   <span className="flex items-center gap-1.5">
                     <Phone className="w-3.5 h-3.5 text-brand-orange" />
-                    +91 75980 77003 / +91 74062 31167
+                    +91 74062 31167
                   </span>
                   <span className="flex items-center gap-1.5">
                     <Mail className="w-3.5 h-3.5 text-brand-orange" />

@@ -125,7 +125,7 @@ export const DEMO_TRACKING_ORDERS: Record<string, PackageTrackingInfo> = {
       shockIndex: "0.04g (Smooth Flight)",
       humidity: "34% (Moisture Safe)",
       vehicleFlightId: "Air Cargo 6E-8291 (IndiGo / BlueDart Apex)",
-      driverHotline: "+91 75980 77003 (Mysore Hub Dispatch Desk)"
+      driverHotline: "+91 74062 31167 (Mysore Hub Dispatch Desk)"
     },
     cartSummary: {
       totalUnits: 36,
@@ -342,7 +342,7 @@ export const DEMO_TRACKING_ORDERS: Record<string, PackageTrackingInfo> = {
       shockIndex: "0.01g (Stationary Bench)",
       humidity: "40%",
       vehicleFlightId: "Mysore Facility Internal Conveyor",
-      driverHotline: "+91 75980 77003"
+      driverHotline: "+91 74062 31167 (Mysore Hub Dispatch Desk)"
     },
     cartSummary: {
       totalUnits: 24,
@@ -483,7 +483,7 @@ export function getTrackingForOrder(orderQuery: string, fallbackOrder?: Partial<
       shockIndex: "0.02g (Stationary Packing)",
       humidity: "38%",
       vehicleFlightId: `${courier} Feeder Line`,
-      driverHotline: "+91 75980 77003 (Mysore Hub Desk)"
+      driverHotline: "+91 74062 31167 (Mysore Hub Desk)"
     },
     cartSummary: {
       totalUnits: units,

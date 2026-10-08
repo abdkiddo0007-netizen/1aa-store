@@ -66,8 +66,8 @@ export default function ProductDetailModal({
   const savings = Math.max(0, benchmarkPrice - product.fairPrice);
   const savingsPercent = Math.round((savings / benchmarkPrice) * 100);
 
-  const directWhatsAppLink = `https://wa.me/917598077003?text=${encodeURIComponent(
-    `Hello 1AA Dispatch, I am inquiring about the ${product.name} (SKU: ${product.sku}).\n` +
+  const directWhatsAppLink = `https://wa.me/917406231167?text=${encodeURIComponent(
+    `Hello Abdul Darvesh (1AA Dispatch), I am inquiring about the ${product.name} (SKU: ${product.sku}).\n` +
     `1AA Price: Rs.${product.fairPrice} | Current Stock: ${product.inStock} pcs.\n` +
     `Please share sample dispatch terms and shipping timeline.`
   )}`;

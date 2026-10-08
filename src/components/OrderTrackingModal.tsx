@@ -30,7 +30,7 @@ interface OrderTrackingModalProps {
   isOpen: boolean;
   onClose: () => void;
   initialOrderRef?: string | null;
-  selectedHotline: "7598077003" | "7406231167";
+  selectedHotline?: string;
 }
 
 export default function OrderTrackingModal({
@@ -614,11 +614,11 @@ export default function OrderTrackingModal({
                     <div className="mt-3 p-3 rounded-xl bg-white/[0.02] border border-white/[0.06] flex items-center justify-between text-[11px] text-slate-400">
                       <span>Live Dispatch Support Hotline:</span>
                       <a 
-                        href={`tel:${selectedHotline === "7598077003" ? "+917598077003" : "+917406231167"}`}
+                        href="tel:+917406231167"
                         className="text-brand-orange hover:underline font-mono font-bold flex items-center gap-1"
                       >
                         <Phone className="w-3 h-3" />
-                        <span>+91 {selectedHotline}</span>
+                        <span>+91 74062 31167</span>
                       </a>
                     </div>
                   </div>
@@ -724,7 +724,7 @@ export default function OrderTrackingModal({
               </a>
 
               <a
-                href={`tel:${selectedHotline === "7598077003" ? "+917598077003" : "+917406231167"}`}
+                href="tel:+917406231167"
                 className="hidden sm:flex px-3.5 py-2 rounded-xl bg-white/[0.04] hover:bg-white/[0.08] text-slate-300 text-xs font-semibold items-center gap-1.5 transition-colors border border-white/[0.08]"
               >
                 <Phone className="w-3.5 h-3.5 text-brand-orange" />

@@ -15,7 +15,7 @@ import {
 interface BroadcastStudioModalProps {
   isOpen: boolean;
   onClose: () => void;
-  selectedHotline: "7598077003" | "7406231167";
+  selectedHotline?: string;
 }
 
 type BroadcastPreset = "top-margin" | "fast-movers" | "toys-kids" | "gadgets-home" | "full-catalog";
@@ -85,9 +85,8 @@ export default function BroadcastStudioModal({
     body += `🛒 *Instant Live Catalog & Online Booking:*\n${storeUrl}\n\n`;
     body += `📍 *Central Dispatch Facility:*\n`;
     body += `1AA Mysore Hub, Rajendra Nagar, Kesare, Mysore - 570007\n`;
-    body += `☎️ *Direct Booking Hotlines:*\n`;
-    body += `• Primary Desk: +91 ${selectedHotline}\n`;
-    body += `• Alternate Desk: +91 ${selectedHotline === "7598077003" ? "7406231167" : "7598077003"}\n\n`;
+    body += `☎️ *Direct Booking & Dispatch Hotline:*\n`;
+    body += `• Dispatch Desk: +91 74062 31167 (Abdul Darvesh)\n\n`;
     body += `*Zero marketplace commissions. Pay directly via UPI or Bank Transfer.*`;
 
     return body;

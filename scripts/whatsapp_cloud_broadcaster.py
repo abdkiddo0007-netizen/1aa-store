@@ -23,7 +23,6 @@ API_VERSION = "v20.0"
 
 # Sample Buyer Phone Numbers in E.164 format (with 91 for India)
 BUYER_LIST = [
-    # "917598077003",
     # "917406231167",
 ]
 
@@ -78,8 +77,8 @@ def compose_broadcast_message(products):
         "",
         "📍 *Mysore Central Dispatch Facility:*",
         "Rajendra Nagar, Kesare, Mysore - 570007",
-        "☎️ *Hotlines / WhatsApp Booking:*",
-        "+91 75980 77003 / +91 74062 31167",
+        "☎️ *Hotline / WhatsApp Booking:*",
+        "+91 74062 31167 (Abdul Darvesh)",
         "",
         "⚡ *Reply 'ORDER' to book sample cartons or request price sheet.*"
     ])

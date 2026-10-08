@@ -14,7 +14,7 @@ import { haptics } from "../utils/haptics";
 interface DeliveryTransitModalProps {
   isOpen: boolean;
   onClose: () => void;
-  selectedHotline: "7598077003" | "7406231167";
+  selectedHotline?: string;
 }
 
 interface TransitData {

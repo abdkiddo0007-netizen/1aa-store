@@ -17,7 +17,7 @@ interface SavedOrdersModalProps {
   onClose: () => void;
   onReorderCart: (quantities: { [sku: string]: number }) => void;
   onTrackOrder?: (orderRef: string) => void;
-  selectedHotline: "7598077003" | "7406231167";
+  selectedHotline?: string;
 }
 
 export default function SavedOrdersModal({

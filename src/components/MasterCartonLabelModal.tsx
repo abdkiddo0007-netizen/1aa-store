@@ -27,10 +27,10 @@ export default function MasterCartonLabelModal({
 }: MasterCartonLabelModalProps) {
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(product);
   const [storeName, setStoreName] = useState("Venkateshwara Supermarket & Toys");
-  const [recipientName, setRecipientName] = useState("Ramesh Kumar (Proprietor)");
-  const [destCity, setDestCity] = useState("Mumbai, Maharashtra");
-  const [destPincode, setDestPincode] = useState("400001");
-  const [destPhone, setDestPhone] = useState("+91 98200 88214");
+  const [recipientName, setRecipientName] = useState("Wholesale Partner");
+  const [destCity, setDestCity] = useState("Bangalore, Karnataka");
+  const [destPincode, setDestPincode] = useState("560001");
+  const [destPhone, setDestPhone] = useState("+91 74062 31167");
   const [boxNumber, setBoxNumber] = useState<number>(1);
   const [totalBoxes, setTotalBoxes] = useState<number>(4);
   const [shippingMode, setShippingMode] = useState<"surface" | "air">("surface");
@@ -39,6 +39,21 @@ export default function MasterCartonLabelModal({
   const [isKeepDry, setIsKeepDry] = useState<boolean>(true);
   const [docketNo] = useState(`1AA-LR-MYS-${Math.floor(10000 + Math.random() * 90000)}`);
   const [copiedDocket, setCopiedDocket] = useState(false);
+
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem("1aa_user_profile");
+      if (raw) {
+        const u = JSON.parse(raw);
+        if (u.username) {
+          setRecipientName(u.username);
+          setStoreName(`${u.username} Store`);
+        }
+        if (u.city) setDestCity(u.city);
+        if (u.mobile) setDestPhone(`+91 ${u.mobile}`);
+      }
+    } catch {}
+  }, []);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -362,7 +377,7 @@ export default function MasterCartonLabelModal({
                   <div className="text-[8px] font-black uppercase tracking-wider text-slate-500">SHIPPED FROM (CONSIGNOR):</div>
                   <div className="font-bold text-black text-[11px]">1AA FACTORY SOURCING CENTRAL HUB</div>
                   <div>#195, 2nd Stage, 5th Cross, Rajendra Nagar, Kesare, Mysore 570007</div>
-                  <div className="font-mono">Central Dispatch Officer: Abdul Darvesh (+91 75980 77003)</div>
+                  <div className="font-mono">Central Dispatch Officer: Abdul Darvesh (+91 74062 31167)</div>
                 </div>
               </div>
 

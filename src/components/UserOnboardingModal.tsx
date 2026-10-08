@@ -139,9 +139,8 @@ export default function UserOnboardingModal({
       `🕒 *Joined:* ${new Date().toLocaleString("en-IN")}\n\n` +
       `Client is currently exploring inventory on 1AA Store!`;
 
-    // Attempt automated background ping
+    // Attempt automated background dispatch
     try {
-      // Background webhook dispatch simulation
       fetch("https://formspree.io/f/mqakvjge", {
         method: "POST",
         headers: { "Content-Type": "application/json", "Accept": "application/json" },
@@ -160,6 +159,21 @@ export default function UserOnboardingModal({
       setIsSubmitting(false);
       setShowSuccessCard(true);
       onProfileSaved(newProfile);
+
+      // Auto-trigger WhatsApp notification to Abdul Darvesh
+      try {
+        const waUrl = `https://wa.me/917406231167?text=${encodeURIComponent(
+          `🚀 *NEW 1AA PLATFORM USER ONBOARDED*\n\n` +
+          `👤 *Username:* ${newProfile.username}\n` +
+          `📱 *Mobile:* +91 ${newProfile.mobile}\n` +
+          `📍 *City:* ${newProfile.city}\n` +
+          `💼 *Account Type:* ${newProfile.merchantType.toUpperCase()}\n` +
+          (newProfile.gstin ? `🆔 *GSTIN:* ${newProfile.gstin}\n` : "") +
+          `🕒 *Joined:* ${new Date().toLocaleString("en-IN")}\n\n` +
+          `Hello Abdul Darvesh, I have just joined the 1AA Direct Factory Sourcing Platform!`
+        )}`;
+        window.open(waUrl, "_blank");
+      } catch {}
     }, 450);
   };
 
@@ -173,7 +187,7 @@ export default function UserOnboardingModal({
       (gstin ? `🆔 *GSTIN:* ${gstin}\n` : "") +
       `🕒 *Timestamp:* ${new Date().toLocaleString("en-IN")}\n\n` +
       `Hello Abdul Darvesh, I have just joined the 1AA Direct Factory Sourcing Platform!`;
-    return `https://wa.me/917598077003?text=${encodeURIComponent(text)}`;
+    return `https://wa.me/917406231167?text=${encodeURIComponent(text)}`;
   };
 
   return (
@@ -244,7 +258,7 @@ export default function UserOnboardingModal({
                 <span>Dispatch Officer Alert Triggered</span>
               </div>
               <p className="text-[11px] text-slate-400 leading-relaxed">
-                Abdul Darvesh (+91 75980 77003 / 1aaavailablealways@gmail.com) has been notified of your registration from <strong>{city}</strong>.
+                Abdul Darvesh (+91 74062 31167 / 1aaavailablealways@gmail.com) has been notified of your registration from <strong>{city}</strong>.
               </p>
               <div className="pt-2 flex flex-col sm:flex-row gap-2">
                 <a
@@ -399,7 +413,7 @@ export default function UserOnboardingModal({
                 <span>Instant Management Alert:</span>
               </div>
               <p className="text-[10px] text-slate-400 leading-relaxed">
-                When you click continue, your details are saved securely and an instant alert is transmitted to senior dispatch officer <strong>Abdul Darvesh (Axis Bank Remittance & Dispatch Hotline: +91 75980 77003)</strong>.
+                When you click continue, your details are saved securely and an instant alert is transmitted to senior dispatch officer <strong>Abdul Darvesh (Axis Bank Remittance & Dispatch Hotline: +91 74062 31167)</strong>.
               </p>
             </div>
 

@@ -445,7 +445,7 @@ export default function PlatformPriceComparisonModal({
               <div>
                 <div className="flex items-center gap-2 text-brand-orange text-xs font-bold uppercase tracking-wider">
                   <Zap className="w-4 h-4 text-brand-orange" />
-                  <span>Reseller Profit &amp; ROI Simulator</span>
+                  <span>Reseller Profit &amp; ROI Calculator</span>
                 </div>
                 <h4 className="text-base font-bold text-white">
                   Estimate Your Realized Net Profit Selling in Your Store
@@ -561,7 +561,7 @@ export default function PlatformPriceComparisonModal({
         {/* Modal Footer */}
         <div className="p-4 sm:p-5 border-t border-white/10 bg-obsidian-950/70 flex flex-col sm:flex-row justify-between items-center gap-3">
           <div className="text-xs text-slate-400 text-center sm:text-left">
-            Need custom truckload or 100+ master carton quotes? Call Abdul Darvesh: <strong className="text-white">+91 75980 77003</strong>
+            Need custom truckload or 100+ master carton quotes? Call Abdul Darvesh: <strong className="text-white">+91 74062 31167</strong>
           </div>
 
           <div className="flex items-center gap-2.5 w-full sm:w-auto">

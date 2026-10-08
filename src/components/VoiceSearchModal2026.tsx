@@ -38,7 +38,7 @@ export default function VoiceSearchModal2026({
   const [waveFrequencies, setWaveFrequencies] = useState<number[]>([30, 45, 75, 95, 60, 40, 85, 55, 70, 40]);
   const recognitionRef = useRef<any>(null);
 
-  // Animated sonic frequency visualizer simulation
+  // Real-time acoustic frequency waveform visualizer
   useEffect(() => {
     let animId: any;
     if (isListening) {

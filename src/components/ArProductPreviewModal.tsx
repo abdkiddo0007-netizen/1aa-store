@@ -88,7 +88,7 @@ export default function ArProductPreviewModal({
       }
     } catch (err: any) {
       console.warn("Camera failed:", err);
-      setCameraError("Camera permission denied or camera unavailable. Switched to 3D simulation mode.");
+      setCameraError("Camera permission denied or camera unavailable. Switched to 3D Interactive Studio mode.");
       setMode("3d_studio");
     }
   };

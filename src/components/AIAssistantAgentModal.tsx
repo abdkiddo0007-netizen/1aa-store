@@ -39,7 +39,7 @@ interface AIAssistantAgentModalProps {
   onClose: () => void;
   onAddToCart: (sku: string, delta: number) => void;
   onSelectProduct: (product: Product) => void;
-  selectedHotline: "7598077003" | "7406231167";
+  selectedHotline?: string;
   activeCartTotal?: number;
   activeCartUnits?: number;
   onTrackOrder?: (orderRef: string) => void;
@@ -500,7 +500,7 @@ export default function AIAssistantAgentModal({
         `• **IFSC Code:** \`UTIB0004543\`\n` +
         `• **Branch:** Axis Bank Mysore\n` +
         `• **UPI ID:** \`7406231167@axisbank\`\n` +
-        `• **Direct Hotlines:** +91 75980 77003 / +91 74062 31167\n\n` +
+        `• **Direct Owner Hotline:** +91 74062 31167\n\n` +
         `⚠️ *Packing and dispatch SLA begins immediately upon receipt of payment screenshot on WhatsApp.*`;
       action = "payment";
     }
@@ -509,8 +509,7 @@ export default function AIAssistantAgentModal({
       replyText = 
         `👤 **Direct Escalation to Senior Leadership:**\n\n` +
         `You can connect directly with **Abdul Darvesh** for bulk container orders, custom brand white-labeling, or credit accounts:\n\n` +
-        `• 📱 **WhatsApp Direct:** +91 75980 77003\n` +
-        `• 📞 **Dispatch Office:** +91 74062 31167\n` +
+        `• 📱 **WhatsApp & Call:** +91 74062 31167\n` +
         `• ✉️ **Email:** 1aaavailablealways@gmail.com\n\n` +
         `Tap the button below to start a pre-filled direct WhatsApp discussion.`;
       action = "escalate";

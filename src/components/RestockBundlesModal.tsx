@@ -90,7 +90,7 @@ interface RestockBundlesModalProps {
   isOpen: boolean;
   onClose: () => void;
   onLoadBundle: (quantities: { [sku: string]: number }) => void;
-  selectedHotline: "7598077003" | "7406231167";
+  selectedHotline?: string;
 }
 
 export default function RestockBundlesModal({

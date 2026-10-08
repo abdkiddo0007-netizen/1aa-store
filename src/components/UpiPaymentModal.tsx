@@ -22,7 +22,7 @@ interface UpiPaymentModalProps {
   onClose: () => void;
   finalAmount: number;
   items: ActiveOrderItem[];
-  selectedHotline: "7598077003" | "7406231167";
+  selectedHotline?: string;
   onTrackOrder?: (orderRef: string) => void;
 }
 
@@ -179,7 +179,7 @@ export default function UpiPaymentModal({
     (utrNumber ? `UPI Ref / UTR: ${utrNumber}\n\n` : `\n`) +
     `Central Dispatch Hub:\n` +
     `1AA Mysore Central Hub: #195, 2nd Stage, 5th Cross, Rajendra Nagar, Kesare, Mysore - 570007\n` +
-    `Hotlines: +91 75980 77003 / +91 74062 31167\n` +
+    `Owner Dispatch Hotline: +91 74062 31167\n` +
     `Email: 1aaavailablealways@gmail.com\n\n` +
     `Best regards,\n1AA Dispatch Team`;
 

@@ -149,7 +149,7 @@ export default function OneAAStore() {
   const [calcProduct, setCalcProduct] = useState<Product | null>(null);
   const [appliedCoupon, setAppliedCoupon] = useState<{ code: string; desc: string; amount: number } | null>(null);
   const [copySuccess, setCopySuccess] = useState(false);
-  const [selectedHotline, setSelectedHotline] = useState<"7598077003" | "7406231167">("7598077003");
+  const [selectedHotline] = useState<string>("7406231167");
   const [showTrackingModal, setShowTrackingModal] = useState(false);
   const [trackingOrderRef, setTrackingOrderRef] = useState<string | null>(null);
   const [showBarcodeModal, setShowBarcodeModal] = useState(false);
@@ -496,7 +496,7 @@ export default function OneAAStore() {
   }, [search, selectedCategory, sortBy, quickFilter]);
 
   // Pre-filled WhatsApp message formatted as an Official Commercial Tax Invoice Receipt
-  const getWhatsAppLink = (number: "7598077003" | "7406231167") => {
+  const getWhatsAppLink = (number: string = "7406231167") => {
     let text = `🧾 *OFFICIAL 1AA INVOICE & DISPATCH ORDER*\n`;
     text += `*1AA (Available Always) — 1st Available Always*\n`;
     text += `Primary Facility: Mysore Central Hub, Kesare, Mysore - 570007\n`;
@@ -534,7 +534,7 @@ export default function OneAAStore() {
 
   const copyOrderSummary = () => {
     let summary = `1AA (Available Always) - Official Invoice Receipt\n`;
-    summary += `Mysore Central Hub (+91 75980 77003 / +91 74062 31167)\n\n`;
+    summary += `Mysore Central Hub (+91 74062 31167)\n\n`;
     summary += `Total Units: ${metrics.units} pcs\n`;
     summary += `Total Amount: Rs. ${metrics.finalAmount.toLocaleString("en-IN")}\n`;
     summary += `Total Savings vs MRP: Rs. ${metrics.totalSavings.toLocaleString("en-IN")}\n\n`;
@@ -589,22 +589,13 @@ export default function OneAAStore() {
 
               <span className="text-white/20 hidden sm:inline">•</span>
 
-              <div className="flex items-center gap-3 text-slate-300">
-                <a 
-                  href="tel:+917598077003" 
-                  className="flex items-center gap-1 hover:text-brand-orange transition-colors font-mono"
-                  title="Call Abdul Darvesh (Hotline 1)"
-                >
-                  <Phone className="w-3 h-3 text-brand-blue-light" />
-                  <span>+91 75980 77003</span>
-                </a>
-                <span className="text-white/20">•</span>
+              <div className="flex items-center gap-2 text-slate-300">
                 <a 
                   href="tel:+917406231167" 
-                  className="flex items-center gap-1 hover:text-brand-orange transition-colors font-mono"
-                  title="Call Dispatch Center (Hotline 2)"
+                  className="flex items-center gap-1.5 hover:text-brand-orange transition-colors font-mono font-bold"
+                  title="Direct Owner Hotline: Abdul Darvesh"
                 >
-                  <Phone className="w-3 h-3 text-brand-blue-light" />
+                  <Phone className="w-3 h-3 text-brand-orange" />
                   <span>+91 74062 31167</span>
                 </a>
               </div>
@@ -904,7 +895,7 @@ export default function OneAAStore() {
             </button>
             <span className="text-slate-500 hidden sm:inline">•</span>
             <a
-              href="https://wa.me/917598077003?text=Hi%201AA%2C%20please%20add%20me%20to%20the%201AA%20Daily%20Wholesale%20Deals%20Broadcast%20List"
+              href="https://wa.me/917406231167?text=Hi%201AA%2C%20please%20add%20me%20to%20the%201AA%20Daily%20Wholesale%20Deals%20Broadcast%20List"
               target="_blank"
               rel="noreferrer"
               className="inline-flex items-center gap-1.5 text-[11px] px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 font-bold hover:scale-105 transition-transform"
@@ -1602,6 +1593,29 @@ export default function OneAAStore() {
                           Save {savingsPercent}%
                         </div>
 
+                        {/* WhatsApp Direct Order Button on Hover */}
+                        <a
+                          href={`https://wa.me/917406231167?text=${encodeURIComponent(
+                            `Hello Abdul Darvesh (1AA Dispatch Desk),\n` +
+                            `I want to book wholesale stock for:\n` +
+                            `• Product: ${product.name}\n` +
+                            `• SKU: ${product.sku}\n` +
+                            `• Price: ₹${product.fairPrice}/pc (Carton: ${product.cartonSize} pcs)\n` +
+                            `Please confirm dispatch availability.`
+                          )}`}
+                          target="_blank"
+                          rel="noreferrer"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            haptics.selection();
+                          }}
+                          className="absolute top-12 right-3.5 bg-emerald-600/90 hover:bg-emerald-500 text-white text-[10px] font-bold px-2 py-1 rounded-full border border-emerald-400/40 opacity-0 group-hover:opacity-100 transition-all flex items-center gap-1 shadow-glow-emerald cursor-pointer z-10"
+                          title="Instant WhatsApp Booking with Abdul Darvesh (+91 74062 31167)"
+                        >
+                          <MessageSquare className="w-3 h-3 text-white" />
+                          <span>WhatsApp</span>
+                        </a>
+
                         {/* 3D AR Button on Hover */}
                         <button
                           onClick={(e) => {
@@ -2227,41 +2241,23 @@ export default function OneAAStore() {
 
               {/* Select WhatsApp Representative */}
               {activeItems.length > 0 && (
-                <div className="p-4 bg-white/[0.02] rounded-2xl border border-white/[0.06] space-y-2 text-xs">
-                  <div className="text-slate-400 text-[11px] font-medium flex items-center gap-1.5">
-                    <MessageSquare className="w-3.5 h-3.5 text-brand-blue-light" />
-                    Select WhatsApp Dispatch Officer:
+                <div className="p-3.5 bg-obsidian-900/60 rounded-2xl border border-white/[0.08] space-y-2 text-xs">
+                  <div className="text-slate-400 text-[11px] font-medium flex items-center justify-between">
+                    <span className="flex items-center gap-1.5 text-white font-semibold">
+                      <Phone className="w-3.5 h-3.5 text-brand-orange" />
+                      Direct Owner Dispatch Desk:
+                    </span>
+                    <span className="text-[10px] text-emerald-400 font-mono font-bold bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/20">
+                      ● Active
+                    </span>
                   </div>
-                  <div className="grid grid-cols-2 gap-2">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        haptics.selection();
-                        setSelectedHotline("7598077003");
-                      }}
-                      className={`py-2 px-3 rounded-xl text-[11px] font-mono border transition-all text-center cursor-pointer ${
-                        selectedHotline === "7598077003"
-                          ? "bg-brand-blue/25 border-brand-blue text-white font-bold shadow-glow-blue"
-                          : "bg-obsidian-950 border-white/10 text-slate-400"
-                      }`}
-                    >
-                      +91 75980 77003
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        haptics.selection();
-                        setSelectedHotline("7406231167");
-                      }}
-                      className={`py-2 px-3 rounded-xl text-[11px] font-mono border transition-all text-center cursor-pointer ${
-                        selectedHotline === "7406231167"
-                          ? "bg-brand-blue/25 border-brand-blue text-white font-bold shadow-glow-blue"
-                          : "bg-obsidian-950 border-white/10 text-slate-400"
-                      }`}
-                    >
-                      +91 74062 31167
-                    </button>
-                  </div>
+                  <a
+                    href="tel:+917406231167"
+                    className="flex items-center justify-between py-2 px-3 rounded-xl text-xs font-mono border bg-brand-orange/10 border-brand-orange/30 text-brand-orange font-bold hover:bg-brand-orange/20 transition-all cursor-pointer shadow-glow-orange"
+                  >
+                    <span>Abdul Darvesh (Mysore Central Hub)</span>
+                    <span className="text-white font-bold">+91 74062 31167</span>
+                  </a>
                 </div>
               )}
             </div>
@@ -2824,14 +2820,14 @@ export default function OneAAStore() {
             </p>
             <div className="space-y-1 pt-1">
               <p>
-                Hotline 1: <a href="tel:+917598077003" className="text-white hover:text-brand-orange">+91 75980 77003</a>
+                Owner Direct Hotline: <a href="tel:+917406231167" className="text-white hover:text-brand-orange font-bold font-mono">+91 74062 31167</a>
               </p>
-              <p>
-                Hotline 2: <a href="tel:+917406231167" className="text-white hover:text-brand-orange">+91 74062 31167</a>
+              <p className="text-[11px] text-slate-400">
+                Abdul Darvesh • Mysore Central Dispatch Desk
               </p>
             </div>
             <p className="text-[11px] text-slate-500 pt-1">
-              WhatsApp dispatch active on both lines.
+              WhatsApp dispatch and call support active 24/7.
             </p>
           </div>
 
