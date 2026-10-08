@@ -24,6 +24,8 @@ import PlatformPriceComparisonModal from "./components/PlatformPriceComparisonMo
 import WholesaleOpsHubModal from "./components/WholesaleOpsHubModal";
 import RestockBundlesModal from "./components/RestockBundlesModal";
 import UserOnboardingModal, { UserProfile } from "./components/UserOnboardingModal";
+import AdminLoginModal from "./components/AdminLoginModal";
+import AdminPortal from "./components/AdminPortal";
 import VoiceSearchModal2026 from "./components/VoiceSearchModal2026";
 import ArProductPreviewModal from "./components/ArProductPreviewModal";
 import SplineInteractiveHero from "./components/SplineInteractiveHero";
@@ -210,18 +212,84 @@ export default function OneAAStore() {
     setShowFsmModal(true);
   };
 
-  // Auto-launch onboarding on launch if not registered
-  useEffect(() => {
+  // Admin Executive HQ State (Authorized credentials: 1AAadmin / 1AApassword)
+  const [isAdminLoggedIn, setIsAdminLoggedIn] = useState<boolean>(() => {
     if (typeof window !== "undefined") {
-      const saved = localStorage.getItem("1aa_user_profile");
-      if (!saved) {
-        const timer = setTimeout(() => {
-          setShowOnboardingModal(true);
-        }, 1200);
-        return () => clearTimeout(timer);
-      }
+      return sessionStorage.getItem("1aa_admin_session") === "true";
     }
+    return false;
+  });
+  const [showAdminLoginModal, setShowAdminLoginModal] = useState<boolean>(false);
+  const [adminPortalActive, setAdminPortalActive] = useState<boolean>(() => {
+    if (typeof window !== "undefined") {
+      return sessionStorage.getItem("1aa_admin_session") === "true";
+    }
+    return false;
+  });
+
+  const handleAdminLoginSuccess = () => {
+    setIsAdminLoggedIn(true);
+    setShowAdminLoginModal(false);
+    setAdminPortalActive(true);
+    haptics.success();
+  };
+
+  const handleAdminLogout = () => {
+    haptics.light();
+    if (typeof window !== "undefined") {
+      sessionStorage.removeItem("1aa_admin_session");
+      sessionStorage.removeItem("1aa_admin_user");
+      sessionStorage.removeItem("1aa_admin_login_time");
+    }
+    setIsAdminLoggedIn(false);
+    setAdminPortalActive(false);
+  };
+
+  const handleSwitchToStore = () => {
+    haptics.selection();
+    setAdminPortalActive(false);
+  };
+
+  const handleOpenAdminPortal = () => {
+    haptics.selection();
+    if (isAdminLoggedIn) {
+      setAdminPortalActive(true);
+    } else {
+      setShowAdminLoginModal(true);
+    }
+  };
+
+  // Real-time stock overrides state (persisted from Admin Portal refill actions)
+  const [stockOverrides, setStockOverrides] = useState<{ [sku: string]: number }>(() => {
+    if (typeof window !== "undefined") {
+      try {
+        const saved = localStorage.getItem("1aa_stock_overrides");
+        if (saved) return JSON.parse(saved);
+      } catch {}
+    }
+    return {};
+  });
+
+  useEffect(() => {
+    const handleStorage = (e: StorageEvent) => {
+      if (e.key === "1aa_stock_overrides" && e.newValue) {
+        try {
+          setStockOverrides(JSON.parse(e.newValue));
+        } catch {}
+      }
+    };
+    window.addEventListener("storage", handleStorage);
+    return () => window.removeEventListener("storage", handleStorage);
   }, []);
+
+  const liveCatalog = useMemo(() => {
+    return CATALOG_PRODUCTS.map((p) => {
+      if (stockOverrides[p.sku] !== undefined) {
+        return { ...p, inStock: stockOverrides[p.sku] };
+      }
+      return p;
+    });
+  }, [stockOverrides]);
 
   const [selectedCurrency, setSelectedCurrency] = useState<CurrencyCode>("INR");
   const [isDesktopViewport, setIsDesktopViewport] = useState(() => {
@@ -455,12 +523,12 @@ export default function OneAAStore() {
   }, [quantities, appliedCoupon]);
 
   const activeItems: ActiveOrderItem[] = useMemo(() => {
-    return CATALOG_PRODUCTS.filter((p) => (quantities[p.sku] || 0) > 0).map((p) => ({
+    return liveCatalog.filter((p) => (quantities[p.sku] || 0) > 0).map((p) => ({
       product: p,
       quantity: quantities[p.sku] || 0,
       total: (quantities[p.sku] || 0) * p.fairPrice,
     }));
-  }, [quantities]);
+  }, [quantities, liveCatalog]);
 
   const looseItems = useMemo(() => {
     return activeItems.filter((i) => i.quantity > 0 && (i.quantity % (i.product.cartonSize || 24)) !== 0);
@@ -486,7 +554,7 @@ export default function OneAAStore() {
 
   // Filter & Sort Products
   const filteredAndSorted = useMemo(() => {
-    const filtered = CATALOG_PRODUCTS.filter((p) => {
+    const filtered = liveCatalog.filter((p) => {
       const matchesCategory = selectedCategory === "All" || p.category === selectedCategory;
       const matchesSearch =
         p.name.toLowerCase().includes(search.toLowerCase()) ||
@@ -581,6 +649,26 @@ export default function OneAAStore() {
     setTimeout(() => setCopySuccess(false), 2500);
   };
 
+  // Dedicated Executive Admin HQ Screen (Username: 1AAadmin, Password: 1AApassword)
+  if (isAdminLoggedIn && adminPortalActive) {
+    return (
+      <div className="min-h-screen bg-obsidian-950 text-slate-100 font-sans antialiased selection:bg-brand-orange selection:text-obsidian-950">
+        <AdminPortal 
+          onLogout={handleAdminLogout}
+          onSwitchToStore={handleSwitchToStore}
+        />
+        {showFsmModal && (
+          <OrderFsmTrackerModal
+            isOpen={showFsmModal}
+            onClose={() => setShowFsmModal(false)}
+            orderRef={fsmOrderRef}
+            initialState={fsmInitialState}
+          />
+        )}
+      </div>
+    );
+  }
+
   return (
     <div 
       className={`min-h-screen bg-obsidian-950 text-slate-100 font-sans antialiased selection:bg-brand-orange selection:text-obsidian-950 flex flex-col justify-between pb-24 ${
@@ -597,7 +685,17 @@ export default function OneAAStore() {
       <BrandIntroReveal 
         key={introSessionKey} 
         forceShow={forceShowIntro} 
-        onComplete={() => setForceShowIntro(false)} 
+        onComplete={() => {
+          setForceShowIntro(false);
+          // Video reveal plays first! Only after it completes (or is skipped) does user onboarding appear for unregistered buyers
+          if (typeof window !== "undefined") {
+            const savedProfile = localStorage.getItem("1aa_user_profile");
+            const adminSession = sessionStorage.getItem("1aa_admin_session");
+            if (!savedProfile && adminSession !== "true") {
+              setShowOnboardingModal(true);
+            }
+          }
+        }} 
       />
 
       <div>
@@ -671,6 +769,17 @@ export default function OneAAStore() {
                   <span>Register Username</span>
                 </button>
               )}
+
+              {/* Authorized 1AA Executive Admin Portal */}
+              <button
+                onClick={handleOpenAdminPortal}
+                className="flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-brand-orange/20 hover:bg-brand-orange text-brand-orange hover:text-obsidian-950 border border-brand-orange/40 font-mono font-bold text-[10px] transition-all cursor-pointer shadow-glow-orange active:scale-95"
+                title="Authorized 1AA Admin & Operations HQ Login (Username: 1AAadmin)"
+              >
+                <ShieldCheck className="w-3 h-3 text-brand-orange" />
+                <span>{isAdminLoggedIn ? "Admin HQ (Active)" : "Admin HQ"}</span>
+                {isAdminLoggedIn && <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />}
+              </button>
 
               <span className="text-white/20 hidden sm:inline">•</span>
 
@@ -887,6 +996,18 @@ export default function OneAAStore() {
                 <span className="hidden sm:inline">Ops Hub</span>
                 <span className="sm:hidden">Ops</span>
                 {metrics.units > 0 && <span className="w-2 h-2 rounded-full bg-brand-orange animate-pulse" />}
+              </button>
+
+              {/* Authorized 1AA Executive Admin Portal Trigger */}
+              <button
+                onClick={handleOpenAdminPortal}
+                className="flex text-xs px-3.5 py-2 rounded-full border border-brand-orange/40 bg-brand-orange/15 hover:bg-brand-orange text-brand-orange hover:text-obsidian-950 font-bold font-mono transition-all items-center gap-1.5 shadow-glow-orange cursor-pointer"
+                title="1AA Executive Admin HQ: Real-Time P&L, Inventory Refills & Orders (1AAadmin / 1AApassword)"
+              >
+                <ShieldCheck className="w-3.5 h-3.5" />
+                <span className="hidden xl:inline">{isAdminLoggedIn ? "Admin HQ" : "Admin Login"}</span>
+                <span className="xl:hidden">Admin</span>
+                {isAdminLoggedIn && <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />}
               </button>
 
               {/* Shopping Manifest Drawer Trigger */}
@@ -2741,6 +2862,17 @@ export default function OneAAStore() {
           setCurrentUser(profile);
           haptics.success();
         }}
+        onOpenAdminLogin={() => {
+          setShowOnboardingModal(false);
+          setShowAdminLoginModal(true);
+        }}
+      />
+
+      {/* --- AUTHORIZED 1AA EXECUTIVE ADMIN LOGIN MODAL --- */}
+      <AdminLoginModal
+        isOpen={showAdminLoginModal}
+        onClose={() => setShowAdminLoginModal(false)}
+        onLoginSuccess={handleAdminLoginSuccess}
       />
 
       {/* --- 2026 TREND SONIC RADIAL VOICE SEARCH MODAL --- */}
@@ -2930,6 +3062,15 @@ export default function OneAAStore() {
             <p className="text-[11px] text-slate-500 pt-1">
               WhatsApp dispatch and call support active 24/7.
             </p>
+            <div className="pt-2">
+              <button
+                onClick={handleOpenAdminPortal}
+                className="px-3 py-1 rounded-full bg-brand-orange/15 hover:bg-brand-orange/25 text-brand-orange border border-brand-orange/30 font-mono font-bold text-[11px] flex items-center gap-1.5 transition-colors cursor-pointer"
+              >
+                <ShieldCheck className="w-3.5 h-3.5" />
+                <span>{isAdminLoggedIn ? "Open Admin Executive HQ" : "Admin Warehouse Login"}</span>
+              </button>
+            </div>
           </div>
 
         </div>

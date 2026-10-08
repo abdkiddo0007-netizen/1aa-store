@@ -43,6 +43,7 @@ interface UserOnboardingModalProps {
   onClose: () => void;
   onProfileSaved: (profile: UserProfile) => void;
   existingProfile?: UserProfile | null;
+  onOpenAdminLogin?: () => void;
 }
 
 export default function UserOnboardingModal({
@@ -50,6 +51,7 @@ export default function UserOnboardingModal({
   onClose,
   onProfileSaved,
   existingProfile,
+  onOpenAdminLogin,
 }: UserOnboardingModalProps) {
   const [username, setUsername] = useState(existingProfile?.username || "");
   const [mobile, setMobile] = useState(existingProfile?.mobile || "");
@@ -534,6 +536,23 @@ export default function UserOnboardingModal({
                 </>
               )}
             </button>
+
+            {/* Direct Admin Login Route */}
+            {onOpenAdminLogin && (
+              <div className="pt-2 text-center border-t border-white/[0.06]">
+                <button
+                  type="button"
+                  onClick={() => {
+                    haptics.selection();
+                    onOpenAdminLogin();
+                  }}
+                  className="text-[11px] font-mono font-bold text-slate-400 hover:text-brand-orange transition-colors flex items-center justify-center gap-1.5 mx-auto cursor-pointer py-1"
+                >
+                  <ShieldCheck className="w-3.5 h-3.5 text-brand-orange" />
+                  <span>Are you a 1AA Admin / Warehouse Operator? Login here →</span>
+                </button>
+              </div>
+            )}
           </form>
         )}
       </div>
