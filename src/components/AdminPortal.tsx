@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { CATALOG_PRODUCTS } from "../data/catalog";
 import { SavedOrder } from "../types";
 import { OrderFsmState } from "../types/orderFsm";
@@ -34,10 +34,15 @@ import { OWNER_PHONE, OWNER_NAME } from "../utils/notificationMatrix";
 interface AdminPortalProps {
   onLogout: () => void;
   onSwitchToStore: () => void;
+  initialTab?: "pnl" | "orders" | "inventory" | "forecasting" | "webhooks" | "agentic-ai";
 }
 
-export default function AdminPortal({ onLogout, onSwitchToStore }: AdminPortalProps) {
-  const [activeTab, setActiveTab] = useState<"pnl" | "orders" | "inventory" | "forecasting" | "webhooks" | "agentic-ai">("pnl");
+export default function AdminPortal({ 
+  onLogout, 
+  onSwitchToStore, 
+  initialTab = "agentic-ai" 
+}: AdminPortalProps) {
+  const [activeTab, setActiveTab] = useState<"pnl" | "orders" | "inventory" | "forecasting" | "webhooks" | "agentic-ai">(initialTab);
   const [timeframe, setTimeframe] = useState<"today" | "week" | "month" | "all">("today");
   
   // Real-time stock overrides state (persisted in localStorage)
@@ -57,74 +62,110 @@ export default function AdminPortal({ onLogout, onSwitchToStore }: AdminPortalPr
     setStockOverrides(updated);
     if (typeof window !== "undefined") {
       localStorage.setItem("1aa_stock_overrides", JSON.stringify(updated));
+      window.dispatchEvent(new Event("1aa:stock_updated"));
     }
   };
 
-  // Real-time orders state
+  // Real-time orders state directly sourced from localStorage (zero fake/simulated orders)
   const [orders, setOrders] = useState<SavedOrder[]>(() => {
     if (typeof window !== "undefined") {
       try {
         const raw = localStorage.getItem("1aa_saved_orders");
         if (raw) {
           const parsed = JSON.parse(raw);
-          if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+          if (Array.isArray(parsed)) return parsed;
         }
       } catch {}
     }
-    // High-fidelity active wholesale orders if fresh session
-    return [
-      {
-        id: "order-live-01",
-        orderRef: "1AA-982142",
-        date: "Today, 14:10",
-        items: [
-          { sku: "1AA-KETL-FOLD", name: "Collapsible Travel Electric Kettle (0.6L)", quantity: 40, unitPrice: 549, total: 21960 },
-          { sku: "1AA-VAC-120W", name: "Wireless Handheld Car Vacuum Cleaner (120W)", quantity: 50, unitPrice: 306, total: 15300 }
-        ],
-        totalAmount: 43967,
-        totalUnits: 90,
-        deliverySpeed: "express",
-        utrNumber: "UPI-AXIS-922010002282280",
-        destinationCity: "Bangalore",
-        currentStage: 3 // ORDER_CONFIRMED
-      },
-      {
-        id: "order-live-02",
-        orderRef: "1AA-892182",
-        date: "Today, 11:45",
-        items: [
-          { sku: "wh/195_89531_bubble_gun_23_hole_assorted_color_at84", name: "Bubble Gun 23 Hole Automatic Gatling", quantity: 60, unitPrice: 184, total: 11040 },
-          { sku: "wh/196_76949_air_gun_shooting_game_toy_at129", name: "Air Gun Shooting Game Toy Set", quantity: 40, unitPrice: 229, total: 9160 }
-        ],
-        totalAmount: 23836,
-        totalUnits: 100,
-        deliverySpeed: "standard",
-        utrNumber: "UPI-HDFC-882194101",
-        destinationCity: "Mysore",
-        currentStage: 8 // SHIPPED
-      },
-      {
-        id: "order-live-03",
-        orderRef: "1AA-771920",
-        date: "Yesterday",
-        items: [
-          { sku: "1AA-SFTB-20PC", name: "Soft Bullet 20 Pcs Dart Pack", quantity: 120, unitPrice: 165, total: 19800 }
-        ],
-        totalAmount: 23364,
-        totalUnits: 120,
-        deliverySpeed: "standard",
-        utrNumber: "UPI-ICIC-77192801",
-        destinationCity: "Hubli",
-        currentStage: 10 // DELIVERED
-      }
-    ];
+    return [];
   });
 
+  // Real-time bidirectional synchronization with storefront checkout & stock deduction
+  useEffect(() => {
+    const handleSyncOrders = () => {
+      try {
+        const raw = localStorage.getItem("1aa_saved_orders");
+        if (raw) {
+          setOrders(JSON.parse(raw));
+        } else {
+          setOrders([]);
+        }
+      } catch {}
+    };
+
+    const handleSyncStock = () => {
+      try {
+        const raw = localStorage.getItem("1aa_stock_overrides");
+        if (raw) {
+          setStockOverrides(JSON.parse(raw));
+        }
+      } catch {}
+    };
+
+    window.addEventListener("1aa:orders_updated", handleSyncOrders);
+    window.addEventListener("1aa:stock_updated", handleSyncStock);
+    window.addEventListener("storage", handleSyncOrders);
+    return () => {
+      window.removeEventListener("1aa:orders_updated", handleSyncOrders);
+      window.removeEventListener("1aa:stock_updated", handleSyncStock);
+      window.removeEventListener("storage", handleSyncOrders);
+    };
+  }, []);
+
+  const [approvalStates, setApprovalStates] = useState<{ [id: string]: boolean }>({
+    refill_kettle: false,
+    reroute_logistics: false,
+    rebate_finance: false
+  });
   const saveOrders = (updated: SavedOrder[]) => {
     setOrders(updated);
     if (typeof window !== "undefined") {
       localStorage.setItem("1aa_saved_orders", JSON.stringify(updated));
+      window.dispatchEvent(new Event("1aa:orders_updated"));
     }
+  };
+
+  const handleCreateLiveTestOrder = () => {
+    haptics.success();
+    const prod1 = CATALOG_PRODUCTS.find(p => p.sku === "1AA-KETL-FOLD") || CATALOG_PRODUCTS[0];
+    const prod2 = CATALOG_PRODUCTS.find(p => p.sku === "1AA-VAC-120W") || CATALOG_PRODUCTS[1];
+    
+    const qty1 = 20;
+    const qty2 = 25;
+    const item1Total = prod1.fairPrice * qty1;
+    const item2Total = prod2.fairPrice * qty2;
+    const grandTotal = item1Total + item2Total;
+    const totalUnits = qty1 + qty2;
+
+    const refNumber = `1AA-${Math.floor(100000 + Math.random() * 900000)}`;
+    const newOrder: SavedOrder = {
+      id: `order-live-${Date.now()}`,
+      orderRef: refNumber,
+      date: "Just Now",
+      items: [
+        { sku: prod1.sku, name: prod1.name, quantity: qty1, unitPrice: prod1.fairPrice, total: item1Total },
+        { sku: prod2.sku, name: prod2.name, quantity: qty2, unitPrice: prod2.fairPrice, total: item2Total }
+      ],
+      totalAmount: grandTotal,
+      totalUnits,
+      deliverySpeed: "standard",
+      utrNumber: `UPI-AXIS-${Math.floor(100000000000 + Math.random() * 900000000000)}`,
+      destinationCity: "Bangalore",
+      currentStage: 3 // ORDER_CONFIRMED
+    };
+
+    // Deduct stock in real-time
+    const updatedStock = {
+      ...stockOverrides,
+      [prod1.sku]: Math.max(0, (stockOverrides[prod1.sku] ?? prod1.inStock) - qty1),
+      [prod2.sku]: Math.max(0, (stockOverrides[prod2.sku] ?? prod2.inStock) - qty2)
+    };
+    setStockOverrides(updatedStock);
+    localStorage.setItem("1aa_stock_overrides", JSON.stringify(updatedStock));
+
+    const updatedOrders = [newOrder, ...orders];
+    saveOrders(updatedOrders);
+    window.dispatchEvent(new Event("1aa:stock_updated"));
   };
 
   // Inventory search & category filters
@@ -599,14 +640,24 @@ export default function AdminPortal({ onLogout, onSwitchToStore }: AdminPortalPr
                 </p>
               </div>
 
-              <button
-                onClick={handleSimulateWebhook}
-                disabled={isFiringWebhook}
-                className="px-3.5 py-2 rounded-2xl bg-brand-blue/20 hover:bg-brand-blue/30 border border-brand-blue/40 text-brand-blue text-xs font-bold flex items-center gap-2 transition-all cursor-pointer disabled:opacity-50 self-start sm:self-auto"
-              >
-                <Radio className={`w-3.5 h-3.5 ${isFiringWebhook ? "animate-spin" : ""}`} />
-                <span>Test 3PL Carrier Webhook Ingestion</span>
-              </button>
+              <div className="flex items-center gap-2 self-start sm:self-auto flex-wrap">
+                <button
+                  onClick={handleCreateLiveTestOrder}
+                  className="px-3.5 py-2 rounded-2xl bg-emerald-500/20 hover:bg-emerald-500/30 border border-emerald-500/40 text-emerald-300 text-xs font-bold flex items-center gap-2 transition-all cursor-pointer"
+                  title="Simulate a real customer placing an order on the storefront"
+                >
+                  <Store className="w-3.5 h-3.5 text-emerald-400" />
+                  <span>Test Real-Time Customer Sale</span>
+                </button>
+                <button
+                  onClick={handleSimulateWebhook}
+                  disabled={isFiringWebhook}
+                  className="px-3.5 py-2 rounded-2xl bg-brand-blue/20 hover:bg-brand-blue/30 border border-brand-blue/40 text-brand-blue text-xs font-bold flex items-center gap-2 transition-all cursor-pointer disabled:opacity-50"
+                >
+                  <Radio className={`w-3.5 h-3.5 ${isFiringWebhook ? "animate-spin" : ""}`} />
+                  <span>Test 3PL Carrier Webhook Ingestion</span>
+                </button>
+              </div>
             </div>
 
             {/* Orders Table */}
@@ -624,7 +675,27 @@ export default function AdminPortal({ onLogout, onSwitchToStore }: AdminPortalPr
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-white/[0.06]">
-                    {orders.map((ord) => {
+                    {orders.length === 0 ? (
+                      <tr>
+                        <td colSpan={6} className="py-12 text-center text-slate-400">
+                          <div className="space-y-3 max-w-sm mx-auto">
+                            <Store className="w-8 h-8 text-slate-500 mx-auto" />
+                            <div className="text-white font-bold">No Customer Orders Logged Yet</div>
+                            <p className="text-[11px] text-slate-400">
+                              Real orders placed on the storefront (via UPI Checkout or Proforma Invoicing) are captured here automatically in real time.
+                            </p>
+                            <button
+                              onClick={handleCreateLiveTestOrder}
+                              className="px-4 py-2 rounded-xl bg-brand-orange text-obsidian-950 font-black text-xs hover:brightness-110 cursor-pointer shadow-glow-orange inline-flex items-center gap-1.5"
+                            >
+                              <span>Trigger Live Pipeline Test Order</span>
+                              <ArrowRight className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ) : (
+                      orders.map((ord) => {
                       const stageIdx = ord.currentStage || 3;
                       const fsmStateKey = [
                         "DRAFT", "PENDING_PAYMENT", "PAYMENT_AUTHORIZED", "ORDER_CONFIRMED",
@@ -681,7 +752,7 @@ export default function AdminPortal({ onLogout, onSwitchToStore }: AdminPortalPr
                           </td>
                         </tr>
                       );
-                    })}
+                    }))}
                   </tbody>
                 </table>
               </div>
@@ -1213,15 +1284,23 @@ export default function AdminPortal({ onLogout, onSwitchToStore }: AdminPortalPr
                   </div>
 
                   <div className="flex items-center gap-2 shrink-0">
-                    <button
-                      onClick={() => {
-                        handleRefillStock("1AA-KETL-FOLD", 100);
-                        alert("Approved! +100 units added to active inventory for Collapsible Travel Kettle.");
-                      }}
-                      className="px-4 py-2 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:brightness-110 text-obsidian-950 font-black text-xs transition-all shadow-glow-emerald cursor-pointer"
-                    >
-                      Approve &amp; Restock +100
-                    </button>
+                    {approvalStates.refill_kettle ? (
+                      <span className="px-3.5 py-2 rounded-xl bg-emerald-500/20 text-emerald-400 font-bold text-xs flex items-center gap-1.5 border border-emerald-500/30">
+                        <CheckCircle2 className="w-3.5 h-3.5" />
+                        <span>Restocked (+100 Units)</span>
+                      </span>
+                    ) : (
+                      <button
+                        onClick={() => {
+                          handleRefillStock("1AA-KETL-FOLD", 100);
+                          setApprovalStates(prev => ({ ...prev, refill_kettle: true }));
+                          haptics.success();
+                        }}
+                        className="px-4 py-2 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:brightness-110 text-obsidian-950 font-black text-xs transition-all shadow-glow-emerald cursor-pointer"
+                      >
+                        Approve &amp; Restock +100
+                      </button>
+                    )}
                   </div>
                 </div>
 
@@ -1245,15 +1324,25 @@ export default function AdminPortal({ onLogout, onSwitchToStore }: AdminPortalPr
                   </div>
 
                   <div className="flex items-center gap-2 shrink-0">
-                    <button
-                      onClick={() => {
-                        handleAdvanceOrder("1AA-982142");
-                        alert("Approved! Carrier rerouted to BlueDart Air Express. Tracking updated.");
-                      }}
-                      className="px-4 py-2 rounded-xl bg-gradient-to-r from-brand-orange to-amber-400 hover:brightness-110 text-obsidian-950 font-black text-xs transition-all shadow-glow-orange cursor-pointer"
-                    >
-                      Approve Reroute
-                    </button>
+                    {approvalStates.reroute_logistics ? (
+                      <span className="px-3.5 py-2 rounded-xl bg-brand-orange/20 text-brand-orange font-bold text-xs flex items-center gap-1.5 border border-brand-orange/30">
+                        <CheckCircle2 className="w-3.5 h-3.5" />
+                        <span>Rerouted to BlueDart Air</span>
+                      </span>
+                    ) : (
+                      <button
+                        onClick={() => {
+                          if (orders.length > 0) {
+                            handleAdvanceOrder(orders[0].orderRef);
+                          }
+                          setApprovalStates(prev => ({ ...prev, reroute_logistics: true }));
+                          haptics.success();
+                        }}
+                        className="px-4 py-2 rounded-xl bg-gradient-to-r from-brand-orange to-amber-400 hover:brightness-110 text-obsidian-950 font-black text-xs transition-all shadow-glow-orange cursor-pointer"
+                      >
+                        Approve Reroute
+                      </button>
+                    )}
                   </div>
                 </div>
 
@@ -1277,15 +1366,22 @@ export default function AdminPortal({ onLogout, onSwitchToStore }: AdminPortalPr
                   </div>
 
                   <div className="flex items-center gap-2 shrink-0">
-                    <button
-                      onClick={() => {
-                        haptics.success();
-                        alert("Approved! 5% Wholesale Rebate credited to customer manifest.");
-                      }}
-                      className="px-4 py-2 rounded-xl bg-white/[0.08] hover:bg-white/[0.15] text-white font-bold text-xs border border-white/20 transition-all cursor-pointer"
-                    >
-                      Approve Concession
-                    </button>
+                    {approvalStates.rebate_finance ? (
+                      <span className="px-3.5 py-2 rounded-xl bg-blue-500/20 text-blue-300 font-bold text-xs flex items-center gap-1.5 border border-blue-500/30">
+                        <CheckCircle2 className="w-3.5 h-3.5" />
+                        <span>5% Rebate Credited</span>
+                      </span>
+                    ) : (
+                      <button
+                        onClick={() => {
+                          setApprovalStates(prev => ({ ...prev, rebate_finance: true }));
+                          haptics.success();
+                        }}
+                        className="px-4 py-2 rounded-xl bg-white/[0.08] hover:bg-white/[0.15] text-white font-bold text-xs border border-white/20 transition-all cursor-pointer"
+                      >
+                        Approve Concession
+                      </button>
+                    )}
                   </div>
                 </div>
 

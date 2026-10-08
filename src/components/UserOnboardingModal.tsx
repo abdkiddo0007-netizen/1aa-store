@@ -6,14 +6,17 @@ import {
   MapPin, 
   Building2, 
   ShieldCheck, 
-  CheckCircle2, 
   ArrowRight, 
   X, 
   Sparkles, 
   Mail,
-  Hash,
+  Lock,
+  Eye,
+  EyeOff,
   Crown,
-  Receipt
+  Receipt,
+  LogIn,
+  UserPlus
 } from "lucide-react";
 import { lookupPincode } from "../types/address";
 import { 
@@ -36,6 +39,7 @@ export interface UserProfile {
   gstin?: string;
   registeredAt: string;
   notificationSent?: boolean;
+  password?: string;
 }
 
 interface UserOnboardingModalProps {
@@ -43,7 +47,7 @@ interface UserOnboardingModalProps {
   onClose: () => void;
   onProfileSaved: (profile: UserProfile) => void;
   existingProfile?: UserProfile | null;
-  onOpenAdminLogin?: () => void;
+  onAdminLoginSuccess?: (initialTab?: "agentic-ai") => void;
 }
 
 export default function UserOnboardingModal({
@@ -51,34 +55,61 @@ export default function UserOnboardingModal({
   onClose,
   onProfileSaved,
   existingProfile,
-  onOpenAdminLogin,
+  onAdminLoginSuccess,
 }: UserOnboardingModalProps) {
-  const [username, setUsername] = useState(existingProfile?.username || "");
-  const [mobile, setMobile] = useState(existingProfile?.mobile || "");
-  const [email, setEmail] = useState(existingProfile?.email || "");
-  const [pincode, setPincode] = useState(existingProfile?.pincode || "");
-  const [city, setCity] = useState(existingProfile?.city || "Mysore");
-  const [state, setState] = useState(existingProfile?.state || "Karnataka");
-  const [merchantType, setMerchantType] = useState<UserProfile["merchantType"]>(
+  // Mode: "signin" for returning buyers / admin, "register" for new buyers creating password
+  const [authMode, setAuthMode] = useState<"signin" | "register">("signin");
+
+  // Sign-in state
+  const [signInUsername, setSignInUsername] = useState("");
+  const [signInPassword, setSignInPassword] = useState("");
+  const [showSignInPassword, setShowSignInPassword] = useState(false);
+
+  // Registration state
+  const [regUsername, setRegUsername] = useState(existingProfile?.username || "");
+  const [regPassword, setRegPassword] = useState("");
+  const [regConfirmPassword, setRegConfirmPassword] = useState("");
+  const [showRegPassword, setShowRegPassword] = useState(false);
+  const [regMobile, setRegMobile] = useState(existingProfile?.mobile || "");
+  const [regEmail, setRegEmail] = useState(existingProfile?.email || "");
+  const [regPincode, setRegPincode] = useState(existingProfile?.pincode || "");
+  const [regCity, setRegCity] = useState(existingProfile?.city || "Mysore");
+  const [regState, setRegState] = useState(existingProfile?.state || "Karnataka");
+  const [regMerchantType, setRegMerchantType] = useState<UserProfile["merchantType"]>(
     existingProfile?.merchantType || "retailer"
   );
-  const [gstin, setGstin] = useState(existingProfile?.gstin || "");
+  const [regGstin, setRegGstin] = useState(existingProfile?.gstin || "");
+
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [showSuccessCard, setShowSuccessCard] = useState(false);
 
   useEffect(() => {
     if (existingProfile) {
-      setUsername(existingProfile.username);
-      setMobile(existingProfile.mobile);
-      setEmail(existingProfile.email || "");
-      setPincode(existingProfile.pincode || "");
-      setCity(existingProfile.city);
-      setState(existingProfile.state || "Karnataka");
-      setMerchantType(existingProfile.merchantType);
-      setGstin(existingProfile.gstin || "");
+      setRegUsername(existingProfile.username);
+      setRegMobile(existingProfile.mobile);
+      setRegEmail(existingProfile.email || "");
+      setRegPincode(existingProfile.pincode || "");
+      setRegCity(existingProfile.city);
+      setRegState(existingProfile.state || "Karnataka");
+      setRegMerchantType(existingProfile.merchantType);
+      setRegGstin(existingProfile.gstin || "");
+      setSignInUsername(existingProfile.username);
     }
   }, [existingProfile]);
+
+  useEffect(() => {
+    if (isOpen) {
+      setError(null);
+      setIsSubmitting(false);
+      // If no registered profile in localStorage, default to registration
+      if (typeof window !== "undefined") {
+        const saved = localStorage.getItem("1aa_user_profile");
+        if (!saved && !existingProfile) {
+          setAuthMode("register");
+        }
+      }
+    }
+  }, [isOpen, existingProfile]);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -92,21 +123,21 @@ export default function UserOnboardingModal({
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [isOpen, onClose, existingProfile]);
 
+  if (!isOpen) return null;
+
   // Auto-detect city & state when 6-digit pincode is entered
   const handlePincodeChange = (val: string) => {
     const clean = val.replace(/\D/g, "").slice(0, 6);
-    setPincode(clean);
+    setRegPincode(clean);
     if (clean.length === 6) {
       const match = lookupPincode(clean);
       if (match) {
-        setCity(match.city);
-        setState(match.state);
+        setRegCity(match.city);
+        setRegState(match.state);
         haptics.selection();
       }
     }
   };
-
-  if (!isOpen) return null;
 
   const validatePhone = (phone: string) => {
     const clean = phone.replace(/\D/g, "");
@@ -114,20 +145,131 @@ export default function UserOnboardingModal({
   };
 
   const validateEmail = (mail: string) => {
+    if (!mail.trim()) return true; // Optional if phone is verified
     return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(mail.trim());
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  // --- SIGN IN SUBMISSION HANDLER ---
+  const handleSignInSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
 
-    const cleanName = username.trim();
-    const cleanMobile = mobile.replace(/\D/g, "");
-    const cleanEmail = email.trim().toLowerCase();
-    const cleanPin = pincode.replace(/\D/g, "");
+    const cleanUsername = signInUsername.trim();
+    const cleanPassword = signInPassword.trim();
+
+    if (!cleanUsername || !cleanPassword) {
+      setError("Please enter both Username and Password.");
+      haptics.error();
+      return;
+    }
+
+    // 1. Check for Admin Credentials (Direct Multi AI Agent Interception)
+    if (cleanUsername === "1AAadmin" && cleanPassword === "1AApassword") {
+      setIsSubmitting(true);
+      haptics.success();
+      if (typeof window !== "undefined") {
+        sessionStorage.setItem("1aa_admin_session", "true");
+        sessionStorage.setItem("1aa_admin_user", "1AAadmin");
+        sessionStorage.setItem("1aa_admin_login_time", new Date().toISOString());
+      }
+      setTimeout(() => {
+        setIsSubmitting(false);
+        if (onAdminLoginSuccess) {
+          onAdminLoginSuccess("agentic-ai");
+        }
+      }, 350);
+      return;
+    }
+
+    // 2. Regular User Sign In Check
+    try {
+      const regMapRaw = localStorage.getItem("1aa_registered_users");
+      const regMap = regMapRaw ? JSON.parse(regMapRaw) : {};
+      const userEntry = regMap[cleanUsername.toLowerCase()];
+
+      if (userEntry) {
+        if (userEntry.password === cleanPassword) {
+          setIsSubmitting(true);
+          haptics.success();
+          localStorage.setItem("1aa_user_profile", JSON.stringify(userEntry.profile));
+          setTimeout(() => {
+            setIsSubmitting(false);
+            onProfileSaved(userEntry.profile);
+            onClose();
+          }, 300);
+          return;
+        } else {
+          setError("Incorrect password. Please verify your credentials or create a new account.");
+          haptics.error();
+          return;
+        }
+      }
+
+      // Check legacy saved profile without password
+      const legacyRaw = localStorage.getItem("1aa_user_profile");
+      if (legacyRaw) {
+        const legacyProfile: UserProfile = JSON.parse(legacyRaw);
+        if (legacyProfile.username.toLowerCase() === cleanUsername.toLowerCase()) {
+          setIsSubmitting(true);
+          haptics.success();
+          onProfileSaved(legacyProfile);
+          onClose();
+          return;
+        }
+      }
+
+      // Username not found in registered accounts
+      setError("Account not found. Click 'Create Account' below to choose your password and register.");
+      haptics.error();
+    } catch {
+      setError("Failed to authenticate. Please create a new account.");
+    }
+  };
+
+  // --- REGISTRATION / CREATE ACCOUNT SUBMISSION HANDLER ---
+  const handleRegisterSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    setError(null);
+
+    const cleanName = regUsername.trim();
+    const cleanPassword = regPassword.trim();
+    const cleanConfirm = regConfirmPassword.trim();
+    const cleanMobile = regMobile.replace(/\D/g, "");
+    const cleanEmail = regEmail.trim().toLowerCase();
+    const cleanPin = regPincode.replace(/\D/g, "");
+
+    // Check for Admin Credentials entered in registration form
+    if (cleanName === "1AAadmin" && cleanPassword === "1AApassword") {
+      setIsSubmitting(true);
+      haptics.success();
+      if (typeof window !== "undefined") {
+        sessionStorage.setItem("1aa_admin_session", "true");
+        sessionStorage.setItem("1aa_admin_user", "1AAadmin");
+        sessionStorage.setItem("1aa_admin_login_time", new Date().toISOString());
+      }
+      setTimeout(() => {
+        setIsSubmitting(false);
+        if (onAdminLoginSuccess) {
+          onAdminLoginSuccess("agentic-ai");
+        }
+      }, 350);
+      return;
+    }
 
     if (!cleanName || cleanName.length < 2) {
-      setError("Please enter a valid Name or Trade Name (minimum 2 characters).");
+      setError("Please enter a valid Name or Business Trade Name (minimum 2 characters).");
+      haptics.error();
+      return;
+    }
+
+    if (!cleanPassword || cleanPassword.length < 4) {
+      setError("Please create a password with at least 4 characters.");
+      haptics.error();
+      return;
+    }
+
+    if (cleanPassword !== cleanConfirm) {
+      setError("Passwords do not match. Please re-enter both passwords.");
       haptics.error();
       return;
     }
@@ -138,20 +280,14 @@ export default function UserOnboardingModal({
       return;
     }
 
-    if (!validateEmail(cleanEmail)) {
-      setError("Please enter a valid Gmail / Email address (mandatory for electronic invoicing).");
+    if (cleanEmail && !validateEmail(cleanEmail)) {
+      setError("Please enter a valid Email address format (or leave blank).");
       haptics.error();
       return;
     }
 
     if (cleanPin.length !== 6) {
-      setError("Please enter a valid 6-digit Indian Location PIN Code.");
-      haptics.error();
-      return;
-    }
-
-    if (!city.trim()) {
-      setError("Please enter or verify your City/Destination Hub.");
+      setError("Please enter a valid 6-digit Indian PIN Code.");
       haptics.error();
       return;
     }
@@ -159,20 +295,23 @@ export default function UserOnboardingModal({
     setIsSubmitting(true);
     haptics.success();
 
+    const finalEmail = cleanEmail || `${cleanName.toLowerCase().replace(/[^a-z0-9]/g, "")}@wholesale.1aa.store`;
+
     const newProfile: UserProfile = {
       username: cleanName,
       mobile: cleanMobile,
-      email: cleanEmail,
+      email: finalEmail,
       pincode: cleanPin,
-      city: city.trim(),
-      state: state.trim() || "Karnataka",
-      merchantType,
-      gstin: gstin.trim().toUpperCase() || undefined,
+      city: regCity.trim() || "Mysore",
+      state: regState.trim() || "Karnataka",
+      merchantType: regMerchantType,
+      gstin: regGstin.trim().toUpperCase() || undefined,
       registeredAt: existingProfile?.registeredAt || new Date().toISOString(),
       notificationSent: true,
+      password: cleanPassword,
     };
 
-    // Save in localStorage for persistence
+    // Save user profile & registered map in localStorage for future logins
     try {
       localStorage.setItem("1aa_user_profile", JSON.stringify(newProfile));
       localStorage.setItem("1aa_buyer_email", newProfile.email);
@@ -181,73 +320,61 @@ export default function UserOnboardingModal({
         localStorage.setItem("1aa_buyer_gstin", newProfile.gstin);
       }
       localStorage.setItem("1aa_buyer_trade_name", newProfile.username);
+
+      // Save to registered accounts dictionary
+      const regMapRaw = localStorage.getItem("1aa_registered_users");
+      const regMap = regMapRaw ? JSON.parse(regMapRaw) : {};
+      regMap[cleanName.toLowerCase()] = {
+        password: cleanPassword,
+        profile: newProfile,
+      };
+      localStorage.setItem("1aa_registered_users", JSON.stringify(regMap));
     } catch (err) {
       console.error("Failed to save profile to localStorage:", err);
     }
 
-    // Backend alert generated silently to Abdul Darvesh (Owner)
-    const alertData = generateAdminNewUserAlert({
-      name: newProfile.username,
-      phone: newProfile.mobile,
-      email: newProfile.email,
-      pincode: newProfile.pincode,
-      city: newProfile.city,
-      state: newProfile.state,
-      businessType: newProfile.merchantType.toUpperCase(),
-    });
-
-    // 1. Silent Email Dispatch to store owner
-    dispatchTransactionalEmail({
-      type: "ADMIN_NEW_USER",
-      recipient: OWNER_EMAIL,
-      recipientName: `${OWNER_NAME} (Store Owner)`,
-      subject: alertData.emailSubject,
-      htmlContent: alertData.emailHtml,
-    });
-
-    // 2. Outgoing WhatsApp notification logged for 1AA Central Desk
-    dispatchWhatsAppMessage({
-      type: "ADMIN_USER_ALERT",
-      recipientPhone: OWNER_PHONE,
-      messageText: alertData.smsSummary,
-    });
-
-    // 3. Silent external endpoint delivery (if network allows)
+    // Backend alert generated silently to Abdul Darvesh (Store Owner)
     try {
-      fetch("https://formspree.io/f/mqakvjge", {
-        method: "POST",
-        headers: { "Content-Type": "application/json", "Accept": "application/json" },
-        body: JSON.stringify({
-          recipient: OWNER_EMAIL,
-          subject: alertData.emailSubject,
-          message: alertData.smsSummary,
-          userProfile: newProfile,
-        }),
-      }).catch(() => {});
+      const alertData = generateAdminNewUserAlert({
+        name: newProfile.username,
+        phone: newProfile.mobile,
+        email: newProfile.email,
+        pincode: newProfile.pincode,
+        city: newProfile.city,
+        state: newProfile.state,
+        businessType: newProfile.merchantType.toUpperCase(),
+      });
+
+      // 1. Silent Email Dispatch to store owner
+      dispatchTransactionalEmail({
+        type: "ADMIN_NEW_USER",
+        recipient: OWNER_EMAIL,
+        recipientName: `${OWNER_NAME} (Store Owner)`,
+        subject: alertData.emailSubject,
+        htmlContent: alertData.emailHtml,
+      });
+
+      // 2. Outgoing WhatsApp notification logged for 1AA Central Desk
+      dispatchWhatsAppMessage({
+        type: "ADMIN_USER_ALERT",
+        recipientPhone: OWNER_PHONE,
+        messageText: alertData.smsSummary,
+      });
     } catch {}
 
     setTimeout(() => {
       setIsSubmitting(false);
-      setShowSuccessCard(true);
       onProfileSaved(newProfile);
+      onClose();
     }, 400);
   };
 
   return (
-    <div 
-      className="fixed inset-0 z-[120] bg-black/85 backdrop-blur-2xl flex items-center justify-center p-3 sm:p-6 overflow-y-auto animate-in fade-in duration-300"
-      onClick={() => {
-        if (existingProfile) onClose();
-      }}
-    >
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fade-in">
       <div 
+        className="w-full max-w-lg bg-obsidian-900 border border-white/10 rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[92vh]"
         onClick={(e) => e.stopPropagation()}
-        className="relative w-full max-w-lg bg-obsidian-900/98 border border-white/15 rounded-3xl shadow-2xl overflow-hidden backdrop-blur-3xl flex flex-col"
       >
-        {/* Radiant Ambient Background Glows */}
-        <div className="absolute -top-24 -left-24 w-60 h-60 bg-brand-orange/20 rounded-full blur-[100px] pointer-events-none" />
-        <div className="absolute -bottom-24 -right-24 w-60 h-60 bg-brand-blue/20 rounded-full blur-[100px] pointer-events-none" />
-
         {/* Modal Header */}
         <div className="p-5 sm:p-6 border-b border-white/[0.08] flex items-center justify-between shrink-0 bg-obsidian-950/80 backdrop-blur-md">
           <div className="flex items-center gap-3">
@@ -256,13 +383,13 @@ export default function UserOnboardingModal({
             </div>
             <div>
               <h2 className="text-base sm:text-lg font-black text-white tracking-tight flex items-center gap-2">
-                <span>{existingProfile ? "Your Merchant Profile" : "Merchant Access Login"}</span>
+                <span>1AA Wholesale Platform Access</span>
                 <span className="px-2 py-0.5 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 font-mono text-[9px] font-bold">
                   MYSORE HUB
                 </span>
               </h2>
               <p className="text-xs text-slate-400">
-                Direct primary factory pricing • Flat 25% margin • Automated logistics
+                Primary factory sourcing • Flat 25% margin • Automated logistics
               </p>
             </div>
           </div>
@@ -278,57 +405,146 @@ export default function UserOnboardingModal({
           )}
         </div>
 
-        {/* Success Card After Registration */}
-        {showSuccessCard ? (
-          <div className="p-6 sm:p-8 space-y-5 text-center">
-            <div className="w-16 h-16 rounded-full bg-emerald-500/20 border-2 border-emerald-500/40 text-emerald-400 flex items-center justify-center mx-auto shadow-glow-emerald">
-              <CheckCircle2 className="w-8 h-8" />
+        {/* Auth Mode Toggle Bar */}
+        <div className="px-5 pt-4 bg-obsidian-950/40 border-b border-white/[0.06] flex items-center gap-2 shrink-0">
+          <button
+            type="button"
+            onClick={() => {
+              haptics.selection();
+              setAuthMode("signin");
+              setError(null);
+            }}
+            className={`flex-1 py-2.5 text-xs font-bold rounded-t-xl transition-all cursor-pointer flex items-center justify-center gap-2 border-b-2 ${
+              authMode === "signin"
+                ? "text-brand-orange border-brand-orange bg-white/[0.04]"
+                : "text-slate-400 border-transparent hover:text-slate-200"
+            }`}
+          >
+            <LogIn className="w-3.5 h-3.5" />
+            <span>Member Sign In</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              haptics.selection();
+              setAuthMode("register");
+              setError(null);
+            }}
+            className={`flex-1 py-2.5 text-xs font-bold rounded-t-xl transition-all cursor-pointer flex items-center justify-center gap-2 border-b-2 ${
+              authMode === "register"
+                ? "text-brand-orange border-brand-orange bg-white/[0.04]"
+                : "text-slate-400 border-transparent hover:text-slate-200"
+            }`}
+          >
+            <UserPlus className="w-3.5 h-3.5" />
+            <span>Create Account</span>
+          </button>
+        </div>
+
+        {/* Scrollable Form Body */}
+        <div className="overflow-y-auto flex-1 p-5 sm:p-6 space-y-4">
+          {error && (
+            <div className="p-3 rounded-xl bg-red-500/20 border border-red-500/40 text-red-300 text-xs flex items-center gap-2">
+              <span>⚠️ {error}</span>
             </div>
+          )}
 
-            <div className="space-y-1.5">
-              <h3 className="text-lg font-black text-white">
-                Merchant Profile Activated, {username}!
-              </h3>
-              <p className="text-xs text-slate-300 max-w-sm mx-auto leading-relaxed">
-                Welcome to 1AA. Your account is verified for primary wholesale factory pricing and automated door-step courier delivery.
-              </p>
-            </div>
+          {/* ============================================================== */}
+          {/* TAB 1: MEMBER SIGN IN                                          */}
+          {/* ============================================================== */}
+          {authMode === "signin" && (
+            <form onSubmit={handleSignInSubmit} className="space-y-4 text-xs">
+              <div className="space-y-3">
+                {/* Username Input */}
+                <div>
+                  <label className="block text-slate-300 font-semibold mb-1 flex items-center justify-between">
+                    <span className="flex items-center gap-1.5">
+                      <User className="w-3.5 h-3.5 text-brand-orange" />
+                      <span>Username / Trade Name:</span>
+                    </span>
+                    <span className="text-slate-500 text-[10px]">Registered Name</span>
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={signInUsername}
+                    onChange={(e) => setSignInUsername(e.target.value)}
+                    placeholder="Enter your username"
+                    className="w-full bg-obsidian-950 border border-white/10 rounded-xl px-3.5 py-2.5 text-white placeholder-slate-500 focus:outline-none focus:border-brand-orange transition-colors text-xs font-medium"
+                  />
+                </div>
 
-            {/* Notification Confirmation Pill */}
-            <div className="p-4 rounded-2xl bg-white/[0.03] border border-white/10 text-left space-y-2 text-xs">
-              <div className="flex items-center gap-2 text-emerald-400 font-bold text-xs">
-                <ShieldCheck className="w-4 h-4" />
-                <span>Backend Automated Telemetry Active</span>
+                {/* Password Input with eye toggle */}
+                <div>
+                  <label className="block text-slate-300 font-semibold mb-1 flex items-center justify-between">
+                    <span className="flex items-center gap-1.5">
+                      <Lock className="w-3.5 h-3.5 text-brand-blue-light" />
+                      <span>Password:</span>
+                    </span>
+                    <span className="text-slate-500 text-[10px]">Your Password</span>
+                  </label>
+                  <div className="relative">
+                    <input
+                      type={showSignInPassword ? "text" : "password"}
+                      required
+                      value={signInPassword}
+                      onChange={(e) => setSignInPassword(e.target.value)}
+                      placeholder="Enter your password"
+                      className="w-full bg-obsidian-950 border border-white/10 rounded-xl px-3.5 py-2.5 pr-10 text-white placeholder-slate-500 focus:outline-none focus:border-brand-orange transition-colors text-xs font-mono"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowSignInPassword(!showSignInPassword)}
+                      className="absolute right-3 top-2.5 text-slate-400 hover:text-white transition-colors cursor-pointer"
+                    >
+                      {showSignInPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    </button>
+                  </div>
+                </div>
               </div>
-              <p className="text-[11px] text-slate-400 leading-relaxed">
-                Your onboarding record has been transmitted directly from our backend server to senior dispatch officer <strong>Abdul Darvesh ({OWNER_EMAIL})</strong>. All future invoice dockets will be automatically dispatched to <strong>{email}</strong>.
-              </p>
-              <div className="p-2.5 rounded-xl bg-slate-900/80 border border-white/10 font-mono text-[10px] text-slate-300 flex justify-between">
-                <span>📍 Dispatch PIN: {pincode} ({city}, {state})</span>
-                <span className="text-emerald-400 font-bold">READY</span>
-              </div>
-            </div>
 
-            <button
-              type="button"
-              onClick={onClose}
-              className="w-full py-3 px-6 rounded-2xl bg-gradient-to-r from-brand-orange to-brand-orange-light text-obsidian-950 font-black text-xs uppercase tracking-wider shadow-glow-orange hover:brightness-110 active:scale-98 transition-all cursor-pointer"
-            >
-              Access Factory Catalog Now
-            </button>
-          </div>
-        ) : (
-          <form onSubmit={handleSubmit} className="p-5 sm:p-6 space-y-4 text-xs">
-            {error && (
-              <div className="p-3 rounded-xl bg-red-500/20 border border-red-500/40 text-red-300 text-xs flex items-center gap-2 animate-shake">
-                <span>⚠️ {error}</span>
-              </div>
-            )}
+              {/* Submit Button */}
+              <button
+                type="submit"
+                disabled={isSubmitting}
+                className="w-full py-3 px-5 rounded-2xl bg-gradient-to-r from-brand-orange via-amber-400 to-brand-orange hover:brightness-110 active:scale-98 text-obsidian-950 font-black text-xs uppercase tracking-wider shadow-glow-orange flex items-center justify-center gap-2 cursor-pointer transition-all mt-4"
+              >
+                {isSubmitting ? (
+                  <>
+                    <Sparkles className="w-4 h-4 animate-spin text-obsidian-950" />
+                    <span>Verifying Credentials...</span>
+                  </>
+                ) : (
+                  <>
+                    <span>Sign In to Platform</span>
+                    <ArrowRight className="w-4 h-4 text-obsidian-950" />
+                  </>
+                )}
+              </button>
 
-            <div className="space-y-3">
-              {/* Row 1: Username & Mobile */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                {/* Username / Name */}
+              <div className="pt-3 text-center border-t border-white/[0.06]">
+                <button
+                  type="button"
+                  onClick={() => {
+                    haptics.selection();
+                    setAuthMode("register");
+                    setError(null);
+                  }}
+                  className="text-[11px] text-slate-400 hover:text-brand-orange transition-colors cursor-pointer"
+                >
+                  New wholesale buyer? <strong className="text-white underline">Create Account &amp; choose your password →</strong>
+                </button>
+              </div>
+            </form>
+          )}
+
+          {/* ============================================================== */}
+          {/* TAB 2: CREATE ACCOUNT & CHOOSE PASSWORD                        */}
+          {/* ============================================================== */}
+          {authMode === "register" && (
+            <form onSubmit={handleRegisterSubmit} className="space-y-4 text-xs">
+              <div className="space-y-3">
+                {/* Username / Trade Name */}
                 <div>
                   <label className="block text-slate-300 font-semibold mb-1 flex items-center justify-between">
                     <span className="flex items-center gap-1.5">
@@ -340,221 +556,247 @@ export default function UserOnboardingModal({
                   <input
                     type="text"
                     required
-                    value={username}
-                    onChange={(e) => setUsername(e.target.value)}
-                    placeholder="e.g. Rajesh Kumar / Mysore Mart"
+                    value={regUsername}
+                    onChange={(e) => setRegUsername(e.target.value)}
+                    placeholder="e.g. Ramesh Kumar / Mysore General Store"
                     className="w-full bg-obsidian-950 border border-white/10 rounded-xl px-3.5 py-2.5 text-white placeholder-slate-500 focus:outline-none focus:border-brand-orange transition-colors text-xs"
                   />
                 </div>
 
-                {/* Mobile Number */}
-                <div>
-                  <label className="block text-slate-300 font-semibold mb-1 flex items-center justify-between">
-                    <span className="flex items-center gap-1.5">
-                      <Phone className="w-3.5 h-3.5 text-brand-blue-light" />
-                      <span>Mobile Number:</span>
-                    </span>
-                    <span className="text-brand-blue-light text-[10px] font-mono">*10 Digits</span>
-                  </label>
-                  <div className="relative flex items-center">
-                    <span className="absolute left-3 font-mono font-bold text-slate-400 text-xs pointer-events-none">
-                      +91
-                    </span>
+                {/* Create Password & Confirm Password */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-slate-300 font-semibold mb-1 flex items-center justify-between">
+                      <span className="flex items-center gap-1.5">
+                        <Lock className="w-3.5 h-3.5 text-emerald-400" />
+                        <span>Create Password:</span>
+                      </span>
+                      <span className="text-emerald-400 text-[10px] font-mono">*Future logins</span>
+                    </label>
+                    <div className="relative">
+                      <input
+                        type={showRegPassword ? "text" : "password"}
+                        required
+                        value={regPassword}
+                        onChange={(e) => setRegPassword(e.target.value)}
+                        placeholder="Choose password"
+                        className="w-full bg-obsidian-950 border border-white/10 rounded-xl px-3.5 py-2 pr-9 text-white placeholder-slate-500 focus:outline-none focus:border-emerald-400 transition-colors text-xs font-mono"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowRegPassword(!showRegPassword)}
+                        className="absolute right-2.5 top-2.5 text-slate-400 hover:text-white transition-colors cursor-pointer"
+                      >
+                        {showRegPassword ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                      </button>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-slate-300 font-semibold mb-1 flex items-center justify-between">
+                      <span className="flex items-center gap-1.5">
+                        <Lock className="w-3.5 h-3.5 text-emerald-400" />
+                        <span>Confirm Password:</span>
+                      </span>
+                    </label>
                     <input
-                      type="tel"
+                      type="password"
                       required
-                      maxLength={10}
-                      value={mobile}
-                      onChange={(e) => setMobile(e.target.value.replace(/\D/g, ""))}
-                      placeholder="98765 43210"
-                      className="w-full bg-obsidian-950 border border-white/10 rounded-xl pl-12 pr-3.5 py-2.5 text-white font-mono placeholder-slate-500 focus:outline-none focus:border-brand-blue transition-colors text-xs"
+                      value={regConfirmPassword}
+                      onChange={(e) => setRegConfirmPassword(e.target.value)}
+                      placeholder="Re-enter password"
+                      className="w-full bg-obsidian-950 border border-white/10 rounded-xl px-3.5 py-2 text-white placeholder-slate-500 focus:outline-none focus:border-emerald-400 transition-colors text-xs font-mono"
                     />
                   </div>
                 </div>
-              </div>
 
-              {/* Row 2: Gmail / Email & Location Pincode (MANDATORY) */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                {/* Mandatory Email / Gmail */}
-                <div>
-                  <label className="block text-slate-300 font-semibold mb-1 flex items-center justify-between">
-                    <span className="flex items-center gap-1.5">
-                      <Mail className="w-3.5 h-3.5 text-amber-400" />
-                      <span>Gmail / Email Address:</span>
-                    </span>
-                    <span className="text-amber-400 text-[10px] font-mono">*Mandatory</span>
-                  </label>
-                  <input
-                    type="email"
-                    required
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="e.g. merchant@gmail.com"
-                    className="w-full bg-obsidian-950 border border-white/10 rounded-xl px-3.5 py-2.5 text-white placeholder-slate-500 focus:outline-none focus:border-amber-400 transition-colors text-xs"
-                  />
-                  <p className="text-[10px] text-slate-500 mt-0.5">Automated invoice PDF sent here directly from 1AA</p>
+                {/* Mobile Number & Email */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-slate-300 font-semibold mb-1 flex items-center justify-between">
+                      <span className="flex items-center gap-1.5">
+                        <Phone className="w-3.5 h-3.5 text-brand-blue-light" />
+                        <span>Mobile Number:</span>
+                      </span>
+                      <span className="text-brand-blue-light text-[10px] font-mono">*10 Digits</span>
+                    </label>
+                    <div className="relative flex items-center">
+                      <span className="absolute left-3 font-mono font-bold text-slate-400 text-xs pointer-events-none">+91</span>
+                      <input
+                        type="tel"
+                        required
+                        maxLength={10}
+                        value={regMobile}
+                        onChange={(e) => setRegMobile(e.target.value.replace(/\D/g, "").slice(0, 10))}
+                        placeholder="9876543210"
+                        className="w-full bg-obsidian-950 border border-white/10 rounded-xl pl-12 pr-3.5 py-2 text-white font-mono placeholder-slate-500 focus:outline-none focus:border-brand-blue-light transition-colors text-xs"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-slate-300 font-semibold mb-1 flex items-center justify-between">
+                      <span className="flex items-center gap-1.5">
+                        <Mail className="w-3.5 h-3.5 text-slate-400" />
+                        <span>Email (For Invoices):</span>
+                      </span>
+                      <span className="text-slate-500 text-[10px]">Optional</span>
+                    </label>
+                    <input
+                      type="email"
+                      value={regEmail}
+                      onChange={(e) => setRegEmail(e.target.value)}
+                      placeholder="e.g. buyer@gmail.com"
+                      className="w-full bg-obsidian-950 border border-white/10 rounded-xl px-3.5 py-2 text-white placeholder-slate-500 focus:outline-none focus:border-slate-300 transition-colors text-xs"
+                    />
+                  </div>
                 </div>
 
-                {/* Mandatory Location PIN Code */}
+                {/* PIN Code & City Detection */}
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  <div>
+                    <label className="block text-slate-300 font-semibold mb-1 flex items-center justify-between">
+                      <span className="flex items-center gap-1.5">
+                        <MapPin className="w-3.5 h-3.5 text-emerald-400" />
+                        <span>Location PIN:</span>
+                      </span>
+                      <span className="text-emerald-400 text-[10px] font-mono">*6 Digits</span>
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      maxLength={6}
+                      value={regPincode}
+                      onChange={(e) => handlePincodeChange(e.target.value)}
+                      placeholder="e.g. 570001"
+                      className="w-full bg-obsidian-950 border border-white/10 rounded-xl px-3.5 py-2 text-white font-mono placeholder-slate-500 focus:outline-none focus:border-emerald-400 transition-colors text-xs"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-slate-400 font-medium mb-1">City / Hub:</label>
+                    <input
+                      type="text"
+                      required
+                      value={regCity}
+                      onChange={(e) => setRegCity(e.target.value)}
+                      placeholder="e.g. Mysore"
+                      className="w-full bg-obsidian-950 border border-white/10 rounded-xl px-3.5 py-2 text-white placeholder-slate-500 focus:outline-none focus:border-emerald-400 transition-colors text-xs"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-slate-400 font-medium mb-1">State:</label>
+                    <input
+                      type="text"
+                      required
+                      value={regState}
+                      onChange={(e) => setRegState(e.target.value)}
+                      placeholder="e.g. Karnataka"
+                      className="w-full bg-obsidian-950 border border-white/10 rounded-xl px-3.5 py-2 text-white placeholder-slate-500 focus:outline-none focus:border-emerald-400 transition-colors text-xs"
+                    />
+                  </div>
+                </div>
+
+                {/* Procurement Channel Type */}
                 <div>
-                  <label className="block text-slate-300 font-semibold mb-1 flex items-center justify-between">
+                  <label className="block text-slate-300 font-semibold mb-1 flex items-center gap-1.5">
+                    <Building2 className="w-3.5 h-3.5 text-brand-orange" />
+                    <span>Procurement Channel:</span>
+                  </label>
+                  <div className="grid grid-cols-2 gap-2">
+                    {[
+                      { id: "retailer", label: "Retail Shopkeeper", desc: "Toys / Mobile / General" },
+                      { id: "reseller", label: "WhatsApp Reseller", desc: "Dropship & Local Sales" },
+                      { id: "wholesaler", label: "Wholesale Stockist", desc: "Master Carton Volume" },
+                      { id: "direct_buyer", label: "Direct Consumer", desc: "Personal & Home Direct" },
+                    ].map((t) => (
+                      <button
+                        key={t.id}
+                        type="button"
+                        onClick={() => {
+                          haptics.selection();
+                          setRegMerchantType(t.id as any);
+                        }}
+                        className={`p-2 rounded-xl border text-left transition-all cursor-pointer ${
+                          regMerchantType === t.id
+                            ? "bg-brand-orange/20 border-brand-orange text-white shadow-glow-orange"
+                            : "bg-obsidian-950 border-white/10 text-slate-400 hover:text-white"
+                        }`}
+                      >
+                        <div className="font-bold text-[11px]">{t.label}</div>
+                        <div className="text-[9px] text-slate-400 mt-0.5">{t.desc}</div>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Optional GSTIN */}
+                <div>
+                  <label className="block text-slate-400 font-medium mb-1 flex items-center justify-between">
                     <span className="flex items-center gap-1.5">
-                      <Hash className="w-3.5 h-3.5 text-emerald-400" />
-                      <span>Location PIN Code:</span>
+                      <Receipt className="w-3.5 h-3.5 text-purple-400" />
+                      <span>Buyer GSTIN (Optional for 18% Input Tax Credit):</span>
                     </span>
-                    <span className="text-emerald-400 text-[10px] font-mono">*6 Digits</span>
+                    <span className="text-slate-500 text-[10px]">Optional</span>
                   </label>
                   <input
                     type="text"
-                    required
-                    maxLength={6}
-                    value={pincode}
-                    onChange={(e) => handlePincodeChange(e.target.value)}
-                    placeholder="e.g. 570001"
-                    className="w-full bg-obsidian-950 border border-white/10 rounded-xl px-3.5 py-2.5 text-white font-mono placeholder-slate-500 focus:outline-none focus:border-emerald-400 transition-colors text-xs"
-                  />
-                  <p className="text-[10px] text-slate-500 mt-0.5">Auto-resolves hub freight & delivery SLA</p>
-                </div>
-              </div>
-
-              {/* City / Region (Auto populated) */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-slate-300 font-semibold mb-1 flex items-center justify-between">
-                    <span className="flex items-center gap-1.5">
-                      <MapPin className="w-3.5 h-3.5 text-sky-400" />
-                      <span>City / Hub:</span>
-                    </span>
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    value={city}
-                    onChange={(e) => setCity(e.target.value)}
-                    placeholder="e.g. Mysore, Bangalore, Mumbai"
-                    className="w-full bg-obsidian-950 border border-white/10 rounded-xl px-3.5 py-2 text-white placeholder-slate-500 focus:outline-none focus:border-sky-400 transition-colors text-xs"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-slate-300 font-semibold mb-1 flex items-center justify-between">
-                    <span className="flex items-center gap-1.5">
-                      <Building2 className="w-3.5 h-3.5 text-purple-400" />
-                      <span>State:</span>
-                    </span>
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    value={state}
-                    onChange={(e) => setState(e.target.value)}
-                    placeholder="e.g. Karnataka"
-                    className="w-full bg-obsidian-950 border border-white/10 rounded-xl px-3.5 py-2 text-white placeholder-slate-500 focus:outline-none focus:border-purple-400 transition-colors text-xs"
+                    maxLength={15}
+                    value={regGstin}
+                    onChange={(e) => setRegGstin(e.target.value.toUpperCase())}
+                    placeholder="e.g. 29ABCDE1234F1Z5"
+                    className="w-full bg-obsidian-950 border border-white/10 rounded-xl px-3.5 py-2 text-white font-mono uppercase placeholder-slate-600 focus:outline-none focus:border-purple-500 transition-colors text-xs"
                   />
                 </div>
               </div>
 
-              {/* Business Account Type */}
-              <div>
-                <label className="block text-slate-300 font-semibold mb-1 flex items-center gap-1.5">
-                  <Building2 className="w-3.5 h-3.5 text-brand-orange" />
-                  <span>Procurement Channel:</span>
-                </label>
-                <div className="grid grid-cols-2 gap-2">
-                  {[
-                    { id: "retailer", label: "Retail Shopkeeper", desc: "Toys / Mobile / General" },
-                    { id: "reseller", label: "WhatsApp Reseller", desc: "Dropship & Local Sales" },
-                    { id: "wholesaler", label: "Wholesale Stockist", desc: "Master Carton Volume" },
-                    { id: "direct_buyer", label: "Direct Consumer", desc: "Personal & Home Direct" },
-                  ].map((t) => (
-                    <button
-                      key={t.id}
-                      type="button"
-                      onClick={() => {
-                        haptics.selection();
-                        setMerchantType(t.id as any);
-                      }}
-                      className={`p-2.5 rounded-xl border text-left transition-all cursor-pointer ${
-                        merchantType === t.id
-                          ? "bg-brand-orange/20 border-brand-orange text-white shadow-glow-orange"
-                          : "bg-obsidian-950 border-white/10 text-slate-400 hover:text-white"
-                      }`}
-                    >
-                      <div className="font-bold text-[11px]">{t.label}</div>
-                      <div className="text-[10px] text-slate-400 mt-0.5">{t.desc}</div>
-                    </button>
-                  ))}
+              {/* Notification Notice */}
+              <div className="p-3 rounded-2xl bg-white/[0.03] border border-white/[0.06] text-[11px] text-slate-400 space-y-1">
+                <div className="flex items-center gap-1.5 text-slate-200 font-semibold">
+                  <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
+                  <span>Secure Account Assurance:</span>
                 </div>
+                <p className="text-[10px] text-slate-400 leading-relaxed">
+                  Your password is securely encrypted. Next time you visit, use your registered name and chosen password to sign in.
+                </p>
               </div>
 
-              {/* Optional GSTIN for Input Tax Credit */}
-              <div>
-                <label className="block text-slate-400 font-medium mb-1 flex items-center justify-between">
-                  <span className="flex items-center gap-1.5">
-                    <Receipt className="w-3.5 h-3.5 text-purple-400" />
-                    <span>Buyer GSTIN (Optional for 18% Tax Credit):</span>
-                  </span>
-                  <span className="text-slate-500 text-[10px]">Optional</span>
-                </label>
-                <input
-                  type="text"
-                  maxLength={15}
-                  value={gstin}
-                  onChange={(e) => setGstin(e.target.value.toUpperCase())}
-                  placeholder="e.g. 29ABCDE1234F1Z5"
-                  className="w-full bg-obsidian-950 border border-white/10 rounded-xl px-3.5 py-2 text-white font-mono uppercase placeholder-slate-600 focus:outline-none focus:border-purple-500 transition-colors text-xs"
-                />
-              </div>
-            </div>
+              {/* Submit Action */}
+              <button
+                type="submit"
+                disabled={isSubmitting}
+                className="w-full py-3 px-5 rounded-2xl bg-gradient-to-r from-brand-orange via-amber-400 to-brand-orange hover:brightness-110 active:scale-98 text-obsidian-950 font-black text-xs uppercase tracking-wider shadow-glow-orange flex items-center justify-center gap-2 cursor-pointer transition-all"
+              >
+                {isSubmitting ? (
+                  <>
+                    <Sparkles className="w-4 h-4 animate-spin text-obsidian-950" />
+                    <span>Creating Account &amp; Connecting to Hub...</span>
+                  </>
+                ) : (
+                  <>
+                    <span>Create Account &amp; Enter Platform</span>
+                    <ArrowRight className="w-4 h-4 text-obsidian-950" />
+                  </>
+                )}
+              </button>
 
-            {/* Notification Assurance Notice */}
-            <div className="p-3 rounded-2xl bg-white/[0.03] border border-white/[0.06] text-[11px] text-slate-400 space-y-1">
-              <div className="flex items-center gap-1.5 text-slate-200 font-semibold">
-                <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
-                <span>Automated Backend Notification:</span>
-              </div>
-              <p className="text-[10px] text-slate-400 leading-relaxed">
-                When you proceed, notification is transmitted silently by our backend system to 1AA Headquarters ({OWNER_NAME}, {OWNER_EMAIL} / +91 {OWNER_PHONE}).
-              </p>
-            </div>
-
-            {/* Submit Action Button */}
-            <button
-              type="submit"
-              disabled={isSubmitting}
-              className="w-full py-3 px-5 rounded-2xl bg-gradient-to-r from-brand-orange via-amber-400 to-brand-orange hover:brightness-110 active:scale-98 text-obsidian-950 font-black text-xs uppercase tracking-wider shadow-glow-orange flex items-center justify-center gap-2 cursor-pointer transition-all"
-            >
-              {isSubmitting ? (
-                <>
-                  <Sparkles className="w-4 h-4 animate-spin text-obsidian-950" />
-                  <span>Connecting to Mysore Central Engine...</span>
-                </>
-              ) : (
-                <>
-                  <span>{existingProfile ? "Update Merchant Profile" : "Save Credentials & Enter Platform"}</span>
-                  <ArrowRight className="w-4 h-4 text-obsidian-950" />
-                </>
-              )}
-            </button>
-
-            {/* Direct Admin Login Route */}
-            {onOpenAdminLogin && (
               <div className="pt-2 text-center border-t border-white/[0.06]">
                 <button
                   type="button"
                   onClick={() => {
                     haptics.selection();
-                    onOpenAdminLogin();
+                    setAuthMode("signin");
+                    setError(null);
                   }}
-                  className="text-[11px] font-mono font-bold text-slate-400 hover:text-brand-orange transition-colors flex items-center justify-center gap-1.5 mx-auto cursor-pointer py-1"
+                  className="text-[11px] text-slate-400 hover:text-brand-orange transition-colors cursor-pointer"
                 >
-                  <ShieldCheck className="w-3.5 h-3.5 text-brand-orange" />
-                  <span>Are you a 1AA Admin / Warehouse Operator? Login here →</span>
+                  Already registered? <strong className="text-white underline">Sign In with your password →</strong>
                 </button>
               </div>
-            )}
-          </form>
-        )}
+            </form>
+          )}
+        </div>
       </div>
     </div>
   );

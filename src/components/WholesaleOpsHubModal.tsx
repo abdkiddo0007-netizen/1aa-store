@@ -17,7 +17,6 @@ import {
   QrCode,
   Sparkles,
   Rotate3d,
-  Bot,
   ChevronDown,
   ChevronUp
 } from "lucide-react";
@@ -38,7 +37,6 @@ interface WholesaleOpsHubModalProps {
   onOpenUpiModal: () => void;
   onOpenRestockBundles?: () => void;
   onOpenArModal?: () => void;
-  onOpenAgenticAiModal?: () => void;
   hasItemsInCart: boolean;
 }
 
@@ -58,7 +56,6 @@ export default function WholesaleOpsHubModal({
   onOpenUpiModal,
   onOpenRestockBundles,
   onOpenArModal,
-  onOpenAgenticAiModal,
   hasItemsInCart,
 }: WholesaleOpsHubModalProps) {
   const [showSpline3d, setShowSpline3d] = useState(false);
@@ -74,20 +71,6 @@ export default function WholesaleOpsHubModal({
   if (!isOpen) return null;
 
   const tools = [
-    {
-      id: "agentic-ai",
-      title: "Agentic AI Operations Fleet",
-      badge: "5 AUTONOMOUS AGENTS",
-      badgeColor: "bg-cyan-500/20 text-cyan-400 border-cyan-500/30",
-      desc: "Admin, Logistics, BPO Support, Finance & QC teams running autonomously with Human-In-The-Loop approvals.",
-      icon: Bot,
-      iconColor: "text-cyan-400",
-      featured: true,
-      action: () => {
-        onClose();
-        if (onOpenAgenticAiModal) onOpenAgenticAiModal();
-      },
-    },
     {
       id: "ar-studio",
       title: "3D AR • Try Before You Buy",
@@ -288,7 +271,7 @@ export default function WholesaleOpsHubModal({
                 </span>
               </h2>
               <p className="text-[11px] text-slate-400 font-mono">
-                Interactive 3D Experience • AR Camera Preview • Agentic AI Fleet • Logistics & Automation
+                Interactive 3D Experience • AR Camera Preview • Logistics &amp; Automation Hub
               </p>
             </div>
           </div>

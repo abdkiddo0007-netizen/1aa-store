@@ -188,7 +188,22 @@ export default function UpiPaymentModal({
         utrNumber: cleanUtr,
       };
       const filtered = existing.filter(o => o.orderRef !== orderRef);
-      localStorage.setItem("1aa_saved_orders", JSON.stringify([newOrder, ...filtered].slice(0, 15)));
+      localStorage.setItem("1aa_saved_orders", JSON.stringify([newOrder, ...filtered].slice(0, 25)));
+
+      // Real-time stock deduction from Mysore Central Hub reserves
+      try {
+        const stockRaw = localStorage.getItem("1aa_stock_overrides");
+        const currentStock = stockRaw ? JSON.parse(stockRaw) : {};
+        items.forEach(it => {
+          const initial = currentStock[it.product.sku] ?? it.product.inStock;
+          currentStock[it.product.sku] = Math.max(0, initial - it.quantity);
+        });
+        localStorage.setItem("1aa_stock_overrides", JSON.stringify(currentStock));
+        window.dispatchEvent(new Event("1aa:stock_updated"));
+      } catch {}
+
+      // Broadcast real-time order update event to Admin Portal
+      window.dispatchEvent(new Event("1aa:orders_updated"));
     } catch {}
 
     // 4. Backend Dispatches: 1AA sends official invoice and receipt to customer
