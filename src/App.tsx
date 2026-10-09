@@ -27,6 +27,8 @@ import UserOnboardingModal, { UserProfile } from "./components/UserOnboardingMod
 import AdminPortal from "./components/AdminPortal";
 import VoiceSearchModal2026 from "./components/VoiceSearchModal2026";
 import ArProductPreviewModal from "./components/ArProductPreviewModal";
+import WhatsAppOrderParserModal from "./components/WhatsAppOrderParserModal";
+import TransitDamageGuaranteeModal from "./components/TransitDamageGuaranteeModal";
 import AddressAndLocationModal from "./components/AddressAndLocationModal";
 import OrderFsmTrackerModal from "./components/OrderFsmTrackerModal";
 import { OrderAddressPackage } from "./types/address";
@@ -184,6 +186,20 @@ export default function OneAAStore() {
   // AR Product Preview ("Try Before You Buy")
   const [showArModal, setShowArModal] = useState(false);
   const [arProduct, setArProduct] = useState<Product | null>(null);
+
+  // B2B WhatsApp Order Parser & Quotation Modal
+  const [showWhatsAppParserModal, setShowWhatsAppParserModal] = useState(false);
+
+  // 👑 Customer is King Transit Damage & Instant Replacement Guarantee Modal
+  const [showTransitGuaranteeModal, setShowTransitGuaranteeModal] = useState(false);
+
+  const handleLoadWhatsAppCart = (items: { product: Product; quantity: number }[]) => {
+    items.forEach(it => {
+      updateQty(it.product.sku, it.quantity);
+    });
+    haptics.chime();
+    setShowOrderDrawer(true);
+  };
 
   // Structured Address & Location Data Architecture
   const [showAddressModal, setShowAddressModal] = useState(false);
@@ -1708,17 +1724,29 @@ export default function OneAAStore() {
                   </div>
                 </div>
               </div>
-              <button
-                onClick={() => {
-                  haptics.light();
-                  setPriceCompareProduct(CATALOG_PRODUCTS[0]);
-                  setShowPriceCompareModal(true);
-                }}
-                className="px-5 py-3 rounded-full bg-gradient-to-r from-brand-orange to-amber-400 hover:brightness-110 text-obsidian-950 text-xs font-black flex items-center gap-2 transition-all shadow-glow-orange shrink-0 cursor-pointer active:scale-95"
-              >
-                <TrendingUp className="w-4 h-4" />
-                <span>Open Price Radar</span>
-              </button>
+              <div className="flex flex-col sm:flex-row items-center gap-2.5 shrink-0">
+                <button
+                  onClick={() => {
+                    haptics.selection();
+                    setShowTransitGuaranteeModal(true);
+                  }}
+                  className="w-full sm:w-auto px-4 py-3 rounded-full bg-white/[0.08] hover:bg-white/[0.15] text-amber-300 border border-amber-500/30 text-xs font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer shadow-sm active:scale-95"
+                >
+                  <ShieldCheck className="w-4 h-4 text-emerald-400" />
+                  <span>Transit QA &amp; 1-Click Claim</span>
+                </button>
+                <button
+                  onClick={() => {
+                    haptics.light();
+                    setPriceCompareProduct(CATALOG_PRODUCTS[0]);
+                    setShowPriceCompareModal(true);
+                  }}
+                  className="w-full sm:w-auto px-5 py-3 rounded-full bg-gradient-to-r from-brand-orange to-amber-400 hover:brightness-110 text-obsidian-950 text-xs font-black flex items-center justify-center gap-2 transition-all shadow-glow-orange cursor-pointer active:scale-95"
+                >
+                  <TrendingUp className="w-4 h-4" />
+                  <span>Open Price Radar</span>
+                </button>
+              </div>
             </div>
 
             {/* GOD-TIER PROMINENT DELIVERY TIMELINE & INTERACTIVE PINCODE ESTIMATOR BAR */}
@@ -2671,7 +2699,22 @@ export default function OneAAStore() {
           setArProduct(filteredAndSorted[0] || CATALOG_PRODUCTS[0]);
           setShowArModal(true);
         }}
+        onOpenWhatsAppParser={() => setShowWhatsAppParserModal(true)}
+        onOpenTransitGuarantee={() => setShowTransitGuaranteeModal(true)}
         hasItemsInCart={metrics.units > 0}
+      />
+
+      {/* --- B2B WHATSAPP MESSY ORDER PARSER & INSTANT GST QUOTATION GENERATOR --- */}
+      <WhatsAppOrderParserModal
+        isOpen={showWhatsAppParserModal}
+        onClose={() => setShowWhatsAppParserModal(false)}
+        onLoadCart={handleLoadWhatsAppCart}
+      />
+
+      {/* --- 👑 ZERO-HAGGLING 1-CLICK TRANSIT DAMAGE & REPLACEMENT CENTER --- */}
+      <TransitDamageGuaranteeModal
+        isOpen={showTransitGuaranteeModal}
+        onClose={() => setShowTransitGuaranteeModal(false)}
       />
 
       {/* --- 1-CLICK WHOLESALE RESTOCK BUNDLES MODAL --- */}

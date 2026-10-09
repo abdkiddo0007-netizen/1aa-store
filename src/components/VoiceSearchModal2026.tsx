@@ -20,7 +20,7 @@ interface VoiceSearchModal2026Props {
   onTrackOrder?: (ref: string) => void;
 }
 
-export type VoiceLanguage = "en-IN" | "hi-IN" | "kn-IN";
+export type VoiceLanguage = "en-IN" | "kn-IN" | "hi-IN" | "ta-IN" | "te-IN";
 
 export default function VoiceSearchModal2026({
   isOpen,
@@ -259,12 +259,12 @@ export default function VoiceSearchModal2026({
     }
   }, [isOpen]);
 
-  // 1AA Smart NLP Intent Parser (YouTube / Amazon Multi-lingual Keyword Engine)
+  // 1AA Smart NLP Intent Parser (Multi-vernacular: Kannada, Hindi, Tamil, Telugu & English)
   const parseVoiceIntent = (rawText: string) => {
     const lower = rawText.toLowerCase().trim();
 
     // 1. Order tracking detection (e.g. "Track order 1AA-892182", "where is my order 771920")
-    const trackingMatch = lower.match(/(?:track|order|consignment|ref|pi|awb|bill)\s*#?\s*([0-9a-z-]+)/i);
+    const trackingMatch = lower.match(/(?:track|order|consignment|ref|pi|awb|bill|ಟ್ರ್ಯಾಕ್|ಆರ್ಡರ್|ट्रैक|ஆர்டர்|ట్రాక్)\s*#?\s*([0-9a-z-]+)/i);
     if (trackingMatch && trackingMatch[1]) {
       const cleanRef = trackingMatch[1].toUpperCase();
       const formatted = cleanRef.includes("1AA") ? cleanRef : `1AA-${cleanRef}`;
@@ -278,31 +278,64 @@ export default function VoiceSearchModal2026({
     let filter: "all" | "high-margin" | "under-150" | "top-rated" | undefined = undefined;
     let category: string | undefined = undefined;
 
-    // Price filters
-    if (lower.includes("under 150") || lower.includes("under 100") || lower.includes("cheap") || lower.includes("budget") || lower.includes("kam rate") || lower.includes("sasta")) {
+    // Price filters (English + Kannada + Hindi + Tamil + Telugu)
+    if (
+      lower.includes("under 150") || lower.includes("under 100") || lower.includes("cheap") || 
+      lower.includes("budget") || lower.includes("kam rate") || lower.includes("sasta") ||
+      lower.includes("150 ಒಳಗೆ") || lower.includes("ಕಡಿಮೆ ಬೆಲೆ") ||
+      lower.includes("150 के अंदर") || lower.includes("कम दाम") ||
+      lower.includes("150 ரூபாய்க்குள்") || lower.includes("குறைந்த விலை") ||
+      lower.includes("150 లోపు") || lower.includes("తక్కువ ధర")
+    ) {
       filter = "under-150";
-    } else if (lower.includes("high margin") || lower.includes("profit") || lower.includes("arbitrage") || lower.includes("wholesale margin") || lower.includes("zyada margin")) {
+    } else if (
+      lower.includes("high margin") || lower.includes("profit") || lower.includes("arbitrage") || 
+      lower.includes("wholesale margin") || lower.includes("zyada margin") ||
+      lower.includes("ಹೆಚ್ಚು ಲಾಭ") || lower.includes("मार्जिन") || lower.includes("அதிக லாபம்") || lower.includes("ఎక్కువ లాభం")
+    ) {
       filter = "high-margin";
-    } else if (lower.includes("best") || lower.includes("top rated") || lower.includes("popular") || lower.includes("top selling") || lower.includes("hit")) {
+    } else if (
+      lower.includes("best") || lower.includes("top rated") || lower.includes("popular") || 
+      lower.includes("top selling") || lower.includes("hit") ||
+      lower.includes("ಉತ್ತಮ") || lower.includes("टॉप") || lower.includes("சிறந்த") || lower.includes("టాప్")
+    ) {
       filter = "top-rated";
     }
 
-    // Category detection
-    if (lower.includes("toy") || lower.includes("stem") || lower.includes("game") || lower.includes("kids") || lower.includes("khilona") || lower.includes("gun") || lower.includes("bubble")) {
+    // Category detection (English + Regional terms)
+    if (
+      lower.includes("toy") || lower.includes("stem") || lower.includes("game") || lower.includes("kids") || 
+      lower.includes("khilona") || lower.includes("gun") || lower.includes("bubble") ||
+      lower.includes("ಆಟಿಕೆ") || lower.includes("ಬಬಲ್") || lower.includes("खिलौना") || lower.includes("பொம்மை") || lower.includes("బొమ్మ")
+    ) {
       category = "Toys & STEM Games";
-    } else if (lower.includes("kitchen") || lower.includes("cook") || lower.includes("cup") || lower.includes("bottle") || lower.includes("kettle") || lower.includes("chai")) {
+    } else if (
+      lower.includes("kitchen") || lower.includes("cook") || lower.includes("cup") || lower.includes("bottle") || 
+      lower.includes("kettle") || lower.includes("chai") || lower.includes("ಕೆಟಲ್") || lower.includes("ಅಡುಗೆ") ||
+      lower.includes("केतली") || lower.includes("रसोई") || lower.includes("கெட்டில்") || lower.includes("சமையல்") ||
+      lower.includes("కెటిల్") || lower.includes("వంట")
+    ) {
       category = "Kitchen & Home Essentials";
-    } else if (lower.includes("light") || lower.includes("lamp") || lower.includes("decor") || lower.includes("speaker") || lower.includes("ambient")) {
+    } else if (
+      lower.includes("light") || lower.includes("lamp") || lower.includes("decor") || lower.includes("speaker") || 
+      lower.includes("ambient") || lower.includes("ದೀಪ") || lower.includes("लाइट") || lower.includes("விளக்கு") || lower.includes("లైట్")
+    ) {
       category = "Lifestyle & Ambient Tech";
-    } else if (lower.includes("gadget") || lower.includes("electronic") || lower.includes("vacuum") || lower.includes("smart") || lower.includes("cleaning")) {
+    } else if (
+      lower.includes("gadget") || lower.includes("electronic") || lower.includes("vacuum") || lower.includes("smart") || 
+      lower.includes("cleaning") || lower.includes("ವ್ಯಾಕ್ಯೂಮ್") || lower.includes("वैक्यूम") || lower.includes("வாக்யூம்") || lower.includes("వాక్యూమ్")
+    ) {
       category = "Smart Household Gadgets";
-    } else if (lower.includes("car") || lower.includes("auto") || lower.includes("tool") || lower.includes("drift")) {
+    } else if (
+      lower.includes("car") || lower.includes("auto") || lower.includes("tool") || lower.includes("drift") || 
+      lower.includes("ಕಾರು") || lower.includes("गाड़ी") || lower.includes("கார்") || lower.includes("కారు")
+    ) {
       category = "Automotive & Tool Kits";
     }
 
     // Clean search text
     const cleanQuery = rawText
-      .replace(/find|show|search|me|looking for|products|items|under 150|under 100|high margin|chahiye|dikhao|batao|karo/gi, "")
+      .replace(/find|show|search|me|looking for|products|items|under 150|under 100|high margin|chahiye|dikhao|batao|karo|ತೋರಿಸಿ|ಕೊಡಿ|காட்டு|చూపించు/gi, "")
       .trim();
 
     return {
@@ -336,14 +369,29 @@ export default function VoiceSearchModal2026({
     
     if (intent?.trackingRef && onTrackOrder) {
       onTrackOrder(intent.trackingRef);
-      speakFeedback(`Opening consignment tracking for ${intent.trackingRef}`);
+      speakFeedback(
+        selectedLanguage === "kn-IN" ? `ಕನ್ಸೈನ್ಮೆಂಟ್ ${intent.trackingRef} ಟ್ರ್ಯಾಕಿಂಗ್ ತೆರೆಯಲಾಗುತ್ತಿದೆ` :
+        selectedLanguage === "hi-IN" ? `कंसाइनमेंट ${intent.trackingRef} ट्रैकिंग खोली जा रही है` :
+        selectedLanguage === "ta-IN" ? `சரக்கு ${intent.trackingRef} டிராக்கிங் திறக்கப்படுகிறது` :
+        selectedLanguage === "te-IN" ? `కన్సైన్‌మెంట్ ${intent.trackingRef} ట్రాకింగ్ తెరవబడుతోంది` :
+        `Opening consignment tracking for ${intent.trackingRef}`
+      );
       onClose();
       return;
     }
 
     const q = intent?.query || queryText;
     onApplySearch(q, intent?.category, intent?.filter);
-    speakFeedback(`Showing catalog items for ${q}`);
+    
+    // Multi-vernacular spoken confirmation
+    const feedbackPhrase = 
+      selectedLanguage === "kn-IN" ? `${q} ಸಂಬಂಧಿಸಿದ ಸಗಟು ಉತ್ಪನ್ನಗಳನ್ನು ತೋರಿಸಲಾಗುತ್ತಿದೆ` :
+      selectedLanguage === "hi-IN" ? `${q} के होलसेल प्रोडक्ट्स दिखाए जा रहे हैं` :
+      selectedLanguage === "ta-IN" ? `${q} மொத்த தயாரிப்புகள் காட்டப்படுகின்றன` :
+      selectedLanguage === "te-IN" ? `${q} హోల్‌సేల్ ఉత్పత్తులు చూపబడుతున్నాయి` :
+      `Showing wholesale catalog items for ${q}`;
+
+    speakFeedback(feedbackPhrase);
     haptics.success();
     onClose();
 
@@ -443,19 +491,14 @@ export default function VoiceSearchModal2026({
               <span className="text-emerald-400">Real-Time Speech</span>
             </div>
 
-            {/* Language Switcher */}
-            <div className="flex items-center gap-1 bg-white/[0.04] px-2 py-0.5 rounded-full border border-white/10 text-[10px]">
-              <Languages className="w-2.5 h-2.5 text-brand-orange" />
-              <select
-                value={selectedLanguage}
-                onChange={(e) => setSelectedLanguage(e.target.value as VoiceLanguage)}
-                className="bg-transparent text-white font-mono font-bold text-[10px] outline-none cursor-pointer"
-                title="Select Speech Language"
-              >
-                <option value="en-IN" className="bg-obsidian-900 text-white">English (India)</option>
-                <option value="hi-IN" className="bg-obsidian-900 text-white">हिंदी (Hindi)</option>
-                <option value="kn-IN" className="bg-obsidian-900 text-white">ಕನ್ನಡ (Kannada)</option>
-              </select>
+            <div className="flex items-center gap-1 bg-white/[0.04] px-2.5 py-1 rounded-full border border-white/10 text-[10px] text-slate-300">
+              <Languages className="w-3 h-3 text-brand-orange" />
+              <span className="font-mono font-bold text-white">
+                {selectedLanguage === "kn-IN" ? "ಕನ್ನಡ" :
+                 selectedLanguage === "hi-IN" ? "हिंदी" :
+                 selectedLanguage === "ta-IN" ? "தமிழ்" :
+                 selectedLanguage === "te-IN" ? "తెలుగు" : "English"}
+              </span>
             </div>
           </div>
 
@@ -583,23 +626,90 @@ export default function VoiceSearchModal2026({
           )}
         </div>
 
-        {/* Quick Sample Voice Prompts (Amazon / Flipkart Style) */}
+        {/* Language Selection Pills */}
+        <div className="w-full flex items-center justify-center gap-1.5 overflow-x-auto pb-1 no-scrollbar">
+          {[
+            { id: "en-IN", label: "English", flag: "🇬🇧" },
+            { id: "kn-IN", label: "ಕನ್ನಡ", flag: "🟡" },
+            { id: "hi-IN", label: "हिंदी", flag: "🇮🇳" },
+            { id: "ta-IN", label: "தமிழ்", flag: "🪷" },
+            { id: "te-IN", label: "తెలుగు", flag: "🌾" }
+          ].map((lang) => (
+            <button
+              key={lang.id}
+              type="button"
+              onClick={() => {
+                haptics.selection();
+                setSelectedLanguage(lang.id as VoiceLanguage);
+              }}
+              className={`px-3 py-1 rounded-full text-[11px] font-mono font-bold flex items-center gap-1.5 transition-all cursor-pointer whitespace-nowrap ${
+                selectedLanguage === lang.id
+                  ? "bg-brand-orange text-obsidian-950 shadow-glow-orange scale-105"
+                  : "bg-white/[0.04] hover:bg-white/[0.1] text-slate-300 border border-white/10"
+              }`}
+            >
+              <span>{lang.flag}</span>
+              <span>{lang.label}</span>
+            </button>
+          ))}
+        </div>
+
+        {/* Quick Sample Voice Prompts (Adapts to selected language) */}
         <div className="w-full space-y-2 text-left">
           <div className="text-[10px] text-slate-400 font-mono uppercase tracking-wider flex items-center gap-1">
             <Sparkles className="w-3 h-3 text-brand-orange" />
-            <span>Try speaking or tap one of these:</span>
+            <span>
+              {selectedLanguage === "kn-IN" ? "ಮಾತನಾಡಿ ಅಥವಾ ಆಯ್ಕೆಮಾಡಿ:" :
+               selectedLanguage === "hi-IN" ? "बोलें या इनमें से चुनें:" :
+               selectedLanguage === "ta-IN" ? "பேசவும் அல்லது கிளிக் செய்யவும்:" :
+               selectedLanguage === "te-IN" ? "మాట్లాడండి లేదా ఎంచుకోండి:" :
+               "Try speaking or tap one of these:"}
+            </span>
           </div>
 
           <div className="flex flex-wrap gap-1.5">
-            {[
-              "Foldable travel kettle",
-              "Bubble gun 23 hole",
-              "120W wireless car vacuum",
-              "Products under 150",
-              "High margin wholesale",
-              "Toys & STEM games",
-              "Track order 1AA-892182"
-            ].map((prompt, i) => (
+            {(
+              selectedLanguage === "kn-IN" ? [
+                "ಬಿಸಿ ನೀರು ಕೆಟಲ್",
+                "ಕಾರ್ ವ್ಯಾಕ್ಯೂಮ್ 120W",
+                "ಬಬಲ್ ಗನ್ 23 ಹೋಲ್",
+                "150 ಒಳಗೆ ಉತ್ಪನ್ನಗಳು",
+                "ಹೆಚ್ಚು ಲಾಭ ಸಗಟು",
+                "ಆರ್ಡರ್ ಟ್ರ್ಯಾಕ್ 1AA-892182"
+              ] :
+              selectedLanguage === "hi-IN" ? [
+                "फोल्डेबल ट्रैवल केटल",
+                "120W कार वैक्यूम",
+                "बबल गन 23 होल",
+                "150 के अंदर के प्रोडक्ट्स",
+                "ज्यादा मार्जिन थोक सामान",
+                "ऑर्डर ट्रैक करो 1AA-892182"
+              ] :
+              selectedLanguage === "ta-IN" ? [
+                "டிராவல் கெட்டில்",
+                "120W கார் வாக்யூம்",
+                "பபிள் கன் 23 துளை",
+                "150 ரூபாய்க்குள்",
+                "அதிக லாப பொருட்கள்",
+                "ஆர்டர் டிராக்கிಂಗ್ 1AA-892182"
+              ] :
+              selectedLanguage === "te-IN" ? [
+                "ట్రావెಲ್ కెటిల్",
+                "120W కార్ వాక్యూమ్",
+                "బబుల్ గన్",
+                "150 లోపు ఉత్పత్తులు",
+                "ఎక్కువ లాభం హోల్‌సేల్",
+                "ఆర్డర్ ట్రాక్ 1AA-892182"
+              ] : [
+                "Foldable travel kettle",
+                "Bubble gun 23 hole",
+                "120W wireless car vacuum",
+                "Products under 150",
+                "High margin wholesale",
+                "Toys & STEM games",
+                "Track order 1AA-892182"
+              ]
+            ).map((prompt, i) => (
               <button
                 key={i}
                 type="button"

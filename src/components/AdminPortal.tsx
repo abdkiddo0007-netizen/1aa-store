@@ -27,7 +27,10 @@ import {
   Phone,
   Flame,
   Truck,
-  Cpu
+  Cpu,
+  Send,
+  Terminal,
+  Sparkles
 } from "lucide-react";
 import { OWNER_PHONE, OWNER_NAME } from "../utils/notificationMatrix";
 
@@ -272,6 +275,181 @@ export default function AdminPortal({
       return ord;
     });
     saveOrders(updated);
+  };
+
+  // --- AUTONOMOUS AGENT COMMAND WAR ROOM STATE & INTERACTION ---
+  type WarRoomSender = "Abdul Darvesh" | "AI Admin Executive" | "AI Logistics Commander" | "AI Support & BPO" | "AI Finance Team" | "AI Data & QC Team";
+
+  interface WarRoomAction {
+    id: string;
+    type: "refill" | "reroute" | "rebate" | "fsm_all";
+    label: string;
+    sku?: string;
+    qty?: number;
+    orderRef?: string;
+    executed: boolean;
+  }
+
+  interface WarRoomMessage {
+    id: string;
+    sender: WarRoomSender;
+    role: "admin" | "agent";
+    avatarColor: string;
+    text: string;
+    timestamp: string;
+    action?: WarRoomAction;
+  }
+
+  const [selectedAgentTarget, setSelectedAgentTarget] = useState<"fleet" | "admin" | "logistics" | "support" | "finance" | "qc">("fleet");
+  const [warRoomInput, setWarRoomInput] = useState("");
+  const [isAgentThinking, setIsAgentThinking] = useState(false);
+  const [warRoomMessages, setWarRoomMessages] = useState<WarRoomMessage[]>([
+    {
+      id: "msg-1",
+      sender: "AI Logistics Commander",
+      role: "agent",
+      avatarColor: "bg-brand-orange/20 text-brand-orange border-brand-orange/40",
+      text: "⚡ Mysore Central Hub telemetry active: Monitoring BlueDart & Delhivery surface lanes. All NH-75 consignments moving on schedule.",
+      timestamp: "10:14 AM"
+    },
+    {
+      id: "msg-2",
+      sender: "AI Finance Team",
+      role: "agent",
+      avatarColor: "bg-amber-500/20 text-amber-300 border-amber-500/40",
+      text: "📊 Real-time P&L audit complete: All catalog items operating strictly at flat 25% factory markup. 18% GST ledger verified with zero unallocated credits.",
+      timestamp: "10:15 AM"
+    },
+    {
+      id: "msg-3",
+      sender: "AI Data & QC Team",
+      role: "agent",
+      avatarColor: "bg-sky-500/20 text-sky-400 border-sky-500/40",
+      text: "🛡️ Mysore QC Bench #04 reports: 100% pre-dispatch electrical bench test pass rate. Zero customer DOA claims in the past 24 hours.",
+      timestamp: "10:16 AM"
+    }
+  ]);
+
+  const handleDispatchAgentCommand = (customCmd?: string) => {
+    const cmd = (customCmd || warRoomInput).trim();
+    if (!cmd) return;
+    haptics.medium();
+
+    const userMsg: WarRoomMessage = {
+      id: `usr-${Date.now()}`,
+      sender: "Abdul Darvesh",
+      role: "admin",
+      avatarColor: "bg-brand-orange text-obsidian-950 font-black",
+      text: cmd,
+      timestamp: new Date().toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" })
+    };
+
+    setWarRoomMessages(prev => [...prev, userMsg]);
+    setWarRoomInput("");
+    setIsAgentThinking(true);
+
+    setTimeout(() => {
+      setIsAgentThinking(false);
+      haptics.chime();
+
+      const lower = cmd.toLowerCase();
+      let responseSender: WarRoomSender = "AI Admin Executive";
+      let responseColor = "bg-purple-500/20 text-purple-300 border-purple-500/40";
+      let responseText = "";
+      let dynamicAction: WarRoomAction | undefined = undefined;
+
+      if (lower.includes("stock") || lower.includes("refill") || lower.includes("inventory") || lower.includes("kettle") || lower.includes("vacuum")) {
+        responseSender = "AI Data & QC Team";
+        responseColor = "bg-sky-500/20 text-sky-400 border-sky-500/40";
+        const kettleStock = stockOverrides["1AA-KETL-FOLD"] ?? 8;
+        const vacStock = stockOverrides["1AA-VAC-120W"] ?? 12;
+        
+        responseText = `📦 Inventory scan completed for Mysore Central Hub. Active stock: Collapsible Kettle (${kettleStock} units), 120W Car Vacuum (${vacStock} units). Formulated an automated supplier purchase refill (+50 units) to avoid stockouts.`;
+        dynamicAction = {
+          id: `act-${Date.now()}`,
+          type: "refill",
+          label: "Approve Factory Refill: 1AA-VAC-120W (+50 Units)",
+          sku: "1AA-VAC-120W",
+          qty: 50,
+          executed: false
+        };
+      } else if (lower.includes("logistics") || lower.includes("delay") || lower.includes("reroute") || lower.includes("carrier") || lower.includes("rain") || lower.includes("weather")) {
+        responseSender = "AI Logistics Commander";
+        responseColor = "bg-brand-orange/20 text-brand-orange border-brand-orange/40";
+        responseText = `🚚 Carrier weather alert verified: Highway surface rain slowing NH-75 transit. Upgrading priority consignments to BlueDart Air Express guarantees <24h delivery. Zero freight surcharge to customer.`;
+        dynamicAction = {
+          id: `act-${Date.now()}`,
+          type: "reroute",
+          label: "Approve Priority Air Reroute (BlueDart Express)",
+          executed: false
+        };
+      } else if (lower.includes("gst") || lower.includes("finance") || lower.includes("margin") || lower.includes("pnl") || lower.includes("profit")) {
+        responseSender = "AI Finance Team";
+        responseColor = "bg-amber-500/20 text-amber-300 border-amber-500/40";
+        responseText = `💰 Real-Time Ledger Summary: Orders Logged: ${orders.length} | Gross Revenue: ₹${pnlMetrics.grossSales.toLocaleString("en-IN")} | 18% GST (Input Tax Credit): ₹${pnlMetrics.gstCollected.toLocaleString("en-IN")} | Net Operational Margin: ${pnlMetrics.profitMargin}%. Operating strictly under 1AA flat 25% factory markup guarantee.`;
+      } else if (lower.includes("concession") || lower.includes("discount") || lower.includes("rebate") || lower.includes("bulk")) {
+        responseSender = "AI Finance Team";
+        responseColor = "bg-amber-500/20 text-amber-300 border-amber-500/40";
+        responseText = `🤝 Wholesale Volume Arbitrage Analysis: Evaluated 6% concession request on bulk carton. Post-rebate net margin remains 19.4% with ₹4,180 net profit. Highly recommended for customer retention.`;
+        dynamicAction = {
+          id: `act-${Date.now()}`,
+          type: "rebate",
+          label: "Approve 6% Wholesale Volume Rebate (-₹1,440)",
+          executed: false
+        };
+      } else if (lower.includes("advance") || lower.includes("fsm") || lower.includes("ship")) {
+        responseSender = "AI Logistics Commander";
+        responseColor = "bg-brand-orange/20 text-brand-orange border-brand-orange/40";
+        responseText = `🚀 Pipeline Dispatch Automation: Verified ${orders.length} consignments against Mysore Hub barcode scanners. Ready to transition oldest consignment to next FSM delivery stage.`;
+        if (orders.length > 0) {
+          dynamicAction = {
+            id: `act-${Date.now()}`,
+            type: "fsm_all",
+            label: `Advance Consignment #${orders[0].orderRef} to Next Stage`,
+            orderRef: orders[0].orderRef,
+            executed: false
+          };
+        }
+      } else {
+        responseSender = "AI Admin Executive";
+        responseColor = "bg-purple-500/20 text-purple-300 border-purple-500/40";
+        responseText = `🤖 Multi-Agent Fleet acknowledgment: Tactical command analyzed across 5 autonomous nodes. Mysore Central Dispatch facility operating at peak performance.`;
+      }
+
+      setWarRoomMessages(prev => [
+        ...prev,
+        {
+          id: `agt-${Date.now()}`,
+          sender: responseSender,
+          role: "agent",
+          avatarColor: responseColor,
+          text: responseText,
+          timestamp: new Date().toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" }),
+          action: dynamicAction
+        }
+      ]);
+    }, 600);
+  };
+
+  const handleExecuteWarRoomAction = (msgId: string, action: WarRoomAction) => {
+    haptics.chime();
+    if (action.type === "refill" && action.sku && action.qty) {
+      handleRefillStock(action.sku, action.qty);
+    } else if (action.type === "reroute" || action.type === "fsm_all") {
+      if (orders.length > 0) {
+        handleAdvanceOrder(action.orderRef || orders[0].orderRef);
+      }
+    }
+
+    setWarRoomMessages(prev => prev.map(m => {
+      if (m.id === msgId && m.action) {
+        return {
+          ...m,
+          action: { ...m.action, executed: true }
+        };
+      }
+      return m;
+    }));
   };
 
   // Webhook Test Simulation
@@ -1238,6 +1416,174 @@ export default function AdminPortal({
                 </div>
               </div>
 
+            </div>
+
+            {/* AUTONOMOUS MULTI-AGENT COMMAND WAR ROOM & LIVE TERMINAL */}
+            <div className="rounded-3xl bg-obsidian-900 border border-purple-500/40 p-5 sm:p-6 space-y-4 shadow-2xl relative overflow-hidden">
+              <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-3 border-b border-white/10 pb-4">
+                <div className="space-y-1">
+                  <div className="flex items-center gap-2">
+                    <div className="w-8 h-8 rounded-xl bg-purple-500/20 border border-purple-500/40 flex items-center justify-center text-purple-300">
+                      <Terminal className="w-4 h-4" />
+                    </div>
+                    <h3 className="text-sm sm:text-base font-black text-white flex items-center gap-2">
+                      <span>Multi-Agent Flight Deck &amp; Live War Room</span>
+                      <span className="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-[10px] font-mono font-bold">
+                        BFT Consensus Active
+                      </span>
+                    </h3>
+                  </div>
+                  <p className="text-xs text-slate-400">
+                    Interact directly with any of the 5 autonomous nodes or broadcast directives to the entire AI Operations Fleet.
+                  </p>
+                </div>
+
+                {/* Target Agent Selector */}
+                <div className="flex items-center gap-1.5 overflow-x-auto pb-1">
+                  {[
+                    { id: "fleet", label: "All Fleet", icon: Cpu },
+                    { id: "logistics", label: "Logistics", icon: Truck },
+                    { id: "finance", label: "Finance", icon: DollarSign },
+                    { id: "support", label: "BPO", icon: Bot },
+                    { id: "qc", label: "QC Bench", icon: ShieldCheck }
+                  ].map((agt) => {
+                    const Icon = agt.icon;
+                    return (
+                      <button
+                        key={agt.id}
+                        type="button"
+                        onClick={() => {
+                          haptics.selection();
+                          setSelectedAgentTarget(agt.id as any);
+                        }}
+                        className={`px-2.5 py-1 rounded-xl text-[10px] font-mono font-bold flex items-center gap-1 transition-all cursor-pointer whitespace-nowrap ${
+                          selectedAgentTarget === agt.id
+                            ? "bg-purple-500 text-obsidian-950 font-black shadow-glow-purple"
+                            : "bg-white/[0.04] hover:bg-white/[0.08] text-slate-300 border border-white/10"
+                        }`}
+                      >
+                        <Icon className="w-3 h-3" />
+                        <span>{agt.label}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Terminal Chat & Execution Feed */}
+              <div className="space-y-3 max-h-72 overflow-y-auto pr-1">
+                {warRoomMessages.map((msg) => (
+                  <div 
+                    key={msg.id}
+                    className={`p-3.5 rounded-2xl border text-xs space-y-2 transition-all ${
+                      msg.role === "admin"
+                        ? "bg-brand-orange/10 border-brand-orange/30 text-white ml-6"
+                        : "bg-black/50 border-white/10 text-slate-200 mr-2"
+                    }`}
+                  >
+                    <div className="flex items-center justify-between text-[10px] font-mono">
+                      <div className="flex items-center gap-1.5">
+                        <span className={`px-2 py-0.5 rounded-full border text-[10px] font-bold ${msg.avatarColor}`}>
+                          {msg.sender}
+                        </span>
+                      </div>
+                      <span className="text-slate-500">{msg.timestamp}</span>
+                    </div>
+
+                    <p className="leading-relaxed text-[11px] text-slate-200">
+                      {msg.text}
+                    </p>
+
+                    {/* Dynamic On-The-Fly HITL Approval Card */}
+                    {msg.action && (
+                      <div className="p-3 rounded-xl bg-white/[0.04] border border-amber-500/30 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 pt-2">
+                        <div className="space-y-0.5">
+                          <div className="text-[10px] text-amber-400 font-mono font-bold flex items-center gap-1">
+                            <Flame className="w-3 h-3" />
+                            <span>Actionable Decision Formulated:</span>
+                          </div>
+                          <div className="text-white font-bold text-xs">{msg.action.label}</div>
+                        </div>
+
+                        {msg.action.executed ? (
+                          <span className="px-3 py-1.5 rounded-xl bg-emerald-500/20 text-emerald-400 font-bold text-[11px] flex items-center gap-1 border border-emerald-500/30 shrink-0">
+                            <CheckCircle2 className="w-3.5 h-3.5" />
+                            <span>Executed &amp; Synced ✓</span>
+                          </span>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={() => handleExecuteWarRoomAction(msg.id, msg.action!)}
+                            className="px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-brand-orange to-amber-400 hover:brightness-110 active:scale-95 text-obsidian-950 font-black text-[11px] uppercase tracking-wider shadow-glow-orange flex items-center gap-1.5 transition-all cursor-pointer shrink-0"
+                          >
+                            <span>Approve &amp; Execute</span>
+                            <ArrowRight className="w-3.5 h-3.5" />
+                          </button>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                ))}
+
+                {isAgentThinking && (
+                  <div className="p-3 rounded-2xl bg-black/40 border border-purple-500/20 text-xs text-purple-300 flex items-center gap-2 font-mono">
+                    <Sparkles className="w-4 h-4 animate-spin text-purple-400" />
+                    <span>Multi-Agent Fleet deliberating consensus...</span>
+                  </div>
+                )}
+              </div>
+
+              {/* Quick Tactical Prompt Chips */}
+              <div className="space-y-1.5 pt-1">
+                <div className="text-[10px] text-slate-400 font-mono flex items-center gap-1">
+                  <Sparkles className="w-3 h-3 text-brand-orange" />
+                  <span>Tactical Directives:</span>
+                </div>
+                <div className="flex flex-wrap gap-1.5">
+                  {[
+                    "Audit low inventory & generate stock replenishment plan",
+                    "Simulate BlueDart heavy rain delay on Mumbai-Mysore highway",
+                    "Calculate today's real-time net GST liability and profit margin",
+                    "Buyer requested 6% wholesale concession on 80 kettles",
+                    "Advance active consignments to next FSM delivery stage"
+                  ].map((chip, idx) => (
+                    <button
+                      key={idx}
+                      type="button"
+                      onClick={() => handleDispatchAgentCommand(chip)}
+                      className="px-2.5 py-1 rounded-full bg-white/[0.04] hover:bg-white/[0.08] text-slate-300 hover:text-white border border-white/10 text-[10px] font-mono transition-all cursor-pointer active:scale-95"
+                    >
+                      "{chip}"
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Command Input Box */}
+              <div className="flex items-center gap-2 pt-2 border-t border-white/10">
+                <div className="relative flex-1">
+                  <Terminal className="w-4 h-4 text-purple-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                  <input
+                    type="text"
+                    value={warRoomInput}
+                    onChange={(e) => setWarRoomInput(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") handleDispatchAgentCommand();
+                    }}
+                    placeholder={`Dispatch command to ${selectedAgentTarget.toUpperCase()} node... (e.g. 'audit stock for kettles')`}
+                    className="w-full bg-obsidian-950 border border-white/10 focus:border-purple-500 rounded-xl pl-9 pr-3.5 py-2.5 text-xs text-white font-mono placeholder-slate-600 focus:outline-none transition-colors"
+                  />
+                </div>
+                <button
+                  type="button"
+                  onClick={() => handleDispatchAgentCommand()}
+                  disabled={!warRoomInput.trim()}
+                  className="py-2.5 px-4 rounded-xl bg-purple-600 hover:bg-purple-500 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold text-xs flex items-center gap-1.5 transition-all cursor-pointer shadow-glow-purple"
+                >
+                  <Send className="w-3.5 h-3.5" />
+                  <span>Dispatch</span>
+                </button>
+              </div>
             </div>
 
             {/* HUMAN IN THE LOOP (HITL) URGENT APPROVAL FEED */}

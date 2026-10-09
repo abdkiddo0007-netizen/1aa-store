@@ -18,7 +18,8 @@ import {
   Sparkles,
   Rotate3d,
   ChevronDown,
-  ChevronUp
+  ChevronUp,
+  MessageSquare
 } from "lucide-react";
 
 interface WholesaleOpsHubModalProps {
@@ -37,6 +38,8 @@ interface WholesaleOpsHubModalProps {
   onOpenUpiModal: () => void;
   onOpenRestockBundles?: () => void;
   onOpenArModal?: () => void;
+  onOpenWhatsAppParser?: () => void;
+  onOpenTransitGuarantee?: () => void;
   hasItemsInCart: boolean;
 }
 
@@ -56,6 +59,8 @@ export default function WholesaleOpsHubModal({
   onOpenUpiModal,
   onOpenRestockBundles,
   onOpenArModal,
+  onOpenWhatsAppParser,
+  onOpenTransitGuarantee,
   hasItemsInCart,
 }: WholesaleOpsHubModalProps) {
   const [showSpline3d, setShowSpline3d] = useState(false);
@@ -72,6 +77,34 @@ export default function WholesaleOpsHubModal({
 
   const tools = [
     {
+      id: "whatsapp-parser",
+      title: "WhatsApp Order Parser & Quotation",
+      badge: "AI NLP ENGINE",
+      badgeColor: "bg-emerald-500/20 text-emerald-400 border-emerald-500/30",
+      desc: "Paste unstructured WhatsApp restock messages to auto-match catalog SKUs, calculate volume discounts & generate 1-click Proforma invoices.",
+      icon: MessageSquare,
+      iconColor: "text-emerald-400",
+      featured: true,
+      action: () => {
+        onClose();
+        if (onOpenWhatsAppParser) onOpenWhatsAppParser();
+      },
+    },
+    {
+      id: "transit-guarantee",
+      title: "👑 Zero-Haggling Transit & QA Center",
+      badge: "CUSTOMER IS KING",
+      badgeColor: "bg-amber-500/20 text-amber-300 border-amber-500/30",
+      desc: "Mysore Hub 100% pre-dispatch bench test certificates and 1-click instant transit damage replacement or UPI credit.",
+      icon: Crown,
+      iconColor: "text-amber-400",
+      featured: true,
+      action: () => {
+        onClose();
+        if (onOpenTransitGuarantee) onOpenTransitGuarantee();
+      },
+    },
+    {
       id: "ar-studio",
       title: "3D AR • Try Before You Buy",
       badge: "CAMERA AR STUDIO",
@@ -79,7 +112,6 @@ export default function WholesaleOpsHubModal({
       desc: "360° product inspector and true 1:1 scale room projection to test sizing and build quality before wholesale ordering.",
       icon: Rotate3d,
       iconColor: "text-indigo-400",
-      featured: true,
       action: () => {
         onClose();
         if (onOpenArModal) onOpenArModal();
