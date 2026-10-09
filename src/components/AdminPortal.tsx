@@ -317,7 +317,7 @@ export default function AdminPortal({
       sender: "AI Finance Team",
       role: "agent",
       avatarColor: "bg-amber-500/20 text-amber-300 border-amber-500/40",
-      text: "📊 Real-time P&L audit complete: All catalog items operating strictly at flat 25% factory markup. 18% GST ledger verified with zero unallocated credits.",
+      text: "📊 Real-time P&L audit complete: All catalog items operating strictly at flat 20% factory markup. 18% GST ledger verified with zero unallocated credits.",
       timestamp: "10:15 AM"
     },
     {
@@ -386,7 +386,7 @@ export default function AdminPortal({
       } else if (lower.includes("gst") || lower.includes("finance") || lower.includes("margin") || lower.includes("pnl") || lower.includes("profit")) {
         responseSender = "AI Finance Team";
         responseColor = "bg-amber-500/20 text-amber-300 border-amber-500/40";
-        responseText = `💰 Real-Time Ledger Summary: Orders Logged: ${orders.length} | Gross Revenue: ₹${pnlMetrics.grossSales.toLocaleString("en-IN")} | 18% GST (Input Tax Credit): ₹${pnlMetrics.gstCollected.toLocaleString("en-IN")} | Net Operational Margin: ${pnlMetrics.profitMargin}%. Operating strictly under 1AA flat 25% factory markup guarantee.`;
+        responseText = `💰 Real-Time Ledger Summary: Orders Logged: ${orders.length} | Gross Revenue: ₹${pnlMetrics.grossSales.toLocaleString("en-IN")} | 18% GST (Input Tax Credit): ₹${pnlMetrics.gstCollected.toLocaleString("en-IN")} | Net Operational Margin: ${pnlMetrics.profitMargin}%. Operating strictly under 1AA flat 20% factory markup guarantee.`;
       } else if (lower.includes("concession") || lower.includes("discount") || lower.includes("rebate") || lower.includes("bulk")) {
         responseSender = "AI Finance Team";
         responseColor = "bg-amber-500/20 text-amber-300 border-amber-500/40";
@@ -1380,7 +1380,7 @@ export default function AdminPortal({
                   </span>
                 </div>
                 <p className="text-[11px] text-slate-300 leading-relaxed">
-                  Validates flat 25% margin adherence, verifies Axis Bank UPI UTRs against inbound webhooks, and creates compliant GST tax ledgers.
+                  Validates flat 20% margin adherence, verifies Axis Bank UPI UTRs against inbound webhooks, and creates compliant GST tax ledgers.
                 </p>
                 <div className="p-2.5 rounded-2xl bg-black/40 border border-white/5 space-y-1 font-mono text-[10px]">
                   <div className="text-slate-400">Current Task:</div>
@@ -1665,7 +1665,7 @@ export default function AdminPortal({
                       Reported by <strong>AI Logistics Team</strong>: Surface highway delay detected on Mysore-Bangalore expressway. Upgrading to BlueDart Express guarantees &lt;24h arrival.
                     </p>
                     <div className="text-[10px] text-slate-400 font-mono">
-                      Cost Absorption: ₹0 (absorbed within 25% 1AA Operating Margin)
+                      Cost Absorption: ₹0 (absorbed within 20% 1AA Operating Margin)
                     </div>
                   </div>
 

@@ -93,7 +93,7 @@ export default function AgenticAIOperationsModal({
         urgency: "HIGH",
         title: "Priority Air Cargo Reroute: Consignment #1AA-892182",
         description: "Surface highway congestion detected near Hubli bypass on NH-48. Rerouting via BlueDart Express Priority Air guarantees <7d SLA compliance.",
-        financialImpact: "Freight Differential: +₹185 (Absorbed by 1AA 25% buffer) • Zero SLA Penalty",
+        financialImpact: "Freight Differential: +₹185 (Absorbed by 1AA 20% buffer) • Zero SLA Penalty",
         suggestedAction: "Authorize priority dispatch manifest switch to BlueDart Air Cargo.",
         timestamp: "4 mins ago",
         status: "PENDING",
@@ -108,7 +108,7 @@ export default function AgenticAIOperationsModal({
         urgency: "MEDIUM",
         title: "Wholesale Institutional Bulk Rebate Authorization: ₹43,967 Order",
         description: "Buyer 'Karnataka Retailers Consortium' crossed 90 pieces in manifest. Automated 5% tier-2 volume discount verified against 18% GST ledger.",
-        financialImpact: "Order Subtotal: ₹43,967 • 5% Volume Rebate: -₹2,198 • Net Profit Margin: 26.2% (Target: 25%)",
+        financialImpact: "Order Subtotal: ₹43,967 • 5% Volume Rebate: -₹2,198 • Net Profit Margin: 21.2% (Target: 20%)",
         suggestedAction: "Approve commercial tax invoice discount code 'B2B-BULK-90' for immediate payment link generation.",
         timestamp: "12 mins ago",
         status: "PENDING",
@@ -136,7 +136,7 @@ export default function AgenticAIOperationsModal({
       currentTask: "Orchestrating agent mesh and monitoring 1AA platform health.",
       tasksCompletedToday: 184,
       recentTelemetry: [
-        "Enforcing 25% flat transparent margin across all 72 active SKUs",
+        "Enforcing 20% flat transparent margin across all 110 active SKUs",
         "Synchronized Mysore Central Hub order queues with Axis Bank webhook ledger",
         "Dispatched daily executive briefing to owner (Abdul Darvesh)"
       ]

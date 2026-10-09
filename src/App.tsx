@@ -1488,7 +1488,7 @@ export default function OneAAStore() {
                           alt={product.name}
                           loading="lazy"
                           onError={(e) => handleImgError(e, product)}
-                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out opacity-90 group-hover:opacity-100"
+                          className="w-full h-full object-cover transition-all duration-700 ease-out group-hover:scale-110 filter group-hover:drop-shadow-[0_15px_25px_rgba(0,0,0,0.5)]"
                         />
                         
                         {/* SKU Pill */}
@@ -1524,7 +1524,7 @@ export default function OneAAStore() {
                           <span>WhatsApp</span>
                         </a>
 
-                        {/* 3D AR Button on Hover */}
+                        {/* 3D AR Button - Always discoverable on mobile & sleek on desktop */}
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
@@ -1532,8 +1532,8 @@ export default function OneAAStore() {
                             setArProduct(product);
                             setShowArModal(true);
                           }}
-                          className="absolute bottom-3.5 right-24 bg-gradient-to-r from-indigo-600/90 to-purple-600/90 hover:from-indigo-600 hover:to-purple-600 text-white text-[10px] font-bold px-2.5 py-1.5 rounded-full border border-indigo-400/40 opacity-0 group-hover:opacity-100 transition-all flex items-center gap-1 shadow-glow-purple cursor-pointer"
-                          title="Inspect in 3D AR (Try Before You Buy)"
+                          className="absolute bottom-3.5 right-24 bg-gradient-to-r from-indigo-600 to-purple-600 hover:brightness-110 text-white text-[10px] font-bold px-2.5 py-1.5 rounded-full border border-indigo-400/40 opacity-90 sm:opacity-0 sm:group-hover:opacity-100 transition-all flex items-center gap-1 shadow-glow-purple cursor-pointer z-10"
+                          title="Inspect in 3D AR Studio (Try Before You Buy)"
                         >
                           <Rotate3d className="w-3 h-3 text-indigo-200" />
                           <span>3D AR</span>

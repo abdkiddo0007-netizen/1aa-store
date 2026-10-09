@@ -9,7 +9,7 @@ const RAW_CATALOG_PRODUCTS: Product[] = [
     name: "Collapsible Travel Electric Kettle (0.6L Silicone)",
     category: "Kitchen & Travel",
     baseCost: 399,
-    fairPrice: 549, // Landed + 25% Margin
+    fairPrice: 549, // Base Cost + 20% Margin
     marketPrice: 1499,
     cartonSize: 40,
     inStock: 680,
@@ -33,7 +33,7 @@ const RAW_CATALOG_PRODUCTS: Product[] = [
     name: "Wireless Handheld Car Vacuum Cleaner (120W USB)",
     category: "Automotive & Tools",
     baseCost: 180,
-    fairPrice: 306, // Landed + 25% Margin
+    fairPrice: 306, // Base Cost + 20% Margin
     marketPrice: 999,
     cartonSize: 50,
     inStock: 1240,
@@ -57,7 +57,7 @@ const RAW_CATALOG_PRODUCTS: Product[] = [
     name: "27-Piece Precision Home Repair Tool Kit with Claw Hammer",
     category: "Home Improvement",
     baseCost: 965,
-    fairPrice: 1288, // Landed + 25% Margin
+    fairPrice: 1288, // Base Cost + 20% Margin
     marketPrice: 2999,
     cartonSize: 10,
     inStock: 340,
@@ -81,7 +81,7 @@ const RAW_CATALOG_PRODUCTS: Product[] = [
     name: "Compact Wall-Outlet Ceramic Room Heater (900W)",
     category: "Appliances & Comfort",
     baseCost: 148,
-    fairPrice: 235, // Landed + 25% Margin
+    fairPrice: 235, // Base Cost + 20% Margin
     marketPrice: 549,
     cartonSize: 50,
     inStock: 820,
@@ -105,7 +105,7 @@ const RAW_CATALOG_PRODUCTS: Product[] = [
     name: "Stainless Steel Vacuum Flask Set with 3 Cups (500ml)",
     category: "Hydration & Gifting",
     baseCost: 205,
-    fairPrice: 300, // Landed + 25% Margin
+    fairPrice: 300, // Base Cost + 20% Margin
     marketPrice: 1499,
     cartonSize: 30,
     inStock: 1560,
@@ -129,7 +129,7 @@ const RAW_CATALOG_PRODUCTS: Product[] = [
     name: "Waterproof Solar Garden Stake Lights (2-Pack)",
     category: "Outdoor & Decor",
     baseCost: 260,
-    fairPrice: 375, // Landed + 25% Margin
+    fairPrice: 375, // Base Cost + 20% Margin
     marketPrice: 1299,
     cartonSize: 40,
     inStock: 910,
@@ -153,7 +153,7 @@ const RAW_CATALOG_PRODUCTS: Product[] = [
     name: "Leakproof Insulated Stainless Steel Bento Lunch Box",
     category: "Kitchen & Dining",
     baseCost: 234,
-    fairPrice: 343, // Landed + 25% Margin
+    fairPrice: 343, // Base Cost + 20% Margin
     marketPrice: 469,
     cartonSize: 36,
     inStock: 740,
@@ -177,7 +177,7 @@ const RAW_CATALOG_PRODUCTS: Product[] = [
     name: "5-Fold Ultra-Compact Capsule Pocket Umbrella",
     category: "Monsoon & Travel",
     baseCost: 237,
-    fairPrice: 340, // Landed + 25% Margin
+    fairPrice: 340, // Base Cost + 20% Margin
     marketPrice: 599,
     cartonSize: 60,
     inStock: 1100,
@@ -201,7 +201,7 @@ const RAW_CATALOG_PRODUCTS: Product[] = [
     name: "2-in-1 Kitchen Sink Soap Pump Dispenser with Sponge Caddy",
     category: "Kitchen & Dining",
     baseCost: 75,
-    fairPrice: 144, // Landed + 25% Margin
+    fairPrice: 144, // Base Cost + 20% Margin
     marketPrice: 299,
     cartonSize: 60,
     inStock: 1450,
@@ -225,7 +225,7 @@ const RAW_CATALOG_PRODUCTS: Product[] = [
     name: "Manual Heavy-Duty Wall Fastener Concrete Steel Nail Gun",
     category: "Home Improvement",
     baseCost: 680,
-    fairPrice: 931, // Landed + 25% Margin
+    fairPrice: 931, // Base Cost + 20% Margin
     marketPrice: 1999,
     cartonSize: 10,
     inStock: 420,
@@ -249,7 +249,7 @@ const RAW_CATALOG_PRODUCTS: Product[] = [
     name: "Waterproof Silicone Elastic Rain Shoe Covers (Reusable Non-Slip)",
     category: "Monsoon & Travel",
     baseCost: 85,
-    fairPrice: 150, // Landed + 25% Margin
+    fairPrice: 150, // Base Cost + 20% Margin
     marketPrice: 349,
     cartonSize: 100,
     inStock: 2100,
@@ -273,7 +273,7 @@ const RAW_CATALOG_PRODUCTS: Product[] = [
     name: "Multi-Function COB Keychain Rechargeable Work Light & Opener",
     category: "Automotive & Tools",
     baseCost: 95,
-    fairPrice: 200, // Landed + 25% Margin
+    fairPrice: 200, // Base Cost + 20% Margin
     marketPrice: 499,
     cartonSize: 100,
     inStock: 1850,
@@ -297,7 +297,7 @@ const RAW_CATALOG_PRODUCTS: Product[] = [
     name: "Soft Foam Bullet Darts For Clip System Toy Blasters, Refill Ammo Pack Of 20 Pieces",
     category: "Toys & STEM Games",
     baseCost: 65,
-    fairPrice: 113, // Landed + 25% Margin
+    fairPrice: 113, // Base Cost + 20% Margin
     marketPrice: 199,
     cartonSize: 60,
     inStock: 682,
@@ -323,7 +323,7 @@ const RAW_CATALOG_PRODUCTS: Product[] = [
     name: "Hardbound Diary- Durable Cover & 100 Ruled Pages",
     category: "Stationery & Desk Supplies",
     baseCost: 72,
-    fairPrice: 121, // Landed + 25% Margin
+    fairPrice: 121, // Base Cost + 20% Margin
     marketPrice: 299,
     cartonSize: 60,
     inStock: 485,
@@ -349,7 +349,7 @@ const RAW_CATALOG_PRODUCTS: Product[] = [
     name: "Corporate Gift Set- Elegant 4~In-1 Office Essentials Kit",
     category: "Institutional & Wholesale",
     baseCost: 210,
-    fairPrice: 306, // Landed + 25% Margin
+    fairPrice: 306, // Base Cost + 20% Margin
     marketPrice: 599,
     cartonSize: 60,
     inStock: 1394,
@@ -375,7 +375,7 @@ const RAW_CATALOG_PRODUCTS: Product[] = [
     name: "Silver Tone Multi Design Stud Earrings Combo Set For Women",
     category: "Jewellery & Accessories",
     baseCost: 75,
-    fairPrice: 125, // Landed + 25% Margin
+    fairPrice: 125, // Base Cost + 20% Margin
     marketPrice: 299,
     cartonSize: 60,
     inStock: 267,
@@ -401,7 +401,7 @@ const RAW_CATALOG_PRODUCTS: Product[] = [
     name: "Traditional Gold-Plated Kundan & Pearl Chain Jhumka Earrings",
     category: "Jewellery & Accessories",
     baseCost: 48,
-    fairPrice: 91, // Landed + 25% Margin
+    fairPrice: 91, // Base Cost + 20% Margin
     marketPrice: 199,
     cartonSize: 60,
     inStock: 1278,
@@ -427,7 +427,7 @@ const RAW_CATALOG_PRODUCTS: Product[] = [
     name: "Crystal Studded Bangles- Elegant Dual-Line Design",
     category: "Jewellery & Accessories",
     baseCost: 75,
-    fairPrice: 125, // Landed + 25% Margin
+    fairPrice: 125, // Base Cost + 20% Margin
     marketPrice: 299,
     cartonSize: 60,
     inStock: 1045,
@@ -453,7 +453,7 @@ const RAW_CATALOG_PRODUCTS: Product[] = [
     name: "Table Tennis Racket Set- Professional Grip & Durable Paddles",
     category: "Institutional & Wholesale",
     baseCost: 253,
-    fairPrice: 366, // Landed + 25% Margin
+    fairPrice: 366, // Base Cost + 20% Margin
     marketPrice: 602,
     cartonSize: 60,
     inStock: 894,
@@ -479,7 +479,7 @@ const RAW_CATALOG_PRODUCTS: Product[] = [
     name: "Unicorn Pull Along Toy- Encourages Toddler Walking & Motor Skills",
     category: "Toys & STEM Games",
     baseCost: 88,
-    fairPrice: 154, // Landed + 25% Margin
+    fairPrice: 154, // Base Cost + 20% Margin
     marketPrice: 299,
     cartonSize: 60,
     inStock: 989,
@@ -505,7 +505,7 @@ const RAW_CATALOG_PRODUCTS: Product[] = [
     name: "Golden Tone Open Circle Rhinestone Stud Earrings With Faux Pearl Center | Korean Style Elegant Studs For Women",
     category: "Jewellery & Accessories",
     baseCost: 48,
-    fairPrice: 91, // Landed + 25% Margin
+    fairPrice: 91, // Base Cost + 20% Margin
     marketPrice: 199,
     cartonSize: 60,
     inStock: 1254,
@@ -531,7 +531,7 @@ const RAW_CATALOG_PRODUCTS: Product[] = [
     name: "Kids Stationery Kit- 6-Piece Cartoon Set For School | TinyTrendy",
     category: "Toys & STEM Games",
     baseCost: 135,
-    fairPrice: 213, // Landed + 25% Margin
+    fairPrice: 213, // Base Cost + 20% Margin
     marketPrice: 399,
     cartonSize: 60,
     inStock: 1138,
@@ -557,7 +557,7 @@ const RAW_CATALOG_PRODUCTS: Product[] = [
     name: "Baby Rattle Toy Set- 3-Piece For Sensory Play LJ & Early Learning",
     category: "Toys & STEM Games",
     baseCost: 39,
-    fairPrice: 80, // Landed + 25% Margin
+    fairPrice: 80, // Base Cost + 20% Margin
     marketPrice: 149,
     cartonSize: 60,
     inStock: 809,
@@ -583,7 +583,7 @@ const RAW_CATALOG_PRODUCTS: Product[] = [
     name: "Baby Shape Sorter Toy- Geometric Stacking Blocks | Little Learners",
     category: "Toys & STEM Games",
     baseCost: 88,
-    fairPrice: 154, // Landed + 25% Margin
+    fairPrice: 154, // Base Cost + 20% Margin
     marketPrice: 299,
     cartonSize: 60,
     inStock: 500,
@@ -609,7 +609,7 @@ const RAW_CATALOG_PRODUCTS: Product[] = [
     name: "20-Pair Combo Stud & Small Hoop Earring Set With Golden-Tone And Pink Crystal Pack",
     category: "Jewellery & Accessories",
     baseCost: 75,
-    fairPrice: 125, // Landed + 25% Margin
+    fairPrice: 125, // Base Cost + 20% Margin
     marketPrice: 299,
     cartonSize: 60,
     inStock: 764,
@@ -635,7 +635,7 @@ const RAW_CATALOG_PRODUCTS: Product[] = [
     name: "Pull-Back Toy Car For Kids- Cute Panda Design & Easy To Use",
     category: "Toys & STEM Games",
     baseCost: 135,
-    fairPrice: 213, // Landed + 25% Margin
+    fairPrice: 213, // Base Cost + 20% Margin
     marketPrice: 399,
     cartonSize: 60,
     inStock: 1384,
@@ -661,7 +661,7 @@ const RAW_CATALOG_PRODUCTS: Product[] = [
     name: "Colorful Erasers- Fun And Vibrant Stationery For Kids",
     category: "Stationery & Desk Supplies",
     baseCost: 28,
-    fairPrice: 66, // Landed + 25% Margin
+    fairPrice: 66, // Base Cost + 20% Margin
     marketPrice: 149,
     cartonSize: 60,
     inStock: 338,
@@ -687,7 +687,7 @@ const RAW_CATALOG_PRODUCTS: Product[] = [
     name: "Plastic Spoons Set- Reusable Serving Cutlery l LJ Tummy Tide",
     category: "Home, Kitchen & Utility",
     baseCost: 48,
-    fairPrice: 110, // Landed + 25% Margin
+    fairPrice: 110, // Base Cost + 20% Margin
     marketPrice: 199,
     cartonSize: 60,
     inStock: 668,
@@ -713,7 +713,7 @@ const RAW_CATALOG_PRODUCTS: Product[] = [
     name: "Chores Note Board - Daily Task Planner & Reminder | Foloria",
     category: "Stationery & Desk Supplies",
     baseCost: 72,
-    fairPrice: 121, // Landed + 25% Margin
+    fairPrice: 121, // Base Cost + 20% Margin
     marketPrice: 299,
     cartonSize: 60,
     inStock: 521,
@@ -739,7 +739,7 @@ const RAW_CATALOG_PRODUCTS: Product[] = [
     name: "Football Trading Cards Set- Premium Collectible For Fans And Enthusiasts",
     category: "Toys & STEM Games",
     baseCost: 135,
-    fairPrice: 213, // Landed + 25% Margin
+    fairPrice: 213, // Base Cost + 20% Margin
     marketPrice: 399,
     cartonSize: 60,
     inStock: 978,
@@ -765,7 +765,7 @@ const RAW_CATALOG_PRODUCTS: Product[] = [
     name: "Metal Snap Hair Clips Set 4 Cm For Women And Girls (8 Pc)",
     category: "Jewellery & Accessories",
     baseCost: 75,
-    fairPrice: 125, // Landed + 25% Margin
+    fairPrice: 125, // Base Cost + 20% Margin
     marketPrice: 299,
     cartonSize: 60,
     inStock: 413,
@@ -791,7 +791,7 @@ const RAW_CATALOG_PRODUCTS: Product[] = [
     name: "Elegant Heart Pendant Necklace With Black Stripes, Crystal Details And Rose Gold Tone",
     category: "Jewellery & Accessories",
     baseCost: 75,
-    fairPrice: 125, // Landed + 25% Margin
+    fairPrice: 125, // Base Cost + 20% Margin
     marketPrice: 299,
     cartonSize: 60,
     inStock: 572,
@@ -817,7 +817,7 @@ const RAW_CATALOG_PRODUCTS: Product[] = [
     name: "Reversible Octopus Plush Toy- Express Moods LJ With Soft Comfort",
     category: "Toys & STEM Games",
     baseCost: 88,
-    fairPrice: 154, // Landed + 25% Margin
+    fairPrice: 154, // Base Cost + 20% Margin
     marketPrice: 299,
     cartonSize: 60,
     inStock: 430,
@@ -843,7 +843,7 @@ const RAW_CATALOG_PRODUCTS: Product[] = [
     name: "Rainbow Slug Fidget Toy- Stress Relief & Sensory Play | Little Learners",
     category: "Toys & STEM Games",
     baseCost: 88,
-    fairPrice: 154, // Landed + 25% Margin
+    fairPrice: 154, // Base Cost + 20% Margin
     marketPrice: 299,
     cartonSize: 60,
     inStock: 658,
@@ -869,7 +869,7 @@ const RAW_CATALOG_PRODUCTS: Product[] = [
     name: "Friction Powered Tractor Toy - Durable Kids Farm Vehicle Play",
     category: "Toys & STEM Games",
     baseCost: 88,
-    fairPrice: 154, // Landed + 25% Margin
+    fairPrice: 154, // Base Cost + 20% Margin
     marketPrice: 299,
     cartonSize: 60,
     inStock: 827,
@@ -895,7 +895,7 @@ const RAW_CATALOG_PRODUCTS: Product[] = [
     name: "Shortcut Keyboard Mat- Large Anti-Slip Desk Pad | Worko",
     category: "Stationery & Desk Supplies",
     baseCost: 140,
-    fairPrice: 206, // Landed + 25% Margin
+    fairPrice: 206, // Base Cost + 20% Margin
     marketPrice: 399,
     cartonSize: 60,
     inStock: 995,
@@ -921,7 +921,7 @@ const RAW_CATALOG_PRODUCTS: Product[] = [
     name: "USB Mini Fan - Portable, Quiet & Bright For Any LJ Desk | VoltDesk",
     category: "Stationery & Desk Supplies",
     baseCost: 65,
-    fairPrice: 113, // Landed + 25% Margin
+    fairPrice: 113, // Base Cost + 20% Margin
     marketPrice: 199,
     cartonSize: 60,
     inStock: 1333,
@@ -947,7 +947,7 @@ const RAW_CATALOG_PRODUCTS: Product[] = [
     name: "LED Light-Up Party Glasses- Bright & Comfortable Accessory",
     category: "Electronics & Smart Tech",
     baseCost: 95,
-    fairPrice: 163, // Landed + 25% Margin
+    fairPrice: 163, // Base Cost + 20% Margin
     marketPrice: 299,
     cartonSize: 60,
     inStock: 362,
@@ -973,7 +973,7 @@ const RAW_CATALOG_PRODUCTS: Product[] = [
     name: "Wooden Vegetable Puzzle- Educational Toy For t Toddlers | Inventive Play",
     category: "Toys & STEM Games",
     baseCost: 88,
-    fairPrice: 154, // Landed + 25% Margin
+    fairPrice: 154, // Base Cost + 20% Margin
     marketPrice: 299,
     cartonSize: 60,
     inStock: 1079,
@@ -999,7 +999,7 @@ const RAW_CATALOG_PRODUCTS: Product[] = [
     name: "Kids Animal Pull Back Toy- Fun Rolling Motion & Imaginative Play",
     category: "Toys & STEM Games",
     baseCost: 88,
-    fairPrice: 154, // Landed + 25% Margin
+    fairPrice: 154, // Base Cost + 20% Margin
     marketPrice: 299,
     cartonSize: 60,
     inStock: 1041,
@@ -1025,7 +1025,7 @@ const RAW_CATALOG_PRODUCTS: Product[] = [
     name: "Wooden Triangle Puzzle- Educational Toy For Kids | Inventive Play",
     category: "Toys & STEM Games",
     baseCost: 88,
-    fairPrice: 154, // Landed + 25% Margin
+    fairPrice: 154, // Base Cost + 20% Margin
     marketPrice: 299,
     cartonSize: 60,
     inStock: 570,
@@ -1051,7 +1051,7 @@ const RAW_CATALOG_PRODUCTS: Product[] = [
     name: "Educational Coloring Roll - Giant Ocean-Themed Art Paper For Kids",
     category: "Jewellery & Accessories",
     baseCost: 32,
-    fairPrice: 71, // Landed + 25% Margin
+    fairPrice: 71, // Base Cost + 20% Margin
     marketPrice: 149,
     cartonSize: 60,
     inStock: 1228,
@@ -1077,7 +1077,7 @@ const RAW_CATALOG_PRODUCTS: Product[] = [
     name: "Gold Tone Charm Bangle Set With Floral Details LJ And Tiny Bead Drops For Festive Wear",
     category: "Jewellery & Accessories",
     baseCost: 75,
-    fairPrice: 125, // Landed + 25% Margin
+    fairPrice: 125, // Base Cost + 20% Margin
     marketPrice: 299,
     cartonSize: 60,
     inStock: 418,
@@ -1103,7 +1103,7 @@ const RAW_CATALOG_PRODUCTS: Product[] = [
     name: "Neck Traction Pillow- Adjustable Support For Neck Pain Relief",
     category: "Institutional & Wholesale",
     baseCost: 210,
-    fairPrice: 306, // Landed + 25% Margin
+    fairPrice: 306, // Base Cost + 20% Margin
     marketPrice: 599,
     cartonSize: 60,
     inStock: 1287,
@@ -1129,7 +1129,7 @@ const RAW_CATALOG_PRODUCTS: Product[] = [
     name: "Vibrant Meenakari Ghungroo Anklet- Exquisite LJ Floral Enamel Work",
     category: "Jewellery & Accessories",
     baseCost: 32,
-    fairPrice: 71, // Landed + 25% Margin
+    fairPrice: 71, // Base Cost + 20% Margin
     marketPrice: 149,
     cartonSize: 60,
     inStock: 1182,
@@ -1155,7 +1155,7 @@ const RAW_CATALOG_PRODUCTS: Product[] = [
     name: "Chocolate Scented Diary- Bite-Shape Kids Notebook | Papezo",
     category: "Stationery & Desk Supplies",
     baseCost: 72,
-    fairPrice: 121, // Landed + 25% Margin
+    fairPrice: 121, // Base Cost + 20% Margin
     marketPrice: 299,
     cartonSize: 60,
     inStock: 337,
@@ -1181,7 +1181,7 @@ const RAW_CATALOG_PRODUCTS: Product[] = [
     name: "Octo Shape Sorter Toy- Educational Learning Fun | Little Learners",
     category: "Toys & STEM Games",
     baseCost: 88,
-    fairPrice: 154, // Landed + 25% Margin
+    fairPrice: 154, // Base Cost + 20% Margin
     marketPrice: 299,
     cartonSize: 60,
     inStock: 272,
@@ -1207,7 +1207,7 @@ const RAW_CATALOG_PRODUCTS: Product[] = [
     name: "Gold Tone Designer Chain Necklace - Elegant Stone Detail",
     category: "Jewellery & Accessories",
     baseCost: 75,
-    fairPrice: 125, // Landed + 25% Margin
+    fairPrice: 125, // Base Cost + 20% Margin
     marketPrice: 299,
     cartonSize: 60,
     inStock: 538,
@@ -1233,7 +1233,7 @@ const RAW_CATALOG_PRODUCTS: Product[] = [
     name: "Dinosaur Roaring Toy - Interactive Sound & Light Model",
     category: "Jewellery & Accessories",
     baseCost: 32,
-    fairPrice: 71, // Landed + 25% Margin
+    fairPrice: 71, // Base Cost + 20% Margin
     marketPrice: 149,
     cartonSize: 60,
     inStock: 862,
@@ -1259,7 +1259,7 @@ const RAW_CATALOG_PRODUCTS: Product[] = [
     name: "Paper Cutter Knife Set- Durable & Precise Cutting Tool For Office & Art",
     category: "Home, Kitchen & Utility",
     baseCost: 195,
-    fairPrice: 294, // Landed + 25% Margin
+    fairPrice: 294, // Base Cost + 20% Margin
     marketPrice: 599,
     cartonSize: 60,
     inStock: 826,
@@ -1285,7 +1285,7 @@ const RAW_CATALOG_PRODUCTS: Product[] = [
     name: "Geometry Box Set- Complete Stationery Kit With Metal Pencil Box",
     category: "Stationery & Desk Supplies",
     baseCost: 28,
-    fairPrice: 66, // Landed + 25% Margin
+    fairPrice: 66, // Base Cost + 20% Margin
     marketPrice: 149,
     cartonSize: 60,
     inStock: 1340,
@@ -1311,7 +1311,7 @@ const RAW_CATALOG_PRODUCTS: Product[] = [
     name: "Metal Stapler No.10 - Compact, Durable Paper Binder For 20 Sheets",
     category: "Stationery & Desk Supplies",
     baseCost: 65,
-    fairPrice: 113, // Landed + 25% Margin
+    fairPrice: 113, // Base Cost + 20% Margin
     marketPrice: 199,
     cartonSize: 60,
     inStock: 343,
@@ -1337,7 +1337,7 @@ const RAW_CATALOG_PRODUCTS: Product[] = [
     name: "Candy Themed Pencil Set- Fun Kids Stationery LJ Combo With Accessories",
     category: "Stationery & Desk Supplies",
     baseCost: 140,
-    fairPrice: 206, // Landed + 25% Margin
+    fairPrice: 206, // Base Cost + 20% Margin
     marketPrice: 399,
     cartonSize: 60,
     inStock: 646,
@@ -1363,7 +1363,7 @@ const RAW_CATALOG_PRODUCTS: Product[] = [
     name: "Sleeping Cat Plush Toy With Gentle Sound & Soft Cushion",
     category: "Toys & STEM Games",
     baseCost: 88,
-    fairPrice: 154, // Landed + 25% Margin
+    fairPrice: 154, // Base Cost + 20% Margin
     marketPrice: 299,
     cartonSize: 60,
     inStock: 1330,
@@ -1389,7 +1389,7 @@ const RAW_CATALOG_PRODUCTS: Product[] = [
     name: "Stainless Steel 3 Compartment Lunch Box For Office Tiffin (1 Pc)",
     category: "Home, Kitchen & Utility",
     baseCost: 195,
-    fairPrice: 294, // Landed + 25% Margin
+    fairPrice: 294, // Base Cost + 20% Margin
     marketPrice: 599,
     cartonSize: 60,
     inStock: 1242,
@@ -1415,7 +1415,7 @@ const RAW_CATALOG_PRODUCTS: Product[] = [
     name: "Flexible Robot Magic Spring Toy- Bendable Stretchable Fun For Kids",
     category: "Jewellery & Accessories",
     baseCost: 32,
-    fairPrice: 71, // Landed + 25% Margin
+    fairPrice: 71, // Base Cost + 20% Margin
     marketPrice: 149,
     cartonSize: 60,
     inStock: 783,
@@ -1441,7 +1441,7 @@ const RAW_CATALOG_PRODUCTS: Product[] = [
     name: "12 Pair Stylish Stud Earrings Set With Black Gold Crystal Floral Heart Star Designs",
     category: "Jewellery & Accessories",
     baseCost: 75,
-    fairPrice: 125, // Landed + 25% Margin
+    fairPrice: 125, // Base Cost + 20% Margin
     marketPrice: 299,
     cartonSize: 60,
     inStock: 855,
@@ -1467,7 +1467,7 @@ const RAW_CATALOG_PRODUCTS: Product[] = [
     name: "Fancy Shape Chalkboard Sticker Labels With Marker Pen, Jar Labels",
     category: "Stationery & Desk Supplies",
     baseCost: 72,
-    fairPrice: 121, // Landed + 25% Margin
+    fairPrice: 121, // Base Cost + 20% Margin
     marketPrice: 299,
     cartonSize: 60,
     inStock: 1183,
@@ -1493,7 +1493,7 @@ const RAW_CATALOG_PRODUCTS: Product[] = [
     name: "Traditional South Indian Temple Style Emerald Green CZ & Ghungroo Bead Necklace Set",
     category: "Jewellery & Accessories",
     baseCost: 75,
-    fairPrice: 125, // Landed + 25% Margin
+    fairPrice: 125, // Base Cost + 20% Margin
     marketPrice: 299,
     cartonSize: 60,
     inStock: 1363,
@@ -1519,7 +1519,7 @@ const RAW_CATALOG_PRODUCTS: Product[] = [
     name: "Kids Action Play Combo- Bubble Blaster, Foam t Dart Gun & Ball Catcher Toy Set",
     category: "Toys & STEM Games",
     baseCost: 135,
-    fairPrice: 213, // Landed + 25% Margin
+    fairPrice: 213, // Base Cost + 20% Margin
     marketPrice: 399,
     cartonSize: 60,
     inStock: 1130,
@@ -1545,7 +1545,7 @@ const RAW_CATALOG_PRODUCTS: Product[] = [
     name: "Elegant Gold-Plated Teardrop & Hoop Earrings Set For Women And Girls Fashion Jewellery (Pack Of 6PC)",
     category: "Jewellery & Accessories",
     baseCost: 75,
-    fairPrice: 125, // Landed + 25% Margin
+    fairPrice: 125, // Base Cost + 20% Margin
     marketPrice: 299,
     cartonSize: 60,
     inStock: 862,
@@ -1571,7 +1571,7 @@ const RAW_CATALOG_PRODUCTS: Product[] = [
     name: "Gold Metal Hair Pins With Smooth Finish, 8 Pc",
     category: "Jewellery & Accessories",
     baseCost: 32,
-    fairPrice: 71, // Landed + 25% Margin
+    fairPrice: 71, // Base Cost + 20% Margin
     marketPrice: 149,
     cartonSize: 60,
     inStock: 1117,
@@ -1597,7 +1597,7 @@ const RAW_CATALOG_PRODUCTS: Product[] = [
     name: "Wooden Board Game Set 3-In-1- Durable Foldable Fun",
     category: "Stationery & Desk Supplies",
     baseCost: 72,
-    fairPrice: 121, // Landed + 25% Margin
+    fairPrice: 121, // Base Cost + 20% Margin
     marketPrice: 299,
     cartonSize: 60,
     inStock: 1414,
@@ -1623,7 +1623,7 @@ const RAW_CATALOG_PRODUCTS: Product[] = [
     name: "Golden Necklace With Intricate Round Pendant Elegant Jewelry",
     category: "Jewellery & Accessories",
     baseCost: 75,
-    fairPrice: 125, // Landed + 25% Margin
+    fairPrice: 125, // Base Cost + 20% Margin
     marketPrice: 299,
     cartonSize: 60,
     inStock: 1216,
@@ -1649,7 +1649,7 @@ const RAW_CATALOG_PRODUCTS: Product[] = [
     name: "Mini Basketball For Kids- Durable Indoor Outdoor Fun | Dollamis",
     category: "Toys & STEM Games",
     baseCost: 88,
-    fairPrice: 154, // Landed + 25% Margin
+    fairPrice: 154, // Base Cost + 20% Margin
     marketPrice: 299,
     cartonSize: 60,
     inStock: 269,
@@ -1675,7 +1675,7 @@ const RAW_CATALOG_PRODUCTS: Product[] = [
     name: "Among Us Fidget Toy- Stress Relief & Fun | Inventive Play",
     category: "Toys & STEM Games",
     baseCost: 88,
-    fairPrice: 154, // Landed + 25% Margin
+    fairPrice: 154, // Base Cost + 20% Margin
     marketPrice: 299,
     cartonSize: 60,
     inStock: 356,
@@ -1701,7 +1701,7 @@ const RAW_CATALOG_PRODUCTS: Product[] = [
     name: "Stylish Eraser Set- 30 Pc Mix Design For Kids",
     category: "Stationery & Desk Supplies",
     baseCost: 28,
-    fairPrice: 66, // Landed + 25% Margin
+    fairPrice: 66, // Base Cost + 20% Margin
     marketPrice: 149,
     cartonSize: 60,
     inStock: 451,
@@ -1727,7 +1727,7 @@ const RAW_CATALOG_PRODUCTS: Product[] = [
     name: "Premium Meenakari Jhumka Earrings With Pearl Beads And Elegant Gold Plated Design",
     category: "Jewellery & Accessories",
     baseCost: 48,
-    fairPrice: 91, // Landed + 25% Margin
+    fairPrice: 91, // Base Cost + 20% Margin
     marketPrice: 199,
     cartonSize: 60,
     inStock: 806,
@@ -1753,7 +1753,7 @@ const RAW_CATALOG_PRODUCTS: Product[] = [
     name: "9-In-1 Stationery Set- Durable Complete School & Office Kit",
     category: "Stationery & Desk Supplies",
     baseCost: 65,
-    fairPrice: 113, // Landed + 25% Margin
+    fairPrice: 113, // Base Cost + 20% Margin
     marketPrice: 199,
     cartonSize: 60,
     inStock: 1301,
@@ -1779,7 +1779,7 @@ const RAW_CATALOG_PRODUCTS: Product[] = [
     name: "Rajasthani Inspired Designer Watch For Women t With Floral Meenakari Work",
     category: "Jewellery & Accessories",
     baseCost: 32,
-    fairPrice: 71, // Landed + 25% Margin
+    fairPrice: 71, // Base Cost + 20% Margin
     marketPrice: 149,
     cartonSize: 60,
     inStock: 997,
@@ -1805,7 +1805,7 @@ const RAW_CATALOG_PRODUCTS: Product[] = [
     name: "Kids Eraser- Fancy & Stylish Mix Designs For School & Gifts | Writezo",
     category: "Stationery & Desk Supplies",
     baseCost: 28,
-    fairPrice: 66, // Landed + 25% Margin
+    fairPrice: 66, // Base Cost + 20% Margin
     marketPrice: 149,
     cartonSize: 60,
     inStock: 844,
@@ -1831,7 +1831,7 @@ const RAW_CATALOG_PRODUCTS: Product[] = [
     name: "Kids Talking Bird Cage Toy- Interactive Sound & Repeats Fun",
     category: "Toys & STEM Games",
     baseCost: 88,
-    fairPrice: 154, // Landed + 25% Margin
+    fairPrice: 154, // Base Cost + 20% Margin
     marketPrice: 299,
     cartonSize: 60,
     inStock: 1148,
@@ -1857,7 +1857,7 @@ const RAW_CATALOG_PRODUCTS: Product[] = [
     name: "Kids Banana Launcher Toy With Soft Ball Shooting Game For Indoor Outdoor Fun (Colour May Vary, 1 Pc)",
     category: "Toys & STEM Games",
     baseCost: 88,
-    fairPrice: 154, // Landed + 25% Margin
+    fairPrice: 154, // Base Cost + 20% Margin
     marketPrice: 299,
     cartonSize: 60,
     inStock: 736,
@@ -1883,7 +1883,7 @@ const RAW_CATALOG_PRODUCTS: Product[] = [
     name: "Khyati Frisky Glitter Slime - Sparkling, Stretchable & Fun For Kids",
     category: "Toys & STEM Games",
     baseCost: 45,
-    fairPrice: 88, // Landed + 25% Margin
+    fairPrice: 88, // Base Cost + 20% Margin
     marketPrice: 199,
     cartonSize: 60,
     inStock: 312,
@@ -1909,7 +1909,7 @@ const RAW_CATALOG_PRODUCTS: Product[] = [
     name: "CYPRESS Insulated Lunch Bag With Zipper For t Office & Travel",
     category: "Home, Kitchen & Utility",
     baseCost: 195,
-    fairPrice: 294, // Landed + 25% Margin
+    fairPrice: 294, // Base Cost + 20% Margin
     marketPrice: 599,
     cartonSize: 60,
     inStock: 863,
@@ -1935,7 +1935,7 @@ const RAW_CATALOG_PRODUCTS: Product[] = [
     name: "USB Type-C To 4 USB 3.0 Hub High-Speed",
     category: "Electronics & Smart Tech",
     baseCost: 160,
-    fairPrice: 244, // Landed + 25% Margin
+    fairPrice: 244, // Base Cost + 20% Margin
     marketPrice: 599,
     cartonSize: 60,
     inStock: 268,
@@ -1961,7 +1961,7 @@ const RAW_CATALOG_PRODUCTS: Product[] = [
     name: "Remote Control Racing Car Toy With Water Spray Effect And LED Lights (1 Pc Set)",
     category: "Toys & STEM Games",
     baseCost: 380,
-    fairPrice: 525, // Landed + 25% Margin
+    fairPrice: 525, // Base Cost + 20% Margin
     marketPrice: 849,
     cartonSize: 60,
     inStock: 427,
@@ -1987,7 +1987,7 @@ const RAW_CATALOG_PRODUCTS: Product[] = [
     name: "Transparent Geometry Set- Durable 4-Piece Instrument Kit",
     category: "Stationery & Desk Supplies",
     baseCost: 65,
-    fairPrice: 113, // Landed + 25% Margin
+    fairPrice: 113, // Base Cost + 20% Margin
     marketPrice: 199,
     cartonSize: 60,
     inStock: 1371,
@@ -2013,7 +2013,7 @@ const RAW_CATALOG_PRODUCTS: Product[] = [
     name: "Street Viper Hi-Arm Toy Blaster Gun With Rotating Dart Drum - Kids Outdoor Shooting Toy (1 Pc, Mix Colour)",
     category: "Toys & STEM Games",
     baseCost: 203,
-    fairPrice: 298, // Landed + 25% Margin
+    fairPrice: 298, // Base Cost + 20% Margin
     marketPrice: 599,
     cartonSize: 60,
     inStock: 670,
@@ -2039,7 +2039,7 @@ const RAW_CATALOG_PRODUCTS: Product[] = [
     name: "Kids Fun Toy Combo- Light-Up Frog Toy, Duck Climbing Track & Cactus Character Toy",
     category: "Toys & STEM Games",
     baseCost: 88,
-    fairPrice: 154, // Landed + 25% Margin
+    fairPrice: 154, // Base Cost + 20% Margin
     marketPrice: 299,
     cartonSize: 60,
     inStock: 816,
@@ -2065,7 +2065,7 @@ const RAW_CATALOG_PRODUCTS: Product[] = [
     name: "Toy Plane Gun Set- Launch 5 Foam Gliders For t Kids Fun",
     category: "Toys & STEM Games",
     baseCost: 141,
-    fairPrice: 220, // Landed + 25% Margin
+    fairPrice: 220, // Base Cost + 20% Margin
     marketPrice: 399,
     cartonSize: 60,
     inStock: 487,
@@ -2091,7 +2091,7 @@ const RAW_CATALOG_PRODUCTS: Product[] = [
     name: "Folding Scissor 3.5inch - Portable Crafting Tool | Cisora",
     category: "Home, Kitchen & Utility",
     baseCost: 48,
-    fairPrice: 110, // Landed + 25% Margin
+    fairPrice: 110, // Base Cost + 20% Margin
     marketPrice: 199,
     cartonSize: 60,
     inStock: 669,
@@ -2117,7 +2117,7 @@ const RAW_CATALOG_PRODUCTS: Product[] = [
     name: "Reusable Metal Magnetic Push Pin Clips For Clothing Fit And Fabric Hold (10 Pc)",
     category: "Stationery & Desk Supplies",
     baseCost: 65,
-    fairPrice: 113, // Landed + 25% Margin
+    fairPrice: 113, // Base Cost + 20% Margin
     marketPrice: 199,
     cartonSize: 60,
     inStock: 712,
@@ -2143,7 +2143,7 @@ const RAW_CATALOG_PRODUCTS: Product[] = [
     name: "Gold Tone Red Kundan Choker Necklace Set With Pearl Bead Drops & Matching Earrings",
     category: "Jewellery & Accessories",
     baseCost: 75,
-    fairPrice: 125, // Landed + 25% Margin
+    fairPrice: 125, // Base Cost + 20% Margin
     marketPrice: 299,
     cartonSize: 60,
     inStock: 444,
@@ -2169,7 +2169,7 @@ const RAW_CATALOG_PRODUCTS: Product[] = [
     name: "Camlin Colour Pencils- 24 Vibrant Shades & Free Sharpener",
     category: "Stationery & Desk Supplies",
     baseCost: 28,
-    fairPrice: 66, // Landed + 25% Margin
+    fairPrice: 66, // Base Cost + 20% Margin
     marketPrice: 149,
     cartonSize: 60,
     inStock: 834,
@@ -2195,7 +2195,7 @@ const RAW_CATALOG_PRODUCTS: Product[] = [
     name: "Silver Chain Anklet With Rainbow Enamel Beads - Dainty Indian Payal",
     category: "Jewellery & Accessories",
     baseCost: 32,
-    fairPrice: 71, // Landed + 25% Margin
+    fairPrice: 71, // Base Cost + 20% Margin
     marketPrice: 149,
     cartonSize: 60,
     inStock: 836,
@@ -2221,7 +2221,7 @@ const RAW_CATALOG_PRODUCTS: Product[] = [
     name: "Kids Colouring Pencils Set- 12 Mini Shades With Sharpener | TinyTrendy",
     category: "Jewellery & Accessories",
     baseCost: 75,
-    fairPrice: 125, // Landed + 25% Margin
+    fairPrice: 125, // Base Cost + 20% Margin
     marketPrice: 299,
     cartonSize: 60,
     inStock: 456,
@@ -2247,7 +2247,7 @@ const RAW_CATALOG_PRODUCTS: Product[] = [
     name: "Adjustable Inline Skates XL- Durable, Comfortable Fit For Kids & Adults",
     category: "Institutional & Wholesale",
     baseCost: 418,
-    fairPrice: 573, // Landed + 25% Margin
+    fairPrice: 573, // Base Cost + 20% Margin
     marketPrice: 995,
     cartonSize: 60,
     inStock: 718,
@@ -2273,7 +2273,7 @@ const RAW_CATALOG_PRODUCTS: Product[] = [
     name: "Evil Eye Anklet - Traditional Spiritual Protection Accessory",
     category: "Jewellery & Accessories",
     baseCost: 32,
-    fairPrice: 71, // Landed + 25% Margin
+    fairPrice: 71, // Base Cost + 20% Margin
     marketPrice: 149,
     cartonSize: 60,
     inStock: 920,
@@ -2299,7 +2299,7 @@ const RAW_CATALOG_PRODUCTS: Product[] = [
     name: "Elegant Traditional Pearl & Stone Embellished Jhumkas",
     category: "Jewellery & Accessories",
     baseCost: 48,
-    fairPrice: 91, // Landed + 25% Margin
+    fairPrice: 91, // Base Cost + 20% Margin
     marketPrice: 199,
     cartonSize: 60,
     inStock: 1103,
@@ -2325,7 +2325,7 @@ const RAW_CATALOG_PRODUCTS: Product[] = [
     name: "Mechanical Pencil 0.9 Mm - Smooth Writing With Soft Grip Pack Of 10",
     category: "Stationery & Desk Supplies",
     baseCost: 28,
-    fairPrice: 66, // Landed + 25% Margin
+    fairPrice: 66, // Base Cost + 20% Margin
     marketPrice: 149,
     cartonSize: 60,
     inStock: 799,
@@ -2351,7 +2351,7 @@ const RAW_CATALOG_PRODUCTS: Product[] = [
     name: "Teddy Bear USB Fan- Portable, Silent & Adjustable Cooling | VoltDesk",
     category: "Stationery & Desk Supplies",
     baseCost: 65,
-    fairPrice: 113, // Landed + 25% Margin
+    fairPrice: 113, // Base Cost + 20% Margin
     marketPrice: 199,
     cartonSize: 60,
     inStock: 1158,
@@ -2377,7 +2377,7 @@ const RAW_CATALOG_PRODUCTS: Product[] = [
     name: "Ergonomic Gaming Mouse Pad - Wrist Support & Non-Slip Base For Precision",
     category: "Stationery & Desk Supplies",
     baseCost: 140,
-    fairPrice: 206, // Landed + 25% Margin
+    fairPrice: 206, // Base Cost + 20% Margin
     marketPrice: 399,
     cartonSize: 60,
     inStock: 1297,
@@ -2403,7 +2403,7 @@ const RAW_CATALOG_PRODUCTS: Product[] = [
     name: "Remote Control Racing Car- 3D LED Lights & Easy Control | Spark Tots",
     category: "Toys & STEM Games",
     baseCost: 380,
-    fairPrice: 525, // Landed + 25% Margin
+    fairPrice: 525, // Base Cost + 20% Margin
     marketPrice: 849,
     cartonSize: 60,
     inStock: 1075,
@@ -2429,7 +2429,7 @@ const RAW_CATALOG_PRODUCTS: Product[] = [
     name: "Electronic Musical Keyboard Toy- Multiple Sounds & Rhythms For Kids",
     category: "Toys & STEM Games",
     baseCost: 88,
-    fairPrice: 154, // Landed + 25% Margin
+    fairPrice: 154, // Base Cost + 20% Margin
     marketPrice: 299,
     cartonSize: 60,
     inStock: 406,
@@ -2455,7 +2455,7 @@ const RAW_CATALOG_PRODUCTS: Product[] = [
     name: "Automatic Domino Laying Train Engine Toy With t Light And Music For K...",
     category: "Toys & STEM Games",
     baseCost: 88,
-    fairPrice: 154, // Landed + 25% Margin
+    fairPrice: 154, // Base Cost + 20% Margin
     marketPrice: 299,
     cartonSize: 60,
     inStock: 465,
@@ -2481,7 +2481,7 @@ const RAW_CATALOG_PRODUCTS: Product[] = [
     name: "Elegant Swan Crystal Bangles- Adjustable Gold Finish For Women",
     category: "Jewellery & Accessories",
     baseCost: 75,
-    fairPrice: 125, // Landed + 25% Margin
+    fairPrice: 125, // Base Cost + 20% Margin
     marketPrice: 299,
     cartonSize: 60,
     inStock: 1395,
@@ -2507,7 +2507,7 @@ const RAW_CATALOG_PRODUCTS: Product[] = [
     name: "Maroon & Pink Geometric Dangle Earrings With Square Stud Design For Women And Girls",
     category: "Jewellery & Accessories",
     baseCost: 48,
-    fairPrice: 91, // Landed + 25% Margin
+    fairPrice: 91, // Base Cost + 20% Margin
     marketPrice: 199,
     cartonSize: 60,
     inStock: 484,
@@ -2533,7 +2533,7 @@ const RAW_CATALOG_PRODUCTS: Product[] = [
     name: "Pineapple Shaped Kids Lunch Box- Customizable & Portable With Fork Spoon",
     category: "Home, Kitchen & Utility",
     baseCost: 195,
-    fairPrice: 294, // Landed + 25% Margin
+    fairPrice: 294, // Base Cost + 20% Margin
     marketPrice: 599,
     cartonSize: 60,
     inStock: 454,
@@ -2559,7 +2559,7 @@ const RAW_CATALOG_PRODUCTS: Product[] = [
     name: "Bohemian Oxidised Silver Drop Earrings With Beaded Dangles",
     category: "Jewellery & Accessories",
     baseCost: 48,
-    fairPrice: 91, // Landed + 25% Margin
+    fairPrice: 91, // Base Cost + 20% Margin
     marketPrice: 199,
     cartonSize: 60,
     inStock: 945,
@@ -2585,7 +2585,7 @@ const RAW_CATALOG_PRODUCTS: Product[] = [
     name: "Burger Shaped Sticky Notes- Multicolor Unique Memo Pads | Foloria",
     category: "Stationery & Desk Supplies",
     baseCost: 140,
-    fairPrice: 206, // Landed + 25% Margin
+    fairPrice: 206, // Base Cost + 20% Margin
     marketPrice: 399,
     cartonSize: 60,
     inStock: 982,
@@ -2611,7 +2611,7 @@ const RAW_CATALOG_PRODUCTS: Product[] = [
     name: "Adjustable Chain Bracelet With Square Stone Charm - Elegant Style",
     category: "Jewellery & Accessories",
     baseCost: 32,
-    fairPrice: 71, // Landed + 25% Margin
+    fairPrice: 71, // Base Cost + 20% Margin
     marketPrice: 149,
     cartonSize: 60,
     inStock: 503,
@@ -2637,7 +2637,7 @@ const RAW_CATALOG_PRODUCTS: Product[] = [
     name: "Kids Kitchen Play Set- Educational Cooking Toy For Toddlers",
     category: "Toys & STEM Games",
     baseCost: 255,
-    fairPrice: 369, // Landed + 25% Margin
+    fairPrice: 369, // Base Cost + 20% Margin
     marketPrice: 899,
     cartonSize: 60,
     inStock: 1385,
@@ -2663,7 +2663,7 @@ const RAW_CATALOG_PRODUCTS: Product[] = [
     name: "Bouncy Balls For Kids - Vibrant, Safe & Educational Play Toys",
     category: "Toys & STEM Games",
     baseCost: 36,
-    fairPrice: 76, // Landed + 25% Margin
+    fairPrice: 76, // Base Cost + 20% Margin
     marketPrice: 149,
     cartonSize: 60,
     inStock: 453,
@@ -2689,7 +2689,7 @@ const RAW_CATALOG_PRODUCTS: Product[] = [
     name: "LED Drawing Pad- Kids Electronic Magic Slate LJ | InkGIow",
     category: "Institutional & Wholesale",
     baseCost: 150,
-    fairPrice: 231, // Landed + 25% Margin
+    fairPrice: 231, // Base Cost + 20% Margin
     marketPrice: 599,
     cartonSize: 60,
     inStock: 1442,
@@ -2715,7 +2715,7 @@ const RAW_CATALOG_PRODUCTS: Product[] = [
     name: "Kids Stationery Set - 7-In-1 School Kit For Girls & Boys",
     category: "Stationery & Desk Supplies",
     baseCost: 65,
-    fairPrice: 113, // Landed + 25% Margin
+    fairPrice: 113, // Base Cost + 20% Margin
     marketPrice: 199,
     cartonSize: 60,
     inStock: 290,
@@ -2741,7 +2741,7 @@ const RAW_CATALOG_PRODUCTS: Product[] = [
     name: "Plastic Safety Scissors - Safe, Colorful Preschool Training Tool",
     category: "Toys & STEM Games",
     baseCost: 88,
-    fairPrice: 154, // Landed + 25% Margin
+    fairPrice: 154, // Base Cost + 20% Margin
     marketPrice: 299,
     cartonSize: 60,
     inStock: 330,
@@ -2767,7 +2767,7 @@ const RAW_CATALOG_PRODUCTS: Product[] = [
     name: "Kids Swing Car Ride On Toy With Music, Blue Shark Design Magic Twist Car",
     category: "Toys & STEM Games",
     baseCost: 135,
-    fairPrice: 213, // Landed + 25% Margin
+    fairPrice: 213, // Base Cost + 20% Margin
     marketPrice: 399,
     cartonSize: 60,
     inStock: 379,
@@ -2793,7 +2793,7 @@ const RAW_CATALOG_PRODUCTS: Product[] = [
     name: "Multicolor Stone Leaf Floral Earrings With Oxidized Finish For Women And Girls",
     category: "Jewellery & Accessories",
     baseCost: 48,
-    fairPrice: 91, // Landed + 25% Margin
+    fairPrice: 91, // Base Cost + 20% Margin
     marketPrice: 199,
     cartonSize: 60,
     inStock: 1429,
@@ -2819,7 +2819,7 @@ const RAW_CATALOG_PRODUCTS: Product[] = [
     name: "Acrylic Jewellery Storage Container With 10 Inner Boxes For Rings Beads & Accessories",
     category: "Jewellery & Accessories",
     baseCost: 32,
-    fairPrice: 71, // Landed + 25% Margin
+    fairPrice: 71, // Base Cost + 20% Margin
     marketPrice: 149,
     cartonSize: 60,
     inStock: 1270,
@@ -2845,7 +2845,7 @@ const RAW_CATALOG_PRODUCTS: Product[] = [
     name: "Compass Box- 8-In-1 Geometry Kit With Calculator | Deskrova",
     category: "Stationery & Desk Supplies",
     baseCost: 65,
-    fairPrice: 113, // Landed + 25% Margin
+    fairPrice: 113, // Base Cost + 20% Margin
     marketPrice: 199,
     cartonSize: 60,
     inStock: 1240,
@@ -2871,7 +2871,7 @@ const RAW_CATALOG_PRODUCTS: Product[] = [
     name: "Pencil Sharpener For Kids- 2 In 1 Sharpener And Eraser Combo",
     category: "Stationery & Desk Supplies",
     baseCost: 140,
-    fairPrice: 206, // Landed + 25% Margin
+    fairPrice: 206, // Base Cost + 20% Margin
     marketPrice: 399,
     cartonSize: 60,
     inStock: 934,
@@ -2897,7 +2897,7 @@ const RAW_CATALOG_PRODUCTS: Product[] = [
     name: "School Stationery Set- 6 Pc Kit For Kids & Office | VoltDesk",
     category: "Stationery & Desk Supplies",
     baseCost: 65,
-    fairPrice: 113, // Landed + 25% Margin
+    fairPrice: 113, // Base Cost + 20% Margin
     marketPrice: 199,
     cartonSize: 60,
     inStock: 936,
@@ -2923,7 +2923,7 @@ const RAW_CATALOG_PRODUCTS: Product[] = [
     name: "Premium Multicolor Crystal Jhumka Earrings Set For Women & Girls- Elegant Party Wear (12 Pcs Set)",
     category: "Jewellery & Accessories",
     baseCost: 75,
-    fairPrice: 125, // Landed + 25% Margin
+    fairPrice: 125, // Base Cost + 20% Margin
     marketPrice: 299,
     cartonSize: 60,
     inStock: 325,
@@ -2949,7 +2949,7 @@ const RAW_CATALOG_PRODUCTS: Product[] = [
     name: "12 Pair Fashion Stud Earrings Set- Diverse Styles",
     category: "Jewellery & Accessories",
     baseCost: 75,
-    fairPrice: 125, // Landed + 25% Margin
+    fairPrice: 125, // Base Cost + 20% Margin
     marketPrice: 299,
     cartonSize: 60,
     inStock: 777,
@@ -2975,7 +2975,7 @@ const RAW_CATALOG_PRODUCTS: Product[] = [
     name: "TRUZO Pocket Racer- Launch & Race Mini Car t Toy (Mix Colour)",
     category: "Toys & STEM Games",
     baseCost: 135,
-    fairPrice: 213, // Landed + 25% Margin
+    fairPrice: 213, // Base Cost + 20% Margin
     marketPrice: 399,
     cartonSize: 60,
     inStock: 572,
@@ -3001,7 +3001,7 @@ const RAW_CATALOG_PRODUCTS: Product[] = [
     name: "Kids Learning Machine - 224 Words Flash Cards | Inventive Play",
     category: "Toys & STEM Games",
     baseCost: 135,
-    fairPrice: 213, // Landed + 25% Margin
+    fairPrice: 213, // Base Cost + 20% Margin
     marketPrice: 399,
     cartonSize: 60,
     inStock: 1245,
@@ -3027,7 +3027,7 @@ const RAW_CATALOG_PRODUCTS: Product[] = [
     name: "Solar System Floor Puzzle - Educational Toy For Kids 3+ With 39 Pieces",
     category: "Toys & STEM Games",
     baseCost: 88,
-    fairPrice: 154, // Landed + 25% Margin
+    fairPrice: 154, // Base Cost + 20% Margin
     marketPrice: 299,
     cartonSize: 60,
     inStock: 1250,
@@ -3053,7 +3053,7 @@ const RAW_CATALOG_PRODUCTS: Product[] = [
     name: "Truzo Toys Top Builder 68 Pcs Construction Building Blocks Set For Kids",
     category: "Toys & STEM Games",
     baseCost: 88,
-    fairPrice: 154, // Landed + 25% Margin
+    fairPrice: 154, // Base Cost + 20% Margin
     marketPrice: 299,
     cartonSize: 60,
     inStock: 955,
@@ -3079,7 +3079,7 @@ const RAW_CATALOG_PRODUCTS: Product[] = [
     name: "Kids Makeup Vanity Toy- Multicolour Pretend Play Beauty Suitcase | Aditi",
     category: "Toys & STEM Games",
     baseCost: 21,
-    fairPrice: 58, // Landed + 25% Margin
+    fairPrice: 58, // Base Cost + 20% Margin
     marketPrice: 149,
     cartonSize: 60,
     inStock: 389,
@@ -3105,7 +3105,7 @@ const RAW_CATALOG_PRODUCTS: Product[] = [
     name: "Bubble Gun Toy- Automatic LED Leak-Proof Fun For Kids | Aditi",
     category: "Toys & STEM Games",
     baseCost: 183,
-    fairPrice: 273, // Landed + 25% Margin
+    fairPrice: 273, // Base Cost + 20% Margin
     marketPrice: 599,
     cartonSize: 60,
     inStock: 1195,
@@ -3131,7 +3131,7 @@ const RAW_CATALOG_PRODUCTS: Product[] = [
     name: "Die~Cast Metal Pull-Back Toy Car- Realistic Luxury Sedan Model",
     category: "Toys & STEM Games",
     baseCost: 135,
-    fairPrice: 213, // Landed + 25% Margin
+    fairPrice: 213, // Base Cost + 20% Margin
     marketPrice: 399,
     cartonSize: 60,
     inStock: 1149,
@@ -3157,7 +3157,7 @@ const RAW_CATALOG_PRODUCTS: Product[] = [
     name: "Elegant Dual-Tone Crystal Beaded Stretch Bracelet - Glossy Finish",
     category: "Jewellery & Accessories",
     baseCost: 32,
-    fairPrice: 71, // Landed + 25% Margin
+    fairPrice: 71, // Base Cost + 20% Margin
     marketPrice: 149,
     cartonSize: 60,
     inStock: 1276,
@@ -3183,7 +3183,7 @@ const RAW_CATALOG_PRODUCTS: Product[] = [
     name: "Silver-Plated Meenakari Payal - Vibrant Floral Enamel With Ghungroo Charms",
     category: "Jewellery & Accessories",
     baseCost: 32,
-    fairPrice: 71, // Landed + 25% Margin
+    fairPrice: 71, // Base Cost + 20% Margin
     marketPrice: 149,
     cartonSize: 60,
     inStock: 1160,
@@ -3209,7 +3209,7 @@ const RAW_CATALOG_PRODUCTS: Product[] = [
     name: "Biscuit Notebook- Scented Fun Writing Copybook | Papezo",
     category: "Stationery & Desk Supplies",
     baseCost: 72,
-    fairPrice: 121, // Landed + 25% Margin
+    fairPrice: 121, // Base Cost + 20% Margin
     marketPrice: 299,
     cartonSize: 60,
     inStock: 1362,
@@ -3235,7 +3235,7 @@ const RAW_CATALOG_PRODUCTS: Product[] = [
     name: "Kids Learning Mobile Phone Toy With Music Lights And Hindi English Audio (1 Pc)",
     category: "Toys & STEM Games",
     baseCost: 88,
-    fairPrice: 154, // Landed + 25% Margin
+    fairPrice: 154, // Base Cost + 20% Margin
     marketPrice: 299,
     cartonSize: 60,
     inStock: 1330,
@@ -3261,7 +3261,7 @@ const RAW_CATALOG_PRODUCTS: Product[] = [
     name: "Prexo Fit-Fusion Shaker Bottle- Leak-Proof 700ML For Fitness",
     category: "Institutional & Wholesale",
     baseCost: 150,
-    fairPrice: 231, // Landed + 25% Margin
+    fairPrice: 231, // Base Cost + 20% Margin
     marketPrice: 599,
     cartonSize: 60,
     inStock: 1335,
@@ -3287,7 +3287,7 @@ const RAW_CATALOG_PRODUCTS: Product[] = [
     name: "Stainless Steel Lunch Box- 3 Containers With Bag | Lunchie Bunchie",
     category: "Home, Kitchen & Utility",
     baseCost: 195,
-    fairPrice: 294, // Landed + 25% Margin
+    fairPrice: 294, // Base Cost + 20% Margin
     marketPrice: 599,
     cartonSize: 60,
     inStock: 340,
@@ -3313,7 +3313,7 @@ const RAW_CATALOG_PRODUCTS: Product[] = [
     name: "Animal Cartoon Pull-Back Toy Car Set- 4 Vibrant Mini Vehicles",
     category: "Toys & STEM Games",
     baseCost: 135,
-    fairPrice: 213, // Landed + 25% Margin
+    fairPrice: 213, // Base Cost + 20% Margin
     marketPrice: 399,
     cartonSize: 60,
     inStock: 1038,
@@ -3339,7 +3339,7 @@ const RAW_CATALOG_PRODUCTS: Product[] = [
     name: "Dual-Tone Crystal Beaded Stretch Bracelet- Elegant & Comfortable",
     category: "Jewellery & Accessories",
     baseCost: 32,
-    fairPrice: 71, // Landed + 25% Margin
+    fairPrice: 71, // Base Cost + 20% Margin
     marketPrice: 149,
     cartonSize: 60,
     inStock: 1225,
@@ -3365,7 +3365,7 @@ const RAW_CATALOG_PRODUCTS: Product[] = [
     name: "Classic Tic Tac Toe Board Game- Fun & Educational Set For Kids",
     category: "Toys & STEM Games",
     baseCost: 88,
-    fairPrice: 154, // Landed + 25% Margin
+    fairPrice: 154, // Base Cost + 20% Margin
     marketPrice: 299,
     cartonSize: 60,
     inStock: 767,
@@ -3391,7 +3391,7 @@ const RAW_CATALOG_PRODUCTS: Product[] = [
     name: "Kids Pencil Case- Dual Compartment Stationery Box | Deskrova",
     category: "Stationery & Desk Supplies",
     baseCost: 28,
-    fairPrice: 66, // Landed + 25% Margin
+    fairPrice: 66, // Base Cost + 20% Margin
     marketPrice: 149,
     cartonSize: 60,
     inStock: 632,
@@ -3417,7 +3417,7 @@ const RAW_CATALOG_PRODUCTS: Product[] = [
     name: "Triangle Puzzle Cube- Fast & Smooth Brain Teaser Toy",
     category: "Toys & STEM Games",
     baseCost: 88,
-    fairPrice: 154, // Landed + 25% Margin
+    fairPrice: 154, // Base Cost + 20% Margin
     marketPrice: 299,
     cartonSize: 60,
     inStock: 688,
@@ -3443,7 +3443,7 @@ const RAW_CATALOG_PRODUCTS: Product[] = [
     name: "Grey Skeleton Dial Analog Wrist Watch With Tonneau Case And Sport Style Strap Design",
     category: "Jewellery & Accessories",
     baseCost: 32,
-    fairPrice: 71, // Landed + 25% Margin
+    fairPrice: 71, // Base Cost + 20% Margin
     marketPrice: 149,
     cartonSize: 60,
     inStock: 1211,
@@ -3469,7 +3469,7 @@ const RAW_CATALOG_PRODUCTS: Product[] = [
     name: "Oxidized Silver Boho Earrings - Intricate Leaf Design And Teardrop",
     category: "Jewellery & Accessories",
     baseCost: 48,
-    fairPrice: 91, // Landed + 25% Margin
+    fairPrice: 91, // Base Cost + 20% Margin
     marketPrice: 199,
     cartonSize: 60,
     inStock: 1131,
@@ -3495,7 +3495,7 @@ const RAW_CATALOG_PRODUCTS: Product[] = [
     name: "Kids Tortoise Money Bank- Fun Coin Saving For Children",
     category: "Institutional & Wholesale",
     baseCost: 150,
-    fairPrice: 231, // Landed + 25% Margin
+    fairPrice: 231, // Base Cost + 20% Margin
     marketPrice: 599,
     cartonSize: 60,
     inStock: 820,
@@ -3521,7 +3521,7 @@ const RAW_CATALOG_PRODUCTS: Product[] = [
     name: "Wired Optical Mouse- M-022, USB Connectivity | Compshop",
     category: "Electronics & Smart Tech",
     baseCost: 160,
-    fairPrice: 244, // Landed + 25% Margin
+    fairPrice: 244, // Base Cost + 20% Margin
     marketPrice: 599,
     cartonSize: 60,
     inStock: 973,
@@ -3547,7 +3547,7 @@ const RAW_CATALOG_PRODUCTS: Product[] = [
     name: "Interactive Toy Gun - Light & Sound Effects With Transparent Gears",
     category: "Toys & STEM Games",
     baseCost: 135,
-    fairPrice: 213, // Landed + 25% Margin
+    fairPrice: 213, // Base Cost + 20% Margin
     marketPrice: 399,
     cartonSize: 60,
     inStock: 886,
@@ -3573,7 +3573,7 @@ const RAW_CATALOG_PRODUCTS: Product[] = [
     name: "Reusable Menstrual Cup- Eco~Friendly Period Care | Happy Bathers",
     category: "Toys & STEM Games",
     baseCost: 135,
-    fairPrice: 213, // Landed + 25% Margin
+    fairPrice: 213, // Base Cost + 20% Margin
     marketPrice: 399,
     cartonSize: 60,
     inStock: 1068,
@@ -3599,7 +3599,7 @@ const RAW_CATALOG_PRODUCTS: Product[] = [
     name: "High-Speed Remote Control Car- Kids' Indoor & Outdoor Racing Toy",
     category: "Toys & STEM Games",
     baseCost: 380,
-    fairPrice: 525, // Landed + 25% Margin
+    fairPrice: 525, // Base Cost + 20% Margin
     marketPrice: 849,
     cartonSize: 60,
     inStock: 966,
@@ -3625,7 +3625,7 @@ const RAW_CATALOG_PRODUCTS: Product[] = [
     name: "Heated Mouse Pad - Ergonomic Comfort & Warmth | Desk Crew",
     category: "Stationery & Desk Supplies",
     baseCost: 140,
-    fairPrice: 206, // Landed + 25% Margin
+    fairPrice: 206, // Base Cost + 20% Margin
     marketPrice: 399,
     cartonSize: 60,
     inStock: 818,
@@ -3651,7 +3651,7 @@ const RAW_CATALOG_PRODUCTS: Product[] = [
     name: "Shot Air Gun Toy With Scope - Safe Foam Bullet Blaster For Kids",
     category: "Toys & STEM Games",
     baseCost: 135,
-    fairPrice: 213, // Landed + 25% Margin
+    fairPrice: 213, // Base Cost + 20% Margin
     marketPrice: 399,
     cartonSize: 60,
     inStock: 496,
@@ -3677,7 +3677,7 @@ const RAW_CATALOG_PRODUCTS: Product[] = [
     name: "Premium Traditional Ad Stone Green Maroon Dokiyu And Breslet Set Both",
     category: "Jewellery & Accessories",
     baseCost: 75,
-    fairPrice: 125, // Landed + 25% Margin
+    fairPrice: 125, // Base Cost + 20% Margin
     marketPrice: 299,
     cartonSize: 60,
     inStock: 1151,
@@ -3703,7 +3703,7 @@ const RAW_CATALOG_PRODUCTS: Product[] = [
     name: "Kids Piano Keyboard - 37-Key, Mic & Record | Little Learners",
     category: "Institutional & Wholesale",
     baseCost: 150,
-    fairPrice: 231, // Landed + 25% Margin
+    fairPrice: 231, // Base Cost + 20% Margin
     marketPrice: 599,
     cartonSize: 60,
     inStock: 728,
@@ -3729,7 +3729,7 @@ const RAW_CATALOG_PRODUCTS: Product[] = [
     name: "12 Pair Birthstone Month Theme Stud Earrings Combo Set ~ Black, White & Gold Designs",
     category: "Jewellery & Accessories",
     baseCost: 75,
-    fairPrice: 125, // Landed + 25% Margin
+    fairPrice: 125, // Base Cost + 20% Margin
     marketPrice: 299,
     cartonSize: 60,
     inStock: 1214,
@@ -3755,7 +3755,7 @@ const RAW_CATALOG_PRODUCTS: Product[] = [
     name: "Two-Hole Punch Machine- Heavy Duty Paper Punching Tool",
     category: "Stationery & Desk Supplies",
     baseCost: 65,
-    fairPrice: 113, // Landed + 25% Margin
+    fairPrice: 113, // Base Cost + 20% Margin
     marketPrice: 199,
     cartonSize: 60,
     inStock: 1334,
@@ -3781,7 +3781,7 @@ const RAW_CATALOG_PRODUCTS: Product[] = [
     name: "Baby Silicone Teether- Soft, Safe, Colorful Teething Aid",
     category: "Toys & STEM Games",
     baseCost: 88,
-    fairPrice: 154, // Landed + 25% Margin
+    fairPrice: 154, // Base Cost + 20% Margin
     marketPrice: 299,
     cartonSize: 60,
     inStock: 1298,
@@ -3807,7 +3807,7 @@ const RAW_CATALOG_PRODUCTS: Product[] = [
     name: "Metal Mesh Pen Holder- Desk Organizer & Pencil Stand | Deskrova",
     category: "Stationery & Desk Supplies",
     baseCost: 140,
-    fairPrice: 206, // Landed + 25% Margin
+    fairPrice: 206, // Base Cost + 20% Margin
     marketPrice: 399,
     cartonSize: 60,
     inStock: 1047,
@@ -3833,7 +3833,7 @@ const RAW_CATALOG_PRODUCTS: Product[] = [
     name: "Silicone Telescopic Pencil Case- Large Capacity | Deskrova",
     category: "Stationery & Desk Supplies",
     baseCost: 28,
-    fairPrice: 66, // Landed + 25% Margin
+    fairPrice: 66, // Base Cost + 20% Margin
     marketPrice: 149,
     cartonSize: 60,
     inStock: 476,
@@ -3859,7 +3859,7 @@ const RAW_CATALOG_PRODUCTS: Product[] = [
     name: "Remote Control Helicopter For Kids- USB Chargeable Toy | Spark Tots",
     category: "Toys & STEM Games",
     baseCost: 380,
-    fairPrice: 525, // Landed + 25% Margin
+    fairPrice: 525, // Base Cost + 20% Margin
     marketPrice: 849,
     cartonSize: 60,
     inStock: 1193,
@@ -3885,7 +3885,7 @@ const RAW_CATALOG_PRODUCTS: Product[] = [
     name: "Business Board Game For Kids- 5-In-1 Educational Fun | Aditi",
     category: "Stationery & Desk Supplies",
     baseCost: 108,
-    fairPrice: 166, // Landed + 25% Margin
+    fairPrice: 166, // Base Cost + 20% Margin
     marketPrice: 399,
     cartonSize: 60,
     inStock: 783,
@@ -3911,7 +3911,7 @@ const RAW_CATALOG_PRODUCTS: Product[] = [
     name: "Doctor Kit For Kids 3+ Years | Pretend Play Doctor Set Toyset",
     category: "Toys & STEM Games",
     baseCost: 252,
-    fairPrice: 365, // Landed + 25% Margin
+    fairPrice: 365, // Base Cost + 20% Margin
     marketPrice: 899,
     cartonSize: 60,
     inStock: 477,
@@ -3937,7 +3937,7 @@ const RAW_CATALOG_PRODUCTS: Product[] = [
     name: "Wooden Piggy Bank Money Box- Motivational Savings Box For Kids",
     category: "Institutional & Wholesale",
     baseCost: 150,
-    fairPrice: 231, // Landed + 25% Margin
+    fairPrice: 231, // Base Cost + 20% Margin
     marketPrice: 599,
     cartonSize: 60,
     inStock: 827,
@@ -3963,7 +3963,7 @@ const RAW_CATALOG_PRODUCTS: Product[] = [
     name: "Graphite Pencils- Pack Of 10 Smooth Writing Camlin Supreme",
     category: "Stationery & Desk Supplies",
     baseCost: 28,
-    fairPrice: 66, // Landed + 25% Margin
+    fairPrice: 66, // Base Cost + 20% Margin
     marketPrice: 149,
     cartonSize: 60,
     inStock: 834,
@@ -3989,7 +3989,7 @@ const RAW_CATALOG_PRODUCTS: Product[] = [
     name: "Sanitary Pads- Extra Long Night Protection For t Heavy Flow",
     category: "Institutional & Wholesale",
     baseCost: 150,
-    fairPrice: 231, // Landed + 25% Margin
+    fairPrice: 231, // Base Cost + 20% Margin
     marketPrice: 599,
     cartonSize: 60,
     inStock: 843,
@@ -4015,7 +4015,7 @@ const RAW_CATALOG_PRODUCTS: Product[] = [
     name: "Kids DIY Foam Clay Art Kit- Vibrant Creative Craft Set For Kids",
     category: "Toys & STEM Games",
     baseCost: 45,
-    fairPrice: 88, // Landed + 25% Margin
+    fairPrice: 88, // Base Cost + 20% Margin
     marketPrice: 199,
     cartonSize: 60,
     inStock: 1203,
@@ -4041,7 +4041,7 @@ const RAW_CATALOG_PRODUCTS: Product[] = [
     name: "Kids Archery Set- Dhanush Baan Toy With Target & Arrows | Aditi",
     category: "Toys & STEM Games",
     baseCost: 96,
-    fairPrice: 164, // Landed + 25% Margin
+    fairPrice: 164, // Base Cost + 20% Margin
     marketPrice: 299,
     cartonSize: 60,
     inStock: 991,
@@ -4067,7 +4067,7 @@ const RAW_CATALOG_PRODUCTS: Product[] = [
     name: "Metal Bus Pencil Case- Double Decker With Sharpener | Deskrova",
     category: "Stationery & Desk Supplies",
     baseCost: 28,
-    fairPrice: 66, // Landed + 25% Margin
+    fairPrice: 66, // Base Cost + 20% Margin
     marketPrice: 149,
     cartonSize: 60,
     inStock: 1412,
@@ -4093,7 +4093,7 @@ const RAW_CATALOG_PRODUCTS: Product[] = [
     name: "Geometry Box With Calculator- Magnetic Double-Sided For Students | ScribbleJoy",
     category: "Jewellery & Accessories",
     baseCost: 32,
-    fairPrice: 71, // Landed + 25% Margin
+    fairPrice: 71, // Base Cost + 20% Margin
     marketPrice: 149,
     cartonSize: 60,
     inStock: 1109,
@@ -4119,7 +4119,7 @@ const RAW_CATALOG_PRODUCTS: Product[] = [
     name: "Inflatable Pregnancy Pillow Maternity Support Mat With Belly Hole",
     category: "Institutional & Wholesale",
     baseCost: 210,
-    fairPrice: 306, // Landed + 25% Margin
+    fairPrice: 306, // Base Cost + 20% Margin
     marketPrice: 599,
     cartonSize: 60,
     inStock: 965,
@@ -4145,7 +4145,7 @@ const RAW_CATALOG_PRODUCTS: Product[] = [
     name: "Khyati Frisky Slime - Stretchable Toy In Bottle For Sensory Play",
     category: "Toys & STEM Games",
     baseCost: 45,
-    fairPrice: 88, // Landed + 25% Margin
+    fairPrice: 88, // Base Cost + 20% Margin
     marketPrice: 199,
     cartonSize: 60,
     inStock: 315,
@@ -4171,7 +4171,7 @@ const RAW_CATALOG_PRODUCTS: Product[] = [
     name: "Watercolour Paint Set For Kids- Vibrant Colors LJ & Portable Design",
     category: "Institutional & Wholesale",
     baseCost: 150,
-    fairPrice: 231, // Landed + 25% Margin
+    fairPrice: 231, // Base Cost + 20% Margin
     marketPrice: 599,
     cartonSize: 60,
     inStock: 1226,
@@ -4197,7 +4197,7 @@ const RAW_CATALOG_PRODUCTS: Product[] = [
     name: "Cartoon Pencil Sharpener- Dual-Function With Built-In Eraser",
     category: "Toys & STEM Games",
     baseCost: 135,
-    fairPrice: 213, // Landed + 25% Margin
+    fairPrice: 213, // Base Cost + 20% Margin
     marketPrice: 399,
     cartonSize: 60,
     inStock: 877,
@@ -4223,7 +4223,7 @@ const RAW_CATALOG_PRODUCTS: Product[] = [
     name: "Pearl Gel Pen Set- Multicolor Moti Pens For Kids (12 Pc) | Writezo",
     category: "Stationery & Desk Supplies",
     baseCost: 28,
-    fairPrice: 66, // Landed + 25% Margin
+    fairPrice: 66, // Base Cost + 20% Margin
     marketPrice: 149,
     cartonSize: 60,
     inStock: 1205,
@@ -4249,7 +4249,7 @@ const RAW_CATALOG_PRODUCTS: Product[] = [
     name: "Kids Beach Sand Shovel Toy Set- Bright, Durable & Easy To Handle",
     category: "Toys & STEM Games",
     baseCost: 88,
-    fairPrice: 154, // Landed + 25% Margin
+    fairPrice: 154, // Base Cost + 20% Margin
     marketPrice: 299,
     cartonSize: 60,
     inStock: 799,
@@ -4275,7 +4275,7 @@ const RAW_CATALOG_PRODUCTS: Product[] = [
     name: "Kids Cement Mixer Toy Truck- Friction Powered Fun For Toddlers",
     category: "Toys & STEM Games",
     baseCost: 135,
-    fairPrice: 213, // Landed + 25% Margin
+    fairPrice: 213, // Base Cost + 20% Margin
     marketPrice: 399,
     cartonSize: 60,
     inStock: 1059,
@@ -4301,7 +4301,7 @@ const RAW_CATALOG_PRODUCTS: Product[] = [
     name: "LED Pop-It Stress Ball - Light-Up Sensory Relief Toy",
     category: "Toys & STEM Games",
     baseCost: 120,
-    fairPrice: 194, // Landed + 25% Margin
+    fairPrice: 194, // Base Cost + 20% Margin
     marketPrice: 399,
     cartonSize: 60,
     inStock: 1090,
@@ -4327,7 +4327,7 @@ const RAW_CATALOG_PRODUCTS: Product[] = [
     name: "Pop Tube Sensory Fidget Toy- Stretch, Twist & Pop For Kids",
     category: "Toys & STEM Games",
     baseCost: 88,
-    fairPrice: 154, // Landed + 25% Margin
+    fairPrice: 154, // Base Cost + 20% Margin
     marketPrice: 299,
     cartonSize: 60,
     inStock: 773,
@@ -4353,7 +4353,7 @@ const RAW_CATALOG_PRODUCTS: Product[] = [
     name: "Kids School Backpack Sling Crossbody Bag Astronaut Print Hard Shell",
     category: "Institutional & Wholesale",
     baseCost: 150,
-    fairPrice: 231, // Landed + 25% Margin
+    fairPrice: 231, // Base Cost + 20% Margin
     marketPrice: 599,
     cartonSize: 60,
     inStock: 542,
@@ -4379,7 +4379,7 @@ const RAW_CATALOG_PRODUCTS: Product[] = [
     name: "Rotating Pen Holder- 5 Compartment Desk Organizer Stand",
     category: "Stationery & Desk Supplies",
     baseCost: 140,
-    fairPrice: 206, // Landed + 25% Margin
+    fairPrice: 206, // Base Cost + 20% Margin
     marketPrice: 399,
     cartonSize: 60,
     inStock: 862,
@@ -4405,7 +4405,7 @@ const RAW_CATALOG_PRODUCTS: Product[] = [
     name: "Black Metal Binder Clips 19mm - Strong 12-Piece Set",
     category: "Stationery & Desk Supplies",
     baseCost: 65,
-    fairPrice: 113, // Landed + 25% Margin
+    fairPrice: 113, // Base Cost + 20% Margin
     marketPrice: 199,
     cartonSize: 60,
     inStock: 496,
@@ -4431,7 +4431,7 @@ const RAW_CATALOG_PRODUCTS: Product[] = [
     name: "Travel Essentials Set- Premium 4 In 1 Executive Combo",
     category: "Institutional & Wholesale",
     baseCost: 210,
-    fairPrice: 306, // Landed + 25% Margin
+    fairPrice: 306, // Base Cost + 20% Margin
     marketPrice: 599,
     cartonSize: 60,
     inStock: 1194,
@@ -4457,7 +4457,7 @@ const RAW_CATALOG_PRODUCTS: Product[] = [
     name: "Metal Bullet Bike Toy With Side Stand- Realistic Miniature Model",
     category: "Toys & STEM Games",
     baseCost: 45,
-    fairPrice: 88, // Landed + 25% Margin
+    fairPrice: 88, // Base Cost + 20% Margin
     marketPrice: 199,
     cartonSize: 60,
     inStock: 944,
@@ -4483,7 +4483,7 @@ const RAW_CATALOG_PRODUCTS: Product[] = [
     name: "3 In 1 Multifunction Cleaning Pen Brush For Earbuds, Keyboard And Gadgets",
     category: "Stationery & Desk Supplies",
     baseCost: 72,
-    fairPrice: 121, // Landed + 25% Margin
+    fairPrice: 121, // Base Cost + 20% Margin
     marketPrice: 299,
     cartonSize: 60,
     inStock: 1377,
@@ -4509,7 +4509,7 @@ const RAW_CATALOG_PRODUCTS: Product[] = [
     name: "Party Balloons - 24 Pcs Multicolor Latex Set | Play & Move",
     category: "Institutional & Wholesale",
     baseCost: 150,
-    fairPrice: 231, // Landed + 25% Margin
+    fairPrice: 231, // Base Cost + 20% Margin
     marketPrice: 599,
     cartonSize: 60,
     inStock: 872,
@@ -4535,7 +4535,7 @@ const RAW_CATALOG_PRODUCTS: Product[] = [
     name: "Catch Ball Game For Kids- Fun Motor Skill Development Toy",
     category: "Toys & STEM Games",
     baseCost: 186,
-    fairPrice: 276, // Landed + 25% Margin
+    fairPrice: 276, // Base Cost + 20% Margin
     marketPrice: 599,
     cartonSize: 60,
     inStock: 785,
@@ -4561,7 +4561,7 @@ const RAW_CATALOG_PRODUCTS: Product[] = [
     name: "Jumbo Geometry Box- Multi-Compartment School Stationery | Writezo",
     category: "Stationery & Desk Supplies",
     baseCost: 65,
-    fairPrice: 113, // Landed + 25% Margin
+    fairPrice: 113, // Base Cost + 20% Margin
     marketPrice: 199,
     cartonSize: 60,
     inStock: 712,
@@ -4587,7 +4587,7 @@ const RAW_CATALOG_PRODUCTS: Product[] = [
     name: "Fancy Jhumki Earrings - Traditional Gold Plated t Drop Style",
     category: "Jewellery & Accessories",
     baseCost: 48,
-    fairPrice: 91, // Landed + 25% Margin
+    fairPrice: 91, // Base Cost + 20% Margin
     marketPrice: 199,
     cartonSize: 60,
     inStock: 1202,
@@ -4613,7 +4613,7 @@ const RAW_CATALOG_PRODUCTS: Product[] = [
     name: "Light And Sound Metal Pull Back Car Toy, Die Cast SUV Model For Kids",
     category: "Toys & STEM Games",
     baseCost: 135,
-    fairPrice: 213, // Landed + 25% Margin
+    fairPrice: 213, // Base Cost + 20% Margin
     marketPrice: 399,
     cartonSize: 60,
     inStock: 311,
@@ -4639,7 +4639,7 @@ const RAW_CATALOG_PRODUCTS: Product[] = [
     name: "Wooden Ukulele For Beginners- Lightweight & Clear Sound",
     category: "Electronics & Smart Tech",
     baseCost: 160,
-    fairPrice: 244, // Landed + 25% Margin
+    fairPrice: 244, // Base Cost + 20% Margin
     marketPrice: 599,
     cartonSize: 60,
     inStock: 1345,
@@ -4665,7 +4665,7 @@ const RAW_CATALOG_PRODUCTS: Product[] = [
     name: "Student Geometry Compass Set- 4-In-1 Precision Drawing Kit",
     category: "Jewellery & Accessories",
     baseCost: 75,
-    fairPrice: 125, // Landed + 25% Margin
+    fairPrice: 125, // Base Cost + 20% Margin
     marketPrice: 299,
     cartonSize: 60,
     inStock: 1320,
@@ -4691,7 +4691,7 @@ const RAW_CATALOG_PRODUCTS: Product[] = [
     name: "Modelling Clay Set- Boost Creativity With Dinosaur Cutter For Kids",
     category: "Toys & STEM Games",
     baseCost: 45,
-    fairPrice: 88, // Landed + 25% Margin
+    fairPrice: 88, // Base Cost + 20% Margin
     marketPrice: 199,
     cartonSize: 60,
     inStock: 1445,
@@ -4717,7 +4717,7 @@ const RAW_CATALOG_PRODUCTS: Product[] = [
     name: "Vintage Car Toy- Friction-Powered Classic Push-And-Go Vehicle",
     category: "Toys & STEM Games",
     baseCost: 135,
-    fairPrice: 213, // Landed + 25% Margin
+    fairPrice: 213, // Base Cost + 20% Margin
     marketPrice: 399,
     cartonSize: 60,
     inStock: 722,
@@ -4743,7 +4743,7 @@ const RAW_CATALOG_PRODUCTS: Product[] = [
     name: "UINE & VERIFI Wooden Daily Calendar Puzzle- Mind Challenge Game | Inventive Play",
     category: "Toys & STEM Games",
     baseCost: 88,
-    fairPrice: 154, // Landed + 25% Margin
+    fairPrice: 154, // Base Cost + 20% Margin
     marketPrice: 299,
     cartonSize: 60,
     inStock: 1257,
@@ -4769,7 +4769,7 @@ const RAW_CATALOG_PRODUCTS: Product[] = [
     name: "Kids Money Bank- Durable Princess Saving Box For Children",
     category: "Institutional & Wholesale",
     baseCost: 150,
-    fairPrice: 231, // Landed + 25% Margin
+    fairPrice: 231, // Base Cost + 20% Margin
     marketPrice: 599,
     cartonSize: 60,
     inStock: 869,
@@ -4795,7 +4795,7 @@ const RAW_CATALOG_PRODUCTS: Product[] = [
     name: "Interactive Cat Toy Ball - LED Light & Detachable Tail",
     category: "Toys & STEM Games",
     baseCost: 88,
-    fairPrice: 154, // Landed + 25% Margin
+    fairPrice: 154, // Base Cost + 20% Margin
     marketPrice: 299,
     cartonSize: 60,
     inStock: 1248,
@@ -4821,7 +4821,7 @@ const RAW_CATALOG_PRODUCTS: Product[] = [
     name: "Fancy Erasers For Kids - 3D Mix Design Colorful Set | Writezo",
     category: "Stationery & Desk Supplies",
     baseCost: 28,
-    fairPrice: 66, // Landed + 25% Margin
+    fairPrice: 66, // Base Cost + 20% Margin
     marketPrice: 149,
     cartonSize: 60,
     inStock: 1066,
@@ -4847,7 +4847,7 @@ const RAW_CATALOG_PRODUCTS: Product[] = [
     name: "DIY Assembly Toy- Engineering Vehicles Kit (2 Pc) | Little Blocks",
     category: "Jewellery & Accessories",
     baseCost: 32,
-    fairPrice: 71, // Landed + 25% Margin
+    fairPrice: 71, // Base Cost + 20% Margin
     marketPrice: 149,
     cartonSize: 60,
     inStock: 1303,
@@ -4873,7 +4873,7 @@ const RAW_CATALOG_PRODUCTS: Product[] = [
     name: "Snap Slap Bracelet- Colorful Fun Wrist Toy For Kids",
     category: "Jewellery & Accessories",
     baseCost: 32,
-    fairPrice: 71, // Landed + 25% Margin
+    fairPrice: 71, // Base Cost + 20% Margin
     marketPrice: 149,
     cartonSize: 60,
     inStock: 752,
@@ -4899,7 +4899,7 @@ const RAW_CATALOG_PRODUCTS: Product[] = [
     name: "Mechanical Pencil 2.Omm - Bold, Dark Writing With Easy Sharpening",
     category: "Stationery & Desk Supplies",
     baseCost: 28,
-    fairPrice: 66, // Landed + 25% Margin
+    fairPrice: 66, // Base Cost + 20% Margin
     marketPrice: 149,
     cartonSize: 60,
     inStock: 513,
@@ -4925,7 +4925,7 @@ const RAW_CATALOG_PRODUCTS: Product[] = [
     name: "Overnight Period Panty XXL Size - Leak-Proof Comfort For Heavy Flow",
     category: "Institutional & Wholesale",
     baseCost: 150,
-    fairPrice: 231, // Landed + 25% Margin
+    fairPrice: 231, // Base Cost + 20% Margin
     marketPrice: 599,
     cartonSize: 60,
     inStock: 1113,
@@ -4951,7 +4951,7 @@ const RAW_CATALOG_PRODUCTS: Product[] = [
     name: "Crawling Baby Toy With Music & Lights- Engaging Toddler Toy | Little Learners",
     category: "Toys & STEM Games",
     baseCost: 88,
-    fairPrice: 154, // Landed + 25% Margin
+    fairPrice: 154, // Base Cost + 20% Margin
     marketPrice: 299,
     cartonSize: 60,
     inStock: 262,
@@ -4977,7 +4977,7 @@ const RAW_CATALOG_PRODUCTS: Product[] = [
     name: "Educational Building Blocks- 90-Piece Creative STEM Toy For Kids",
     category: "Toys & STEM Games",
     baseCost: 87,
-    fairPrice: 153, // Landed + 25% Margin
+    fairPrice: 153, // Base Cost + 20% Margin
     marketPrice: 299,
     cartonSize: 60,
     inStock: 906,
@@ -5003,7 +5003,7 @@ const RAW_CATALOG_PRODUCTS: Product[] = [
     name: "Musical Doll Toy With Colourful LED Lights And Multidirectional Movement (1 Pc)",
     category: "Toys & STEM Games",
     baseCost: 88,
-    fairPrice: 154, // Landed + 25% Margin
+    fairPrice: 154, // Base Cost + 20% Margin
     marketPrice: 299,
     cartonSize: 60,
     inStock: 715,
@@ -5029,7 +5029,7 @@ const RAW_CATALOG_PRODUCTS: Product[] = [
     name: "Fluorescent Highlighter Pen - Vibrant Marker For Study & Office | InkGIow",
     category: "Jewellery & Accessories",
     baseCost: 32,
-    fairPrice: 71, // Landed + 25% Margin
+    fairPrice: 71, // Base Cost + 20% Margin
     marketPrice: 149,
     cartonSize: 60,
     inStock: 1275,
@@ -5055,7 +5055,7 @@ const RAW_CATALOG_PRODUCTS: Product[] = [
     name: "Magic Water Coloring Book- Reusable Mess-Free Fun For Kids | Inventive Play",
     category: "Jewellery & Accessories",
     baseCost: 32,
-    fairPrice: 71, // Landed + 25% Margin
+    fairPrice: 71, // Base Cost + 20% Margin
     marketPrice: 149,
     cartonSize: 60,
     inStock: 1099,
@@ -5081,7 +5081,7 @@ const RAW_CATALOG_PRODUCTS: Product[] = [
     name: "Elegant Dual-Tone Crystal Beaded Stretch Bracelet- Comfortable Fit",
     category: "Jewellery & Accessories",
     baseCost: 32,
-    fairPrice: 71, // Landed + 25% Margin
+    fairPrice: 71, // Base Cost + 20% Margin
     marketPrice: 149,
     cartonSize: 60,
     inStock: 1147,
@@ -5107,7 +5107,7 @@ const RAW_CATALOG_PRODUCTS: Product[] = [
     name: "Stylish Multicolor Stud Earrings Set For Women & Girls With Pearl Gold-Tone Design (12 Pc Set)",
     category: "Jewellery & Accessories",
     baseCost: 75,
-    fairPrice: 125, // Landed + 25% Margin
+    fairPrice: 125, // Base Cost + 20% Margin
     marketPrice: 299,
     cartonSize: 60,
     inStock: 793,
@@ -5133,7 +5133,7 @@ const RAW_CATALOG_PRODUCTS: Product[] = [
     name: "Solid Glue Stick Pack Of 5- Cartoon Design, Mess-Free Adhesive",
     category: "Toys & STEM Games",
     baseCost: 135,
-    fairPrice: 213, // Landed + 25% Margin
+    fairPrice: 213, // Base Cost + 20% Margin
     marketPrice: 399,
     cartonSize: 60,
     inStock: 394,
@@ -5159,7 +5159,7 @@ const RAW_CATALOG_PRODUCTS: Product[] = [
     name: "Free-Wheel Racing Jeep Toy Car- Push & Go Adventure Fun",
     category: "Toys & STEM Games",
     baseCost: 135,
-    fairPrice: 213, // Landed + 25% Margin
+    fairPrice: 213, // Base Cost + 20% Margin
     marketPrice: 399,
     cartonSize: 60,
     inStock: 1348,
@@ -5185,7 +5185,7 @@ const RAW_CATALOG_PRODUCTS: Product[] = [
     name: "Mini Pop It Diary Fidget Notebook For Kids Rainbow Silicone Bubble",
     category: "Toys & STEM Games",
     baseCost: 45,
-    fairPrice: 88, // Landed + 25% Margin
+    fairPrice: 88, // Base Cost + 20% Margin
     marketPrice: 199,
     cartonSize: 60,
     inStock: 650,
@@ -5211,7 +5211,7 @@ const RAW_CATALOG_PRODUCTS: Product[] = [
     name: "Writable Label Stickers- Easy To Use With Red Border For Clarity",
     category: "Stationery & Desk Supplies",
     baseCost: 28,
-    fairPrice: 66, // Landed + 25% Margin
+    fairPrice: 66, // Base Cost + 20% Margin
     marketPrice: 149,
     cartonSize: 60,
     inStock: 888,
@@ -5237,7 +5237,7 @@ const RAW_CATALOG_PRODUCTS: Product[] = [
     name: "Elastic Rubber Bands- Premium Strong Multipurpose 125-140 Gm Pack",
     category: "Institutional & Wholesale",
     baseCost: 150,
-    fairPrice: 231, // Landed + 25% Margin
+    fairPrice: 231, // Base Cost + 20% Margin
     marketPrice: 599,
     cartonSize: 60,
     inStock: 427,
@@ -5263,7 +5263,7 @@ const RAW_CATALOG_PRODUCTS: Product[] = [
     name: "Kundan & Meenakari Chandbali Earrings- Traditional Bridal Jewelry",
     category: "Jewellery & Accessories",
     baseCost: 48,
-    fairPrice: 91, // Landed + 25% Margin
+    fairPrice: 91, // Base Cost + 20% Margin
     marketPrice: 199,
     cartonSize: 60,
     inStock: 1042,
@@ -5289,7 +5289,7 @@ const RAW_CATALOG_PRODUCTS: Product[] = [
     name: "Crystal Beaded Stretch Bracelet- Elegant Dual-Tone Design",
     category: "Jewellery & Accessories",
     baseCost: 32,
-    fairPrice: 71, // Landed + 25% Margin
+    fairPrice: 71, // Base Cost + 20% Margin
     marketPrice: 149,
     cartonSize: 60,
     inStock: 1263,
@@ -5315,7 +5315,7 @@ const RAW_CATALOG_PRODUCTS: Product[] = [
     name: "Friction Powered Ambulance Toy - Safe Durable Kids Play Vehicle",
     category: "Toys & STEM Games",
     baseCost: 88,
-    fairPrice: 154, // Landed + 25% Margin
+    fairPrice: 154, // Base Cost + 20% Margin
     marketPrice: 299,
     cartonSize: 60,
     inStock: 645,
@@ -5341,7 +5341,7 @@ const RAW_CATALOG_PRODUCTS: Product[] = [
     name: "Classic Glass Marbles For Kids- Set Of Approx 35 Vibrant Kanchas",
     category: "Institutional & Wholesale",
     baseCost: 150,
-    fairPrice: 231, // Landed + 25% Margin
+    fairPrice: 231, // Base Cost + 20% Margin
     marketPrice: 599,
     cartonSize: 60,
     inStock: 1426,
@@ -5367,7 +5367,7 @@ const RAW_CATALOG_PRODUCTS: Product[] = [
     name: "Kids Electric Toy Train Set- Lights, Music & Easy Assembly",
     category: "Toys & STEM Games",
     baseCost: 88,
-    fairPrice: 154, // Landed + 25% Margin
+    fairPrice: 154, // Base Cost + 20% Margin
     marketPrice: 299,
     cartonSize: 60,
     inStock: 293,
@@ -5393,7 +5393,7 @@ const RAW_CATALOG_PRODUCTS: Product[] = [
     name: "Soft Foam Smiley Toy Ball - Stress Relief For Kids & Adults",
     category: "Toys & STEM Games",
     baseCost: 88,
-    fairPrice: 154, // Landed + 25% Margin
+    fairPrice: 154, // Base Cost + 20% Margin
     marketPrice: 299,
     cartonSize: 60,
     inStock: 1194,
@@ -5419,7 +5419,7 @@ const RAW_CATALOG_PRODUCTS: Product[] = [
     name: "Transforming Spinner Flat Ball Toy With 360 Degree Spin For Kids And Desk Play",
     category: "Toys & STEM Games",
     baseCost: 88,
-    fairPrice: 154, // Landed + 25% Margin
+    fairPrice: 154, // Base Cost + 20% Margin
     marketPrice: 299,
     cartonSize: 60,
     inStock: 381,
@@ -5445,7 +5445,7 @@ const RAW_CATALOG_PRODUCTS: Product[] = [
     name: "Remote Control Car- Rechargeable Kids Racing Toy | Spark Tots",
     category: "Toys & STEM Games",
     baseCost: 380,
-    fairPrice: 525, // Landed + 25% Margin
+    fairPrice: 525, // Base Cost + 20% Margin
     marketPrice: 849,
     cartonSize: 60,
     inStock: 1248,
@@ -5471,7 +5471,7 @@ const RAW_CATALOG_PRODUCTS: Product[] = [
     name: "Kids Stationery Set- Wooden 5-Piece School Kit | Writezo",
     category: "Stationery & Desk Supplies",
     baseCost: 65,
-    fairPrice: 113, // Landed + 25% Margin
+    fairPrice: 113, // Base Cost + 20% Margin
     marketPrice: 199,
     cartonSize: 60,
     inStock: 530,
@@ -5497,7 +5497,7 @@ const RAW_CATALOG_PRODUCTS: Product[] = [
     name: "Kids Pencil Set- Cute Animal Design With Sharpener & Eraser | InkGIow",
     category: "Stationery & Desk Supplies",
     baseCost: 28,
-    fairPrice: 66, // Landed + 25% Margin
+    fairPrice: 66, // Base Cost + 20% Margin
     marketPrice: 149,
     cartonSize: 60,
     inStock: 1225,
@@ -5523,7 +5523,7 @@ const RAW_CATALOG_PRODUCTS: Product[] = [
     name: "3x3x3 Puzzle Cube- Smooth Speedcube For All | Boardoria",
     category: "Toys & STEM Games",
     baseCost: 88,
-    fairPrice: 154, // Landed + 25% Margin
+    fairPrice: 154, // Base Cost + 20% Margin
     marketPrice: 299,
     cartonSize: 60,
     inStock: 252,
@@ -5549,7 +5549,7 @@ const RAW_CATALOG_PRODUCTS: Product[] = [
     name: "Pink Kids Stationery Set- 4-In-1 School Essentials",
     category: "Stationery & Desk Supplies",
     baseCost: 65,
-    fairPrice: 113, // Landed + 25% Margin
+    fairPrice: 113, // Base Cost + 20% Margin
     marketPrice: 199,
     cartonSize: 60,
     inStock: 819,
@@ -5575,7 +5575,7 @@ const RAW_CATALOG_PRODUCTS: Product[] = [
     name: "LED Glow Pop Tube- Stretchable Light-Up Sensory Toy",
     category: "Toys & STEM Games",
     baseCost: 88,
-    fairPrice: 154, // Landed + 25% Margin
+    fairPrice: 154, // Base Cost + 20% Margin
     marketPrice: 299,
     cartonSize: 60,
     inStock: 956,
@@ -5601,7 +5601,7 @@ const RAW_CATALOG_PRODUCTS: Product[] = [
     name: "Writable Label Stickers- 50 Sheets Self-Adhesive For Easy Organizing",
     category: "Stationery & Desk Supplies",
     baseCost: 28,
-    fairPrice: 66, // Landed + 25% Margin
+    fairPrice: 66, // Base Cost + 20% Margin
     marketPrice: 149,
     cartonSize: 60,
     inStock: 822,
@@ -5627,7 +5627,7 @@ const RAW_CATALOG_PRODUCTS: Product[] = [
     name: "12-Piece Die-Cast Toy Car Set With Assorted Designs For Kids Racing And Collecting",
     category: "Toys & STEM Games",
     baseCost: 135,
-    fairPrice: 213, // Landed + 25% Margin
+    fairPrice: 213, // Base Cost + 20% Margin
     marketPrice: 399,
     cartonSize: 60,
     inStock: 654,
@@ -5653,7 +5653,7 @@ const RAW_CATALOG_PRODUCTS: Product[] = [
     name: "Korean Style Bow Earrings For Women | Trendy LJ Gold Tone Enamel Ribbon Stud Earrings",
     category: "Jewellery & Accessories",
     baseCost: 48,
-    fairPrice: 91, // Landed + 25% Margin
+    fairPrice: 91, // Base Cost + 20% Margin
     marketPrice: 199,
     cartonSize: 60,
     inStock: 446,
@@ -5679,7 +5679,7 @@ const RAW_CATALOG_PRODUCTS: Product[] = [
     name: "6 In 1 Mini Stationery Kit- Compact Essential Student Set",
     category: "Jewellery & Accessories",
     baseCost: 75,
-    fairPrice: 125, // Landed + 25% Margin
+    fairPrice: 125, // Base Cost + 20% Margin
     marketPrice: 299,
     cartonSize: 60,
     inStock: 417,
@@ -5705,7 +5705,7 @@ const RAW_CATALOG_PRODUCTS: Product[] = [
     name: "Black Gel Pen 0.5mm Fine Tip- Smooth Precise Writing",
     category: "Stationery & Desk Supplies",
     baseCost: 28,
-    fairPrice: 66, // Landed + 25% Margin
+    fairPrice: 66, // Base Cost + 20% Margin
     marketPrice: 149,
     cartonSize: 60,
     inStock: 561,
@@ -5731,7 +5731,7 @@ const RAW_CATALOG_PRODUCTS: Product[] = [
     name: "Toilet Pencil Sharpener- Fun Novelty With Eraser (2 Pc Set) | Writezo",
     category: "Stationery & Desk Supplies",
     baseCost: 28,
-    fairPrice: 66, // Landed + 25% Margin
+    fairPrice: 66, // Base Cost + 20% Margin
     marketPrice: 149,
     cartonSize: 60,
     inStock: 632,
@@ -5757,7 +5757,7 @@ const RAW_CATALOG_PRODUCTS: Product[] = [
     name: "Kids Water Shooting Game- Dolphin Bubble Toy With Fun Push Button",
     category: "Toys & STEM Games",
     baseCost: 180,
-    fairPrice: 269, // Landed + 25% Margin
+    fairPrice: 269, // Base Cost + 20% Margin
     marketPrice: 599,
     cartonSize: 60,
     inStock: 1349,
@@ -5783,7 +5783,7 @@ const RAW_CATALOG_PRODUCTS: Product[] = [
     name: "USB-C OTG Adapter- Fast Data Transfer & Seamless Connectivity",
     category: "Electronics & Smart Tech",
     baseCost: 95,
-    fairPrice: 163, // Landed + 25% Margin
+    fairPrice: 163, // Base Cost + 20% Margin
     marketPrice: 299,
     cartonSize: 60,
     inStock: 1187,
@@ -5809,7 +5809,7 @@ const RAW_CATALOG_PRODUCTS: Product[] = [
     name: "Kids Power Dumper Truck Toy- Friction-Powered Construction Play",
     category: "Toys & STEM Games",
     baseCost: 135,
-    fairPrice: 213, // Landed + 25% Margin
+    fairPrice: 213, // Base Cost + 20% Margin
     marketPrice: 399,
     cartonSize: 60,
     inStock: 304,

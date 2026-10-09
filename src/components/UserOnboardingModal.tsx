@@ -392,7 +392,7 @@ export default function UserOnboardingModal({
                 </span>
               </h2>
               <p className="text-xs text-slate-400">
-                Primary factory sourcing • Flat 25% margin • Automated logistics
+                Primary factory sourcing • Flat 20% margin • Automated logistics
               </p>
             </div>
           </div>

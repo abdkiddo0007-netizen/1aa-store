@@ -537,7 +537,7 @@ export default function ProformaInvoiceModal({
                 Direct Sourcing Transparency & Pricing Integrity
               </div>
               <p className="text-[11px] leading-relaxed text-slate-400">
-                All prices reflect direct primary manufacturing cost + door courier freight + a flat 25% 1AA operating margin. 👑 Customer is King: zero hidden commissions, zero haggling.
+                All prices reflect direct primary manufacturing base price (with tax) + a flat 20% 1AA operating margin. 👑 Customer is King: zero hidden commissions, zero haggling.
               </p>
               {invoiceType === 'gst_tax_invoice' && (
                 <div className="p-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-300 text-[10px] leading-relaxed font-mono">

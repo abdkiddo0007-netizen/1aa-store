@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { ArrowRight, ShieldCheck, X, Volume2, VolumeX, Sparkles, Play, Pause, RotateCcw } from "lucide-react";
 import { haptics } from "../utils/haptics";
+import OneAALogo from "./OneAALogo";
 
 interface BrandIntroRevealProps {
   onComplete: () => void;
@@ -21,9 +22,48 @@ export default function BrandIntroReveal({ onComplete, forceShow = false }: Bran
   const [isFadingOut, setIsFadingOut] = useState(false);
   const [progress, setProgress] = useState(0);
   const [isMuted, setIsMuted] = useState(false);
-  const [isPlaying, setIsPlaying] = useState(true);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [needsTapToPlay, setNeedsTapToPlay] = useState(false);
   const [hasVideoError, setHasVideoError] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
+
+  // Play video helper with resilient fallbacks
+  const triggerPlayback = async (withAudio = true) => {
+    const video = videoRef.current;
+    if (!video) return;
+
+    try {
+      video.muted = !withAudio;
+      video.volume = withAudio ? 1.0 : 0;
+      await video.play();
+      setIsPlaying(true);
+      setIsMuted(!withAudio);
+      setNeedsTapToPlay(false);
+      setHasVideoError(false);
+      if (withAudio) haptics.chime();
+    } catch {
+      // If browser blocks unmuted playback due to autoplay policy without user gesture,
+      // fallback to playing muted first so video starts moving, and prompt user to unmute
+      if (withAudio) {
+        try {
+          video.muted = true;
+          video.volume = 0;
+          await video.play();
+          setIsPlaying(true);
+          setIsMuted(true);
+          setNeedsTapToPlay(false);
+          setHasVideoError(false);
+        } catch {
+          // Both unmuted and muted autoplay blocked by browser policy; wait for user tap
+          setNeedsTapToPlay(true);
+          setIsPlaying(false);
+        }
+      } else {
+        setNeedsTapToPlay(true);
+        setIsPlaying(false);
+      }
+    }
+  };
 
   useEffect(() => {
     // If not forced and user has already seen intro in this session, skip automatically
@@ -40,67 +80,25 @@ export default function BrandIntroReveal({ onComplete, forceShow = false }: Bran
     setIsVisible(true);
     setIsFadingOut(false);
     setProgress(0);
-    setIsPlaying(true);
     setHasVideoError(false);
-    setIsMuted(false); // ALWAYS UNMUTED BY DEFAULT AS REQUESTED
+    setNeedsTapToPlay(false);
+    setIsMuted(false);
 
-    // Attempt unmuted video playback with full volume
-    if (videoRef.current) {
-      videoRef.current.currentTime = 0;
-      videoRef.current.muted = false; // Keep unmuted always
-      videoRef.current.volume = 1.0;
-      
-      const playPromise = videoRef.current.play();
-      if (playPromise !== undefined) {
-        playPromise
-          .then(() => {
-            setIsMuted(false);
-            haptics.chime();
-          })
-          .catch(() => {
-            // If browser blocks unmuted autoplay without user gesture on cold start,
-            // play muted temporarily under the hood so video starts playing immediately,
-            // but keep UI state as Sound: ON and automatically unmute on the very first micro-gesture or pointer move!
-            if (videoRef.current) {
-              videoRef.current.muted = true;
-              videoRef.current.play().catch(() => {
-                setHasVideoError(true);
-              });
+    // Initial play attempt
+    const timer = setTimeout(() => {
+      triggerPlayback(true);
+    }, 100);
 
-              const handleAutoUnmuteOnFirstMove = () => {
-                if (videoRef.current) {
-                  videoRef.current.muted = false;
-                  videoRef.current.volume = 1.0;
-                  setIsMuted(false);
-                  haptics.chime();
-                }
-                window.removeEventListener("pointermove", handleAutoUnmuteOnFirstMove);
-                window.removeEventListener("mousemove", handleAutoUnmuteOnFirstMove);
-                window.removeEventListener("pointerdown", handleAutoUnmuteOnFirstMove);
-                window.removeEventListener("touchstart", handleAutoUnmuteOnFirstMove);
-                window.removeEventListener("click", handleAutoUnmuteOnFirstMove);
-                window.removeEventListener("keydown", handleAutoUnmuteOnFirstMove);
-                window.removeEventListener("scroll", handleAutoUnmuteOnFirstMove);
-              };
-
-              window.addEventListener("pointermove", handleAutoUnmuteOnFirstMove, { once: true });
-              window.addEventListener("mousemove", handleAutoUnmuteOnFirstMove, { once: true });
-              window.addEventListener("pointerdown", handleAutoUnmuteOnFirstMove, { once: true });
-              window.addEventListener("touchstart", handleAutoUnmuteOnFirstMove, { once: true });
-              window.addEventListener("click", handleAutoUnmuteOnFirstMove, { once: true });
-              window.addEventListener("keydown", handleAutoUnmuteOnFirstMove, { once: true });
-              window.addEventListener("scroll", handleAutoUnmuteOnFirstMove, { once: true });
-            }
-          });
+    // Global listener to immediately unlock audio/video on first user interaction
+    const handleFirstGesture = () => {
+      if (videoRef.current && (videoRef.current.paused || videoRef.current.muted)) {
+        triggerPlayback(true);
       }
-    }
+    };
 
-    // Play luxury audio chime
-    if (haptics.isSoundEnabled()) {
-      setTimeout(() => {
-        haptics.chime();
-      }, 350);
-    }
+    window.addEventListener("pointerdown", handleFirstGesture, { once: true });
+    window.addEventListener("touchstart", handleFirstGesture, { once: true });
+    window.addEventListener("click", handleFirstGesture, { once: true });
 
     // Keyboard ESC listener
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -111,6 +109,10 @@ export default function BrandIntroReveal({ onComplete, forceShow = false }: Bran
     window.addEventListener("keydown", handleKeyDown);
 
     return () => {
+      clearTimeout(timer);
+      window.removeEventListener("pointerdown", handleFirstGesture);
+      window.removeEventListener("touchstart", handleFirstGesture);
+      window.removeEventListener("click", handleFirstGesture);
       window.removeEventListener("keydown", handleKeyDown);
     };
   }, [forceShow]);
@@ -135,44 +137,38 @@ export default function BrandIntroReveal({ onComplete, forceShow = false }: Bran
     }, 450);
   };
 
-  const togglePlayPause = () => {
+  const togglePlayPause = (e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
     if (!videoRef.current) return;
     haptics.light();
-    if (isMuted) {
-      videoRef.current.muted = false;
-      videoRef.current.volume = 1.0;
-      setIsMuted(false);
-      haptics.chime();
-    }
+
     if (videoRef.current.paused) {
-      videoRef.current.play();
-      setIsPlaying(true);
+      triggerPlayback(!isMuted);
     } else {
       videoRef.current.pause();
       setIsPlaying(false);
     }
   };
 
-  const toggleAudio = () => {
+  const toggleAudio = (e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
     if (!videoRef.current) return;
     const nextMuted = !isMuted;
     videoRef.current.muted = nextMuted;
     if (!nextMuted) {
       videoRef.current.volume = 1.0;
+      haptics.chime();
     }
     setIsMuted(nextMuted);
     haptics.setSoundEnabled(!nextMuted);
-    if (!nextMuted) {
-      haptics.chime();
-    }
   };
 
-  const replayVideo = () => {
+  const replayVideo = (e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
     if (!videoRef.current) return;
     haptics.light();
     videoRef.current.currentTime = 0;
-    videoRef.current.play();
-    setIsPlaying(true);
+    triggerPlayback(!isMuted);
     setProgress(0);
   };
 
@@ -205,35 +201,37 @@ export default function BrandIntroReveal({ onComplete, forceShow = false }: Bran
 
         {/* Audio Toggle & Skip Button */}
         <div className="flex items-center gap-2">
-          <button
-            onClick={toggleAudio}
-            className={`px-3.5 py-1.5 rounded-full border text-xs flex items-center gap-2 transition-all cursor-pointer shadow-lg active:scale-95 ${
-              isMuted 
-                ? "bg-amber-500/20 border-amber-500/40 text-amber-300 hover:bg-amber-500/30" 
-                : "bg-emerald-500/20 border-emerald-500/40 text-emerald-300 hover:bg-emerald-500/30 shadow-glow-emerald"
-            }`}
-            title={isMuted ? "Sound is Muted (Click to Turn ON)" : "Sound is Playing (Click to Switch Off)"}
-          >
-            {isMuted ? (
-              <>
-                <VolumeX className="w-4 h-4 text-amber-400" />
-                <span className="text-[11px] font-mono font-bold">Sound: OFF (Turn ON)</span>
-              </>
-            ) : (
-              <>
-                <Volume2 className="w-4 h-4 text-emerald-400 animate-pulse" />
-                <span className="flex items-center gap-1.5 text-[11px] font-mono font-bold">
-                  <span>Sound: ON</span>
-                  <span className="flex items-end gap-0.5 h-3">
-                    <span className="w-0.5 h-3 bg-emerald-400 rounded-full animate-bounce" style={{ animationDelay: "0ms" }} />
-                    <span className="w-0.5 h-2 bg-emerald-400 rounded-full animate-bounce" style={{ animationDelay: "150ms" }} />
-                    <span className="w-0.5 h-3 bg-emerald-400 rounded-full animate-bounce" style={{ animationDelay: "300ms" }} />
+          {!hasVideoError && (
+            <button
+              onClick={toggleAudio}
+              className={`px-3.5 py-1.5 rounded-full border text-xs flex items-center gap-2 transition-all cursor-pointer shadow-lg active:scale-95 ${
+                isMuted 
+                  ? "bg-amber-500/20 border-amber-500/40 text-amber-300 hover:bg-amber-500/30" 
+                  : "bg-emerald-500/20 border-emerald-500/40 text-emerald-300 hover:bg-emerald-500/30 shadow-glow-emerald"
+              }`}
+              title={isMuted ? "Sound is Muted (Click to Turn ON)" : "Sound is Playing (Click to Switch Off)"}
+            >
+              {isMuted ? (
+                <>
+                  <VolumeX className="w-4 h-4 text-amber-400" />
+                  <span className="text-[11px] font-mono font-bold">Sound: OFF (Turn ON)</span>
+                </>
+              ) : (
+                <>
+                  <Volume2 className="w-4 h-4 text-emerald-400 animate-pulse" />
+                  <span className="flex items-center gap-1.5 text-[11px] font-mono font-bold">
+                    <span>Sound: ON</span>
+                    <span className="flex items-end gap-0.5 h-3">
+                      <span className="w-0.5 h-3 bg-emerald-400 rounded-full animate-bounce" style={{ animationDelay: "0ms" }} />
+                      <span className="w-0.5 h-2 bg-emerald-400 rounded-full animate-bounce" style={{ animationDelay: "150ms" }} />
+                      <span className="w-0.5 h-3 bg-emerald-400 rounded-full animate-bounce" style={{ animationDelay: "300ms" }} />
+                    </span>
+                    <span className="hidden sm:inline text-[9px] text-emerald-400/80">(Tap to Mute)</span>
                   </span>
-                  <span className="hidden sm:inline text-[9px] text-emerald-400/80">(Tap to Switch Off)</span>
-                </span>
-              </>
-            )}
-          </button>
+                </>
+              )}
+            </button>
+          )}
 
           <button
             onClick={handleFinish}
@@ -251,80 +249,139 @@ export default function BrandIntroReveal({ onComplete, forceShow = false }: Bran
       <div className="relative z-10 flex flex-col items-center text-center px-4 sm:px-6 w-full max-w-4xl mx-auto space-y-5 select-none">
         
         {/* Video Screen Container with Apple Pro Hardware Styling */}
-        <div className="relative w-full aspect-video max-h-[60vh] rounded-3xl overflow-hidden bg-obsidian-900/90 border border-white/15 shadow-2xl backdrop-blur-2xl group flex items-center justify-center">
-          
+        <div 
+          onClick={() => {
+            if (needsTapToPlay) {
+              triggerPlayback(true);
+            }
+          }}
+          className="relative w-full aspect-video max-h-[60vh] rounded-3xl overflow-hidden bg-obsidian-900/90 border border-white/15 shadow-2xl backdrop-blur-2xl group flex items-center justify-center cursor-pointer"
+        >
           {/* Backlight Glow matching video */}
           <div className="absolute -inset-4 bg-gradient-to-r from-brand-blue/30 via-brand-orange/30 to-brand-blue/30 rounded-3xl blur-2xl pointer-events-none opacity-50 group-hover:opacity-80 transition duration-700" />
 
           {!hasVideoError ? (
-            <video
-              ref={videoRef}
-              src="/1aa-brand-reveal.mp4"
-              playsInline
-              autoPlay
-              muted={isMuted}
-              preload="auto"
-              onTimeUpdate={handleTimeUpdate}
-              onEnded={handleFinish}
-              onError={() => setHasVideoError(true)}
-              className="relative z-10 w-full h-full object-contain rounded-3xl cursor-pointer"
-              onClick={togglePlayPause}
-            />
-          ) : (
-            /* Fallback 3D SVG Logo if video fails */
-            <div className="relative z-10 p-8 flex flex-col items-center justify-center space-y-4">
-              <Sparkles className="w-12 h-12 text-brand-orange animate-spin" />
-              <div className="text-xl font-black text-white font-mono">1AA — AVAILABLE ALWAYS</div>
-              <p className="text-xs text-slate-400 max-w-sm">Direct Primary Factory Sourcing • Mysore Central Facility</p>
-            </div>
-          )}
-
-          {/* Floating Video Overlay Controls on Hover / Paused */}
-          <div className="absolute bottom-4 inset-x-4 z-20 flex items-center justify-between px-4 py-2.5 rounded-2xl bg-obsidian-950/70 border border-white/10 backdrop-blur-md opacity-90 hover:opacity-100 transition-opacity">
-            <div className="flex items-center gap-3">
-              <button
+            <>
+              <video
+                ref={videoRef}
+                playsInline
+                autoPlay
+                muted={isMuted}
+                preload="auto"
+                onTimeUpdate={handleTimeUpdate}
+                onEnded={handleFinish}
+                onError={() => {
+                  if (videoRef.current?.error) {
+                    setHasVideoError(true);
+                  }
+                }}
+                className="relative z-10 w-full h-full object-contain rounded-3xl"
                 onClick={togglePlayPause}
-                className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition-colors cursor-pointer"
-                title={isPlaying ? "Pause Video" : "Play Video"}
               >
-                {isPlaying ? <Pause className="w-4 h-4 fill-white" /> : <Play className="w-4 h-4 fill-white" />}
-              </button>
+                <source src="./1aa-brand-reveal.mp4" type="video/mp4" />
+                <source src="/1aa-brand-reveal.mp4" type="video/mp4" />
+              </video>
 
-              <button
-                onClick={replayVideo}
-                className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition-colors cursor-pointer"
-                title="Replay Video"
+              {/* Tap to Play Overlay if Autoplay was held by Browser */}
+              {needsTapToPlay && (
+                <div 
+                  onClick={() => triggerPlayback(true)}
+                  className="absolute inset-0 z-30 bg-black/60 backdrop-blur-sm flex flex-col items-center justify-center space-y-3 cursor-pointer p-4 transition-all"
+                >
+                  <div className="w-16 h-16 rounded-full bg-brand-orange text-obsidian-950 flex items-center justify-center shadow-glow-orange animate-bounce">
+                    <Play className="w-8 h-8 fill-obsidian-950 ml-1" />
+                  </div>
+                  <div className="text-sm font-bold text-white tracking-wide">
+                    Tap Anywhere to Watch Reveal (Sound ON)
+                  </div>
+                  <div className="text-xs text-brand-orange/90 font-mono">
+                    Official 1AA Factory Procurement Presentation
+                  </div>
+                </div>
+              )}
+
+              {/* Floating Video Overlay Controls */}
+              <div 
+                onClick={(e) => e.stopPropagation()}
+                className="absolute bottom-4 inset-x-4 z-20 flex items-center justify-between px-4 py-2.5 rounded-2xl bg-obsidian-950/70 border border-white/10 backdrop-blur-md opacity-90 hover:opacity-100 transition-opacity"
               >
-                <RotateCcw className="w-3.5 h-3.5" />
-              </button>
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={togglePlayPause}
+                    className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition-colors cursor-pointer"
+                    title={isPlaying ? "Pause Video" : "Play Video"}
+                  >
+                    {isPlaying ? <Pause className="w-4 h-4 fill-white" /> : <Play className="w-4 h-4 fill-white" />}
+                  </button>
 
-              <div className="text-[11px] font-mono text-slate-300">
-                1AA Brand Reveal Video
+                  <button
+                    onClick={replayVideo}
+                    className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition-colors cursor-pointer"
+                    title="Replay Video"
+                  >
+                    <RotateCcw className="w-3.5 h-3.5" />
+                  </button>
+
+                  <div className="text-[11px] font-mono text-slate-300">
+                    1AA Brand Reveal Video
+                  </div>
+                </div>
+
+                <button
+                  onClick={toggleAudio}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-xs font-mono transition-all cursor-pointer ${
+                    isMuted 
+                      ? "bg-amber-500/20 border-amber-500/40 text-amber-300" 
+                      : "bg-emerald-500/20 border-emerald-500/40 text-emerald-300 shadow-glow-emerald"
+                  }`}
+                  title={isMuted ? "Turn Sound ON" : "Switch Sound OFF"}
+                >
+                  {isMuted ? <VolumeX className="w-3.5 h-3.5 text-amber-400" /> : <Volume2 className="w-3.5 h-3.5 text-emerald-400" />}
+                  <span className="text-[10px] font-bold">{isMuted ? "Sound: OFF (Enable)" : "Sound: ON (Mute)"}</span>
+                </button>
               </div>
-            </div>
 
-            <button
-              onClick={toggleAudio}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-xs font-mono transition-all cursor-pointer ${
-                isMuted 
-                  ? "bg-amber-500/20 border-amber-500/40 text-amber-300" 
-                  : "bg-emerald-500/20 border-emerald-500/40 text-emerald-300 shadow-glow-emerald"
-              }`}
-              title={isMuted ? "Turn Sound ON" : "Switch Sound OFF"}
-            >
-              {isMuted ? <VolumeX className="w-3.5 h-3.5 text-amber-400" /> : <Volume2 className="w-3.5 h-3.5 text-emerald-400" />}
-              <span className="text-[10px] font-bold">{isMuted ? "Sound: OFF (Enable)" : "Sound: ON (Switch Off)"}</span>
-            </button>
-          </div>
-
-          {/* Unmute Prompt Banner if autoplay started muted */}
-          {isMuted && (
-            <div 
-              onClick={toggleAudio}
-              className="absolute top-4 inset-x-auto z-20 px-4 py-2 rounded-full bg-gradient-to-r from-brand-orange via-amber-400 to-brand-orange hover:brightness-110 text-obsidian-950 font-black text-xs uppercase tracking-wider flex items-center gap-2 cursor-pointer shadow-glow-orange animate-bounce"
-            >
-              <Volume2 className="w-4 h-4 text-obsidian-950 animate-pulse" />
-              <span>🔊 Tap to Enable Sound</span>
+              {/* Unmute Prompt Banner if autoplay started muted */}
+              {isMuted && !needsTapToPlay && (
+                <div 
+                  onClick={toggleAudio}
+                  className="absolute top-4 inset-x-auto z-20 px-4 py-2 rounded-full bg-gradient-to-r from-brand-orange via-amber-400 to-brand-orange hover:brightness-110 text-obsidian-950 font-black text-xs uppercase tracking-wider flex items-center gap-2 cursor-pointer shadow-glow-orange animate-bounce"
+                >
+                  <Volume2 className="w-4 h-4 text-obsidian-950 animate-pulse" />
+                  <span>🔊 Tap to Enable Sound</span>
+                </div>
+              )}
+            </>
+          ) : (
+            /* Premium Interactive 3D Logo Reveal Fallback */
+            <div className="relative z-10 p-8 flex flex-col items-center justify-center space-y-4">
+              <OneAALogo size="xl" variant="dark" />
+              <div className="space-y-1 text-center">
+                <div className="text-xl font-black text-white font-mono tracking-tight">1AA — AVAILABLE ALWAYS</div>
+                <p className="text-xs text-brand-orange font-mono font-semibold">Direct Primary Factory Sourcing • Mysore Central Facility</p>
+                <p className="text-[11px] text-slate-400 max-w-md pt-1">
+                  Authentic factory procurement across India with built-in doorstep courier freight, 18% GST input credit, and flat 20% margin.
+                </p>
+              </div>
+              <div className="flex items-center gap-3 pt-2">
+                <button
+                  onClick={() => {
+                    setHasVideoError(false);
+                    triggerPlayback(true);
+                  }}
+                  className="px-4 py-2 rounded-xl bg-white/10 hover:bg-white/20 border border-white/20 text-white text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer"
+                >
+                  <RotateCcw className="w-3.5 h-3.5" />
+                  <span>Retry Video</span>
+                </button>
+                <button
+                  onClick={handleFinish}
+                  className="px-5 py-2 rounded-xl bg-brand-orange hover:bg-brand-orange-light text-obsidian-950 text-xs font-bold flex items-center gap-1.5 transition-all shadow-glow-orange cursor-pointer"
+                >
+                  <span>Enter Store</span>
+                  <ArrowRight className="w-3.5 h-3.5" />
+                </button>
+              </div>
             </div>
           )}
         </div>
@@ -339,7 +396,7 @@ export default function BrandIntroReveal({ onComplete, forceShow = false }: Bran
           </div>
 
           <p className="text-xs sm:text-sm text-slate-300 max-w-lg mx-auto font-mono leading-relaxed">
-            Factory Cost + Courier Freight + Flat 25% 1AA Margin • 👑 Customer is King: No-Bargain Guarantee • Pre-Dispatch Mysore QA
+            Base Price (with Tax) + Flat 20% 1AA Margin • 👑 Customer is King: No-Bargain Guarantee • Pre-Dispatch Mysore QA
           </p>
 
           {/* Action Button & Video Time Progress */}

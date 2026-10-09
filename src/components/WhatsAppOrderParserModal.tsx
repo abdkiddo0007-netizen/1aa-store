@@ -316,7 +316,7 @@ export default function WhatsAppOrderParserModal({
     msg += `🏛️ *18% GST (Input Tax Credit):* +₹${totals.gstAmount.toLocaleString("en-IN")}\n`;
     msg += `💰 *TOTAL LANDED COST:* *₹${totals.grandTotal.toLocaleString("en-IN")}*\n`;
     msg += `-----------------------------------------\n`;
-    msg += `👑 *1AA GUARANTEES:* 100% Pre-Dispatch QA Tested • 0% DOA • Flat 25% Transparent Margin\n`;
+    msg += `👑 *1AA GUARANTEES:* 100% Pre-Dispatch QA Tested • 0% DOA • Flat 20% Transparent Margin\n`;
     msg += `💳 *UPI Direct / Instant Dispatch:* 1aaavailablealways@axisbank\n`;
     msg += `📞 *Direct Mysore Dispatch Desk:* Abdul Darvesh (+91 ${OWNER_PHONE})\n`;
     msg += `🌐 *Order Online:* https://1aa-store.vercel.app/\n`;

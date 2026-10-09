@@ -42,7 +42,7 @@ const BUNDLE_DEFINITIONS: RestockBundle[] = [
     perks: [
       "100% Pre-Dispatch bench tested at Mysore Central Hub",
       "Door courier freight included in price",
-      "Flat 25% transparent 1AA wholesale margin",
+      "Flat 20% transparent 1AA wholesale margin",
       "Crown Customer Guarantee: Zero haggling",
     ],
   },
@@ -275,7 +275,7 @@ export default function RestockBundlesModal({
             <div className="space-y-2.5">
               <div className="text-xs font-semibold text-slate-300 uppercase tracking-wider flex items-center justify-between">
                 <span>Included Products ({bundleItemsWithProducts.length} Factory Lines):</span>
-                <span className="text-brand-orange font-mono text-[11px]">Flat 25% 1AA Margin • Courier Freight Included</span>
+                <span className="text-brand-orange font-mono text-[11px]">Flat 20% 1AA Margin • Courier Freight Included</span>
               </div>
 
               <div className="space-y-2">
@@ -330,7 +330,7 @@ export default function RestockBundlesModal({
               <div className="flex items-center gap-2.5">
                 <Crown className="w-5 h-5 text-amber-400 shrink-0" />
                 <div>
-                  <span className="font-bold text-white">👑 Customer is King Guarantee:</span> Flat 25% 1AA Operating Margin. Door courier freight is already included in every unit. Zero haggling or bargaining needed.
+                  <span className="font-bold text-white">👑 Customer is King Guarantee:</span> Flat 20% 1AA Operating Margin. Door courier freight is already included in every unit. Zero haggling or bargaining needed.
                 </div>
               </div>
               <div className="hidden sm:block text-right font-mono font-bold text-amber-400 text-xs shrink-0">

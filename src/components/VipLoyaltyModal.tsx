@@ -61,7 +61,7 @@ export default function VipLoyaltyModal({
       borderColor: "border-slate-500/30",
       accentBg: "bg-slate-500/10",
       perks: [
-        "Transparent Factory Cost + Door Courier + Flat 25% 1AA Wholesale Margin on all 225+ SKUs",
+        "Transparent Base Cost (with Tax) + Door Courier + Flat 20% 1AA Wholesale Margin on all 225+ SKUs",
         "Zero Minimum Order Quantity (Order 1 pc or 1 Carton)",
         "Standard 10–15 Days Surface Delivery (Express <7 Days)",
         "100% Pre-Dispatch Quality Testing at Mysore Central",

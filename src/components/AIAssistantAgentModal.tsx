@@ -265,7 +265,7 @@ export default function AIAssistantAgentModal({
       { label: "🍳 Kitchen & Utility", query: "Show me popular kitchen and home utility items" },
       { label: "🚚 Delivery Timelines", query: "What are your delivery timelines?" },
       { label: "📍 Check City Transit ETA", query: "Check delivery transit time for my city" },
-      { label: "👑 25% Margin (Customer is King)", query: "How does your pricing model work and why is there no bargaining?" },
+      { label: "👑 20% Margin (Customer is King)", query: "How does your pricing model work and why is there no bargaining?" },
       { label: "📦 Sample Pack & Bench QA", query: "Can I order 1 piece sample first?" },
       { label: "🏦 Bank Remittance & UPI QR", query: "What are your verified payment details?" },
       { label: "👤 Speak with Abdul Darvesh", query: "I want to talk to Abdul Darvesh directly" },
@@ -479,11 +479,11 @@ export default function AIAssistantAgentModal({
       action = "delivery";
     }
     // 6. Pricing Model / Customer is King
-    else if (q.includes("bargain") || q.includes("negotiat") || q.includes("discount") || q.includes("pricing") || q.includes("25%") || q.includes("king")) {
+    else if (q.includes("bargain") || q.includes("negotiat") || q.includes("discount") || q.includes("pricing") || q.includes("20%") || q.includes("25%") || q.includes("king")) {
       replyText = 
         `👑 **Customer is King: No-Bargain Fair Price Policy**\n\n` +
         `At 1AA, we do not artificially inflate prices just to offer fake discounts. Our formula is 100% transparent:\n\n` +
-        `📐 **Factory Base Cost + Doorstep Courier Freight + Flat 25% 1AA Operating Margin = Final Landed Price**\n\n` +
+        `📐 **Base Price (with Tax) + Doorstep Courier Freight + Flat 20% 1AA Operating Margin = Final Wholesale Price**\n\n` +
         `• Why bargain when you are already getting genuine factory-floor wholesale rates?\n` +
         `• You save **40% to 70%** compared to Amazon, Flipkart, and local middlemen.\n` +
         `• All items come with guaranteed Zero-DOA pre-dispatch inspection at our Mysore facility.`;
@@ -667,7 +667,7 @@ export default function AIAssistantAgentModal({
               { title: "👓 3D AR Tryout Studio", query: "Can I inspect products in 3D AR before buying?" },
               { title: "🚀 High Margin Reseller Items", query: "Show me high margin products for resellers" },
               { title: "🚚 Mysore Delivery SLA", query: "What are your delivery timelines?" },
-              { title: "👑 25% Fair Price Guarantee", query: "How does your pricing model work and why is there no bargaining?" },
+              { title: "👑 20% Fair Price Guarantee", query: "How does your pricing model work and why is there no bargaining?" },
               { title: "📦 1-Piece Sample Pack", query: "Can I order 1 piece sample first?" },
               { title: "🏦 Axis Bank & UPI Remittance", query: "What are your verified payment details?" },
               { title: "👤 Speak with Abdul Darvesh", query: "I want to talk to Abdul Darvesh directly" },

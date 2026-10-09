@@ -119,20 +119,34 @@ export default function ProductDetailModal({
           
           {/* Visual Showcase (Apple Hardware Style) */}
           <div className="relative bg-obsidian-950/70 p-4 sm:p-6 md:p-8 rounded-2xl flex flex-col justify-between border-b md:border-b-0 md:border-r border-white/[0.06]">
-            <div className="relative aspect-square rounded-2xl overflow-hidden bg-obsidian-900/80 border border-white/[0.08] shadow-inner group">
+            <div className="relative aspect-square rounded-2xl overflow-hidden bg-slate-100 dark:bg-obsidian-900/80 border border-slate-200 dark:border-white/[0.08] shadow-inner group flex items-center justify-center p-4">
               <img
                 src={product.image}
                 alt={product.name}
                 onError={(e) => handleImgError(e, product)}
-                className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-105"
+                className="w-full h-full object-contain transition-all duration-700 ease-out group-hover:scale-108 filter drop-shadow-md group-hover:drop-shadow-[0_20px_35px_rgba(0,0,0,0.45)] dark:group-hover:drop-shadow-[0_20px_35px_rgba(0,0,0,0.85)]"
               />
-              <div className="absolute top-3.5 left-3.5 bg-obsidian-950/85 backdrop-blur-md px-3 py-1 rounded-full text-xs font-mono text-brand-orange border border-white/10 flex items-center gap-1 font-bold">
+              <div className="absolute top-3.5 left-3.5 bg-white/90 dark:bg-obsidian-950/85 backdrop-blur-md px-3 py-1 rounded-full text-xs font-mono text-brand-orange border border-slate-200 dark:border-white/10 flex items-center gap-1 font-bold shadow-sm">
                 <Tag className="w-3 h-3" />
                 {product.sku}
               </div>
               <div className="absolute top-3.5 right-3.5 bg-brand-orange text-obsidian-950 text-xs font-black px-3 py-1 rounded-full shadow-glow-orange">
                 Save {savingsPercent}%
               </div>
+              {onOpenArPreview && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    haptics.selection();
+                    onOpenArPreview(product);
+                  }}
+                  className="absolute bottom-3.5 right-3.5 bg-gradient-to-r from-indigo-600 to-purple-600 hover:brightness-110 active:scale-95 text-white text-xs font-bold px-3 py-1.5 rounded-full border border-indigo-400/40 shadow-glow-purple flex items-center gap-1.5 transition-all cursor-pointer z-10"
+                  title="Inspect in 3D AR Studio"
+                >
+                  <Rotate3d className="w-3.5 h-3.5 text-indigo-200" />
+                  <span>Inspect in 3D</span>
+                </button>
+              )}
             </div>
 
             {/* Quick Assurance Badges */}

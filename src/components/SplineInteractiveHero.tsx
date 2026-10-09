@@ -48,9 +48,9 @@ export default function SplineInteractiveHero({
     },
     {
       id: 2,
-      title: "Flat 25% 1AA Operating Margin",
+      title: "Flat 20% 1AA Operating Margin",
       subtitle: "👑 No-Bargain Customer Guarantee",
-      desc: "Completely transparent 25% margin. Why bargain when you pay factory direct?",
+      desc: "Completely transparent 20% margin. Why bargain when you pay factory direct?",
       icon: Percent,
       color: "from-emerald-500 to-teal-500",
       textColor: "text-emerald-400",
