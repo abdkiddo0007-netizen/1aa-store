@@ -26,7 +26,7 @@ export default function MobileBottomNav({
   return (
     <nav 
       aria-label="Mobile Bottom Navigation"
-      className="fixed bottom-0 inset-x-0 z-40 lg:hidden bg-obsidian-950/95 backdrop-blur-xl border-t border-white/10 px-2 py-1 shadow-2xl safe-area-bottom"
+      className="fixed bottom-0 inset-x-0 z-40 lg:hidden bg-white/95 dark:bg-obsidian-950/95 backdrop-blur-xl border-t border-slate-200 dark:border-white/10 px-2 py-1 shadow-2xl safe-area-bottom transition-colors"
     >
       <div className="grid grid-cols-5 items-center justify-around max-w-md mx-auto h-14">
         {/* 1. Home */}
@@ -35,11 +35,11 @@ export default function MobileBottomNav({
             haptics.selection();
             onGoHome();
           }}
-          className="flex flex-col items-center justify-center py-1 text-slate-400 hover:text-brand-orange active:scale-95 transition-all cursor-pointer group"
+          className="flex flex-col items-center justify-center py-1 text-slate-500 dark:text-slate-400 hover:text-brand-orange active:scale-95 transition-all cursor-pointer group"
           title="Back to Home / Full Catalog"
         >
-          <Home className="w-5 h-5 text-slate-300 group-hover:text-brand-orange transition-colors" />
-          <span className="text-[10px] font-medium mt-0.5 tracking-tight group-hover:text-white">Home</span>
+          <Home className="w-5 h-5 text-slate-600 dark:text-slate-300 group-hover:text-brand-orange transition-colors" />
+          <span className="text-[10px] font-medium mt-0.5 tracking-tight text-slate-700 dark:text-slate-300 group-hover:text-brand-orange">Home</span>
         </button>
 
         {/* 2. Categories / Explore Price Ranges */}
@@ -48,11 +48,11 @@ export default function MobileBottomNav({
             haptics.selection();
             onOpenCategories();
           }}
-          className="flex flex-col items-center justify-center py-1 text-slate-400 hover:text-brand-orange active:scale-95 transition-all cursor-pointer group"
+          className="flex flex-col items-center justify-center py-1 text-slate-500 dark:text-slate-400 hover:text-brand-orange active:scale-95 transition-all cursor-pointer group"
           title="Browse Categories & 9 Golden Price Stages"
         >
-          <LayoutGrid className="w-5 h-5 text-slate-300 group-hover:text-brand-orange transition-colors" />
-          <span className="text-[10px] font-medium mt-0.5 tracking-tight group-hover:text-white">Categories</span>
+          <LayoutGrid className="w-5 h-5 text-slate-600 dark:text-slate-300 group-hover:text-brand-orange transition-colors" />
+          <span className="text-[10px] font-medium mt-0.5 tracking-tight text-slate-700 dark:text-slate-300 group-hover:text-brand-orange">Categories</span>
         </button>
 
         {/* 3. Center Manifest / Cart with Live Badge */}
@@ -67,7 +67,7 @@ export default function MobileBottomNav({
           <div className={`w-10 h-10 rounded-full flex items-center justify-center -mt-3 shadow-lg border transition-all ${
             activeUnits > 0
               ? "bg-gradient-to-tr from-brand-orange to-amber-500 border-amber-300 text-obsidian-950 shadow-glow-orange scale-105"
-              : "bg-white/[0.08] border-white/15 text-slate-300"
+              : "bg-slate-100 dark:bg-white/[0.08] border-slate-300 dark:border-white/15 text-slate-700 dark:text-slate-300"
           }`}>
             <ShoppingBag className="w-5 h-5" />
             {activeUnits > 0 && (
@@ -76,7 +76,7 @@ export default function MobileBottomNav({
               </span>
             )}
           </div>
-          <span className="text-[10px] font-bold mt-0.5 text-white">
+          <span className="text-[10px] font-bold mt-0.5 text-slate-900 dark:text-white">
             {activeUnits > 0 ? `₹${totalAmount.toLocaleString("en-IN")}` : "Cart"}
           </span>
         </button>
@@ -87,16 +87,16 @@ export default function MobileBottomNav({
             haptics.selection();
             onOpenAccount();
           }}
-          className="flex flex-col items-center justify-center py-1 text-slate-400 hover:text-brand-orange active:scale-95 transition-all cursor-pointer group"
+          className="flex flex-col items-center justify-center py-1 text-slate-500 dark:text-slate-400 hover:text-brand-orange active:scale-95 transition-all cursor-pointer group"
           title="Account / VIP Merchant Profile & Login"
         >
           <div className="relative">
-            <User className="w-5 h-5 text-slate-300 group-hover:text-brand-orange transition-colors" />
+            <User className="w-5 h-5 text-slate-600 dark:text-slate-300 group-hover:text-brand-orange transition-colors" />
             {currentUser && (
-              <span className="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-emerald-400 ring-2 ring-obsidian-950" />
+              <span className="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-emerald-400 ring-2 ring-white dark:ring-obsidian-950" />
             )}
           </div>
-          <span className="text-[10px] font-medium mt-0.5 tracking-tight group-hover:text-white truncate max-w-[56px]">
+          <span className="text-[10px] font-medium mt-0.5 tracking-tight text-slate-700 dark:text-slate-300 group-hover:text-brand-orange truncate max-w-[56px]">
             {currentUser ? currentUser.username : "Account"}
           </span>
         </button>
@@ -107,11 +107,11 @@ export default function MobileBottomNav({
             haptics.selection();
             onOpenHelp();
           }}
-          className="flex flex-col items-center justify-center py-1 text-slate-400 hover:text-brand-orange active:scale-95 transition-all cursor-pointer group"
+          className="flex flex-col items-center justify-center py-1 text-slate-500 dark:text-slate-400 hover:text-brand-orange active:scale-95 transition-all cursor-pointer group"
           title="Help & Mysore Hub WhatsApp Support"
         >
-          <MessageSquare className="w-5 h-5 text-slate-300 group-hover:text-brand-orange transition-colors" />
-          <span className="text-[10px] font-medium mt-0.5 tracking-tight group-hover:text-white">Help</span>
+          <MessageSquare className="w-5 h-5 text-slate-600 dark:text-slate-300 group-hover:text-brand-orange transition-colors" />
+          <span className="text-[10px] font-medium mt-0.5 tracking-tight text-slate-700 dark:text-slate-300 group-hover:text-brand-orange">Help</span>
         </button>
       </div>
     </nav>

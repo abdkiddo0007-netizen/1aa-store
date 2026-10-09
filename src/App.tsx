@@ -80,10 +80,37 @@ import {
   Mic,
   User,
   Rotate3d,
-  LogOut
+  LogOut,
+  Sun,
+  Moon
 } from "lucide-react";
 
 export default function OneAAStore() {
+  // Theme State: Pristine White Light Mode (Default) & Dark Mode
+  const [theme, setTheme] = useState<"light" | "dark">(() => {
+    if (typeof window !== "undefined") {
+      const saved = localStorage.getItem("1aa_theme") as "light" | "dark" | null;
+      if (saved === "light" || saved === "dark") return saved;
+    }
+    return "light";
+  });
+
+  useEffect(() => {
+    if (typeof document !== "undefined") {
+      if (theme === "dark") {
+        document.documentElement.classList.add("dark");
+      } else {
+        document.documentElement.classList.remove("dark");
+      }
+      localStorage.setItem("1aa_theme", theme);
+    }
+  }, [theme]);
+
+  const toggleTheme = () => {
+    haptics.selection();
+    setTheme((prev) => (prev === "dark" ? "light" : "dark"));
+  };
+
   const [quantities, setQuantities] = useState<{ [sku: string]: number }>(() => {
     if (typeof window !== "undefined") {
       try {
@@ -649,7 +676,7 @@ export default function OneAAStore() {
     text += `🚚 *DELIVERY TIMELINE & DISPATCH POLICY:*\n`;
     text += `• Delivery Speed: *${deliverySpeed === "express" ? "Express Priority Air (Within 7 Days)" : "Standard Surface (10–15 Days)"}*\n`;
     text += `• Important: Shipment dispatch commences *immediately post payment confirmation*.\n`;
-    text += `👑 *PRICING COVENANT:* Customer is King • Factory Cost + Doorstep Courier + Flat 25% Margin • Zero Haggling Needed\n`;
+    text += `👑 *PRICING COVENANT:* Customer is King • Base Price (with Tax) + Flat 20% Margin • Zero Haggling Needed\n`;
     text += `━━━━━━━━━━━━━━━━━━━━\n\n`;
     text += `📍 *Delivery Address / Pincode:* ${pincodeResult ? `${pincodeResult.city} (PIN: ${pincodeInput} | SLA: ${pincodeResult.eta})` : '[Enter Shipping Address]'}\n`;
     text += `Please confirm payment receipt & initiate insured Mysore dispatch.`;
@@ -680,7 +707,7 @@ export default function OneAAStore() {
   // Dedicated Executive Admin HQ Screen (Username: 1AAadmin, Password: 1AApassword)
   if (isAdminLoggedIn && adminPortalActive) {
     return (
-      <div className="min-h-screen bg-obsidian-950 text-slate-100 font-sans antialiased selection:bg-brand-orange selection:text-obsidian-950">
+      <div className="min-h-screen bg-white dark:bg-obsidian-950 text-slate-900 dark:text-slate-100 font-sans antialiased selection:bg-brand-orange selection:text-obsidian-950 transition-colors">
         <AdminPortal 
           initialTab={adminInitialTab}
           onLogout={handleAdminLogout}
@@ -700,7 +727,7 @@ export default function OneAAStore() {
 
   return (
     <div 
-      className={`min-h-screen bg-obsidian-950 text-slate-100 font-sans antialiased selection:bg-brand-orange selection:text-obsidian-950 flex flex-col justify-between pb-24 ${
+      className={`min-h-screen bg-white dark:bg-obsidian-950 text-slate-900 dark:text-slate-100 font-sans antialiased selection:bg-brand-orange selection:text-obsidian-950 flex flex-col justify-between pb-24 transition-colors ${
         displayConfig.density === "compact"
           ? "density-compact"
           : displayConfig.density === "retina"
@@ -729,7 +756,7 @@ export default function OneAAStore() {
 
       <div>
         {/* --- APPLE-STYLE MINIMAL LUXURY UTILITY BAR --- */}
-        <div className="top-utility-bar bg-obsidian-900/60 border-b border-white/[0.06] text-[11px] px-4 py-2 text-slate-400 backdrop-blur-md">
+        <div className="top-utility-bar bg-slate-50 dark:bg-obsidian-900/60 border-b border-slate-200 dark:border-white/[0.06] text-[11px] px-4 py-2 text-slate-600 dark:text-slate-400 backdrop-blur-md transition-colors">
           <div className="max-w-7xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-2">
             
             {/* Left: Mysore Central Hub Status & Fast Hotlines */}
@@ -742,9 +769,9 @@ export default function OneAAStore() {
                 1AA Mysore Central Hub • Active
               </span>
 
-              <span className="text-white/20 hidden sm:inline">•</span>
+              <span className="text-slate-300 dark:text-white/20 hidden sm:inline">•</span>
 
-              <div className="flex items-center gap-2 text-slate-300">
+              <div className="flex items-center gap-2 text-slate-700 dark:text-slate-300">
                 <a 
                   href="tel:+917406231167" 
                   className="flex items-center gap-1.5 hover:text-brand-orange transition-colors font-mono font-bold"
@@ -755,18 +782,18 @@ export default function OneAAStore() {
                 </a>
               </div>
 
-              <span className="text-white/20 hidden lg:inline">•</span>
+              <span className="text-slate-300 dark:text-white/20 hidden lg:inline">•</span>
 
               <a 
                 href="mailto:1aaavailablealways@gmail.com" 
-                className="hidden lg:flex items-center gap-1 hover:text-brand-orange transition-colors text-slate-400 font-mono text-[10px]"
+                className="hidden lg:flex items-center gap-1 hover:text-brand-orange transition-colors text-slate-500 dark:text-slate-400 font-mono text-[10px]"
               >
                 <Mail className="w-3 h-3 text-brand-orange" />
                 1aaavailablealways@gmail.com
               </a>
             </div>
 
-            {/* Right: Personalization, Currency, Sound FX, Delivery SLA */}
+            {/* Right: Personalization, Currency, Sound FX, Dark Mode, Delivery SLA */}
             <div className="flex flex-wrap items-center gap-2.5">
               {/* Dynamic AI Personalization Badge & Logout */}
               {currentUser ? (
@@ -776,20 +803,20 @@ export default function OneAAStore() {
                       haptics.selection();
                       setShowOnboardingModal(true);
                     }}
-                    className="flex items-center gap-1.5 px-3 py-0.5 rounded-full bg-gradient-to-r from-brand-orange/20 via-brand-blue/20 to-purple-500/20 border border-brand-orange/40 text-white hover:border-brand-orange transition-all cursor-pointer shadow-glow-orange group"
+                    className="flex items-center gap-1.5 px-3 py-0.5 rounded-full bg-gradient-to-r from-brand-orange/20 via-brand-blue/20 to-purple-500/20 border border-brand-orange/40 text-slate-800 dark:text-white hover:border-brand-orange transition-all cursor-pointer shadow-glow-orange group"
                     title="Click to view/edit your 1AA VIP Merchant Profile"
                   >
-                    <Crown className="w-3.5 h-3.5 text-amber-400 group-hover:scale-110 transition-transform" />
+                    <Crown className="w-3.5 h-3.5 text-amber-500 group-hover:scale-110 transition-transform" />
                     <span className="font-bold text-brand-orange text-[11px]">
                       Welcome back, {currentUser.username}!
                     </span>
-                    <span className="text-[9px] uppercase px-1.5 py-0.2 rounded bg-white/10 text-slate-300 font-mono hidden sm:inline">
+                    <span className="text-[9px] uppercase px-1.5 py-0.2 rounded bg-slate-200 dark:bg-white/10 text-slate-700 dark:text-slate-300 font-mono hidden sm:inline">
                       {currentUser.merchantType}
                     </span>
                   </button>
                   <button
                     onClick={handleUserLogout}
-                    className="flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/30 text-[10px] font-bold transition-all cursor-pointer shadow-sm active:scale-95"
+                    className="flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-red-500/10 hover:bg-red-500/20 text-red-500 dark:text-red-400 border border-red-500/30 text-[10px] font-bold transition-all cursor-pointer shadow-sm active:scale-95"
                     title="Log out of current merchant profile"
                   >
                     <LogOut className="w-3 h-3" />
@@ -809,17 +836,17 @@ export default function OneAAStore() {
                 </button>
               )}
 
-              <span className="text-white/20 hidden sm:inline">•</span>
+              <span className="text-slate-300 dark:text-white/20 hidden sm:inline">•</span>
 
               <span className="text-brand-orange font-bold flex items-center gap-1.5">
                 <Truck className="w-3.5 h-3.5 text-brand-orange" />
-                <span>Delivery: 10–15 Days (<strong className="text-white font-mono">&lt;7d Express</strong>) post-payment</span>
+                <span>Delivery: 10–15 Days (<strong className="text-slate-900 dark:text-white font-mono">&lt;7d Express</strong>) post-payment</span>
               </span>
 
-              <span className="text-white/20">•</span>
+              <span className="text-slate-300 dark:text-white/20">•</span>
 
               {/* Multi-Currency Selector */}
-              <div className="flex items-center gap-1 bg-white/[0.04] px-2 py-0.5 rounded-full border border-white/10 text-[10px]">
+              <div className="flex items-center gap-1 bg-slate-100 dark:bg-white/[0.04] px-2 py-0.5 rounded-full border border-slate-300 dark:border-white/10 text-[10px]">
                 <Globe className="w-2.5 h-2.5 text-brand-orange" />
                 <select
                   value={selectedCurrency}
@@ -827,15 +854,15 @@ export default function OneAAStore() {
                     haptics.selection();
                     setSelectedCurrency(e.target.value as CurrencyCode);
                   }}
-                  className="bg-transparent text-white font-mono font-bold text-[10px] outline-none cursor-pointer"
+                  className="bg-transparent text-slate-800 dark:text-white font-mono font-bold text-[10px] outline-none cursor-pointer"
                   title="Select Currency"
                 >
-                  <option value="INR" className="bg-obsidian-900 text-white">🇮🇳 INR (₹)</option>
-                  <option value="USD" className="bg-obsidian-900 text-white">🇺🇸 USD ($)</option>
-                  <option value="AED" className="bg-obsidian-900 text-white">🇦🇪 AED (د.إ)</option>
-                  <option value="SAR" className="bg-obsidian-900 text-white">🇸🇦 SAR (ر.س)</option>
-                  <option value="EUR" className="bg-obsidian-900 text-white">🇪🇺 EUR (€)</option>
-                  <option value="GBP" className="bg-obsidian-900 text-white">🇬🇧 GBP (£)</option>
+                  <option value="INR" className="bg-white dark:bg-obsidian-900 text-slate-900 dark:text-white">🇮🇳 INR (₹)</option>
+                  <option value="USD" className="bg-white dark:bg-obsidian-900 text-slate-900 dark:text-white">🇺🇸 USD ($)</option>
+                  <option value="AED" className="bg-white dark:bg-obsidian-900 text-slate-900 dark:text-white">🇦🇪 AED (د.إ)</option>
+                  <option value="SAR" className="bg-white dark:bg-obsidian-900 text-slate-900 dark:text-white">🇸🇦 SAR (ر.س)</option>
+                  <option value="EUR" className="bg-white dark:bg-obsidian-900 text-slate-900 dark:text-white">🇪🇺 EUR (€)</option>
+                  <option value="GBP" className="bg-white dark:bg-obsidian-900 text-slate-900 dark:text-white">🇬🇧 GBP (£)</option>
                 </select>
               </div>
 
@@ -848,13 +875,32 @@ export default function OneAAStore() {
                 }}
                 className={`flex items-center gap-1 px-2.5 py-0.5 rounded-full border text-[10px] font-semibold transition-all cursor-pointer ${
                   isSoundOn 
-                    ? "bg-white/[0.08] text-slate-200 border-white/20" 
-                    : "bg-white/[0.02] text-slate-500 border-white/[0.06]"
+                    ? "bg-slate-200 dark:bg-white/[0.08] text-slate-800 dark:text-slate-200 border-slate-300 dark:border-white/20" 
+                    : "bg-slate-100 dark:bg-white/[0.02] text-slate-500 border-slate-200 dark:border-white/[0.06]"
                 }`}
                 title="Toggle Tactile Haptics & Sound FX"
               >
-                {isSoundOn ? <Volume2 className="w-3 h-3 text-emerald-400" /> : <VolumeX className="w-3 h-3 text-slate-500" />}
+                {isSoundOn ? <Volume2 className="w-3 h-3 text-emerald-600 dark:text-emerald-400" /> : <VolumeX className="w-3 h-3 text-slate-500" />}
                 <span className="hidden sm:inline">Haptics:</span> {isSoundOn ? "ON" : "OFF"}
+              </button>
+
+              {/* Dark / Pristine White Mode Toggle Button */}
+              <button
+                onClick={toggleTheme}
+                className="flex items-center gap-1 px-2.5 py-0.5 rounded-full border border-slate-300 dark:border-white/15 bg-slate-100 dark:bg-white/[0.04] text-slate-700 dark:text-slate-300 hover:text-brand-orange text-[10px] font-semibold transition-all cursor-pointer shadow-sm"
+                title={theme === "dark" ? "Switch to Pristine White Light Mode" : "Switch to Dark Mode"}
+              >
+                {theme === "dark" ? (
+                  <>
+                    <Sun className="w-3 h-3 text-amber-400" />
+                    <span className="hidden sm:inline">Theme:</span> <span>Light</span>
+                  </>
+                ) : (
+                  <>
+                    <Moon className="w-3 h-3 text-indigo-600 dark:text-indigo-400" />
+                    <span className="hidden sm:inline">Theme:</span> <span>Dark</span>
+                  </>
+                )}
               </button>
             </div>
 
@@ -862,7 +908,7 @@ export default function OneAAStore() {
         </div>
 
         {/* --- APPLE STORE TRANSLUCENT NAVIGATION BAR --- */}
-        <header className="sticky top-0 z-40 apple-glass border-b border-white/[0.08] backdrop-blur-2xl bg-obsidian-950/75 transition-all">
+        <header className="sticky top-0 z-40 apple-glass border-b border-slate-200 dark:border-white/[0.08] backdrop-blur-2xl bg-white/80 dark:bg-obsidian-950/75 transition-all">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3.5 flex items-center justify-between gap-4">
             
             {/* 1AA Brand Logo & Quick Video Reveal */}
@@ -874,7 +920,7 @@ export default function OneAAStore() {
                 }} 
                 className="cursor-pointer transition-transform hover:opacity-95"
               >
-                <OneAALogo size="md" variant="dark" />
+                <OneAALogo size="md" variant="adaptive" />
               </div>
 
               <button
@@ -897,7 +943,7 @@ export default function OneAAStore() {
             <div className="flex items-center gap-3">
               
               {/* Apple Segmented Pill Switcher */}
-              <div className="bg-white/[0.06] p-1 rounded-full border border-white/[0.08] flex text-xs backdrop-blur-lg">
+              <div className="bg-slate-100 dark:bg-white/[0.06] p-1 rounded-full border border-slate-300 dark:border-white/[0.08] flex text-xs backdrop-blur-lg">
                 <button
                   onClick={() => {
                     haptics.selection();
@@ -906,7 +952,7 @@ export default function OneAAStore() {
                   className={`px-4 py-1.5 rounded-full transition-all duration-300 cursor-pointer ${
                     mode === "retail" 
                       ? "bg-gradient-to-r from-brand-blue to-brand-blue-light text-white font-semibold shadow-glow-blue" 
-                      : "text-slate-400 hover:text-white"
+                      : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
                   }`}
                 >
                   Consumer (B2C)
@@ -919,7 +965,7 @@ export default function OneAAStore() {
                   className={`px-4 py-1.5 rounded-full transition-all duration-300 cursor-pointer ${
                     mode === "b2b" 
                       ? "bg-gradient-to-r from-brand-orange to-brand-orange-light text-obsidian-950 font-bold shadow-glow-orange" 
-                      : "text-slate-400 hover:text-white"
+                      : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
                   }`}
                 >
                   Wholesale (B2B)
@@ -933,10 +979,10 @@ export default function OneAAStore() {
                   setArProduct(CATALOG_PRODUCTS[0]);
                   setShowArModal(true);
                 }}
-                className="flex text-xs px-3 py-2 rounded-full border border-indigo-500/40 bg-indigo-500/10 text-indigo-300 hover:bg-indigo-500 hover:text-white font-semibold transition-all items-center gap-1.5 shadow-glow-purple cursor-pointer"
+                className="flex text-xs px-3 py-2 rounded-full border border-indigo-500/40 bg-indigo-500/10 text-indigo-600 dark:text-indigo-300 hover:bg-indigo-500 hover:text-white font-semibold transition-all items-center gap-1.5 shadow-glow-purple cursor-pointer"
                 title="Open 3D AR Studio (Try Before You Buy in Camera AR)"
               >
-                <Rotate3d className="w-3.5 h-3.5 text-indigo-400" />
+                <Rotate3d className="w-3.5 h-3.5 text-indigo-500 dark:text-indigo-400" />
                 <span className="hidden sm:inline">3D AR</span>
               </button>
 
@@ -946,10 +992,10 @@ export default function OneAAStore() {
                   haptics.light();
                   setShowAiAgentModal(true);
                 }}
-                className="flex text-xs px-3 py-2 rounded-full border border-purple-500/40 bg-purple-500/10 text-purple-300 hover:bg-purple-600 hover:text-white font-semibold transition-all items-center gap-1.5 shadow-glow-purple cursor-pointer"
+                className="flex text-xs px-3 py-2 rounded-full border border-purple-500/40 bg-purple-500/10 text-purple-600 dark:text-purple-300 hover:bg-purple-600 hover:text-white font-semibold transition-all items-center gap-1.5 shadow-glow-purple cursor-pointer"
                 title="Launch 1AA ChatGPT-Style Embedded Sourcing Copilot"
               >
-                <Bot className="w-3.5 h-3.5 text-purple-300" />
+                <Bot className="w-3.5 h-3.5 text-purple-500 dark:text-purple-300" />
                 <span className="hidden md:inline">AI Copilot</span>
               </button>
 
@@ -965,7 +1011,7 @@ export default function OneAAStore() {
               >
                 <TrendingUp className="w-3.5 h-3.5 text-brand-orange" />
                 <span className="hidden sm:inline">Price Radar</span>
-                <span className="text-[9px] px-1.5 py-0.2 rounded-full bg-emerald-500/20 text-emerald-400 font-mono font-bold hidden md:inline">
+                <span className="text-[9px] px-1.5 py-0.2 rounded-full bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 font-mono font-bold hidden md:inline">
                   Arbitrage
                 </span>
               </button>
@@ -973,10 +1019,10 @@ export default function OneAAStore() {
               {/* Real-time Order & Package Tracking Trigger */}
               <button
                 onClick={() => handleOpenTracking()}
-                className="flex text-xs px-3.5 py-2 rounded-full border border-emerald-500/40 bg-emerald-500/10 text-emerald-300 hover:bg-emerald-500 hover:text-obsidian-950 font-semibold transition-all items-center gap-1.5 shadow-glow-emerald cursor-pointer"
+                className="flex text-xs px-3.5 py-2 rounded-full border border-emerald-500/40 bg-emerald-500/10 text-emerald-600 dark:text-emerald-300 hover:bg-emerald-500 hover:text-obsidian-950 font-semibold transition-all items-center gap-1.5 shadow-glow-emerald cursor-pointer"
                 title="Real-Time Package Radar & Consignment Tracking"
               >
-                <Navigation className="w-3.5 h-3.5 text-emerald-400" />
+                <Navigation className="w-3.5 h-3.5 text-emerald-500 dark:text-emerald-400" />
                 <span className="hidden sm:inline">Track Package</span>
                 <span className="sm:hidden">Track</span>
               </button>
@@ -984,10 +1030,10 @@ export default function OneAAStore() {
               {/* Order Finite State Machine (FSM) Trigger */}
               <button
                 onClick={() => handleOpenFsmTracker()}
-                className="flex text-xs px-3 py-2 rounded-full border border-indigo-500/40 bg-indigo-500/10 text-indigo-300 hover:bg-indigo-600 hover:text-white font-semibold transition-all items-center gap-1.5 shadow-sm cursor-pointer"
+                className="flex text-xs px-3 py-2 rounded-full border border-indigo-500/40 bg-indigo-500/10 text-indigo-600 dark:text-indigo-300 hover:bg-indigo-600 hover:text-white font-semibold transition-all items-center gap-1.5 shadow-sm cursor-pointer"
                 title="Order Finite State Machine: 12-Stage Deterministic Lifecycle"
               >
-                <Layers className="w-3.5 h-3.5 text-indigo-400" />
+                <Layers className="w-3.5 h-3.5 text-indigo-500 dark:text-indigo-400" />
                 <span className="hidden lg:inline">Order FSM</span>
               </button>
 
@@ -997,10 +1043,10 @@ export default function OneAAStore() {
                   haptics.light();
                   setShowAddressModal(true);
                 }}
-                className="flex text-xs px-3 py-2 rounded-full border border-sky-500/40 bg-sky-500/10 text-sky-300 hover:bg-sky-500 hover:text-obsidian-950 font-semibold transition-all items-center gap-1.5 shadow-sm cursor-pointer"
+                className="flex text-xs px-3 py-2 rounded-full border border-sky-500/40 bg-sky-500/10 text-sky-600 dark:text-sky-300 hover:bg-sky-500 hover:text-obsidian-950 font-semibold transition-all items-center gap-1.5 shadow-sm cursor-pointer"
                 title="Structured Shipping & Billing Address Architecture"
               >
-                <MapPin className="w-3.5 h-3.5 text-sky-400" />
+                <MapPin className="w-3.5 h-3.5 text-sky-500 dark:text-sky-400" />
                 <span className="hidden lg:inline">
                   {orderAddressPackage?.shippingAddress?.postalCode 
                     ? `PIN: ${orderAddressPackage.shippingAddress.postalCode}` 
@@ -1017,7 +1063,7 @@ export default function OneAAStore() {
                   haptics.light();
                   setShowOpsHubModal(true);
                 }}
-                className="flex text-xs px-3.5 py-2 rounded-full border border-white/15 bg-white/[0.06] hover:bg-white/[0.12] text-slate-200 hover:text-white font-semibold transition-all items-center gap-1.5 cursor-pointer"
+                className="flex text-xs px-3.5 py-2 rounded-full border border-slate-300 dark:border-white/15 bg-slate-100 dark:bg-white/[0.06] hover:bg-slate-200 dark:hover:bg-white/[0.12] text-slate-700 dark:text-slate-200 hover:text-slate-900 dark:hover:text-white font-semibold transition-all items-center gap-1.5 cursor-pointer"
                 title="Open Wholesale Operations Hub (Outer Box Labels, Shelf Barcodes, CBM Freight, Invoice, VIP Club)"
               >
                 <Boxes className="w-3.5 h-3.5 text-brand-blue-light" />
@@ -1026,7 +1072,24 @@ export default function OneAAStore() {
                 {metrics.units > 0 && <span className="w-2 h-2 rounded-full bg-brand-orange animate-pulse" />}
               </button>
 
-
+              {/* Dark / Light Mode Toggle Button in Desktop Header */}
+              <button
+                onClick={toggleTheme}
+                className="flex text-xs px-3 py-2 rounded-full border border-slate-300 dark:border-white/15 bg-slate-100 dark:bg-white/[0.06] hover:bg-slate-200 dark:hover:bg-white/[0.12] text-slate-700 dark:text-slate-200 hover:text-brand-orange font-semibold transition-all items-center gap-1.5 cursor-pointer shadow-sm"
+                title={theme === "dark" ? "Switch to Pristine White Light Mode" : "Switch to Dark Mode"}
+              >
+                {theme === "dark" ? (
+                  <>
+                    <Sun className="w-3.5 h-3.5 text-amber-400" />
+                    <span className="hidden xl:inline">Light</span>
+                  </>
+                ) : (
+                  <>
+                    <Moon className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" />
+                    <span className="hidden xl:inline">Dark</span>
+                  </>
+                )}
+              </button>
 
               {/* Shopping Manifest Drawer Trigger */}
               <button
@@ -1034,7 +1097,7 @@ export default function OneAAStore() {
                   haptics.medium();
                   setShowOrderDrawer(true);
                 }}
-                className="relative p-2.5 bg-white/[0.06] border border-white/10 hover:border-brand-orange rounded-full text-slate-200 transition-all hover:bg-white/[0.1] group cursor-pointer"
+                className="relative p-2.5 bg-slate-100 dark:bg-white/[0.06] border border-slate-300 dark:border-white/10 hover:border-brand-orange rounded-full text-slate-700 dark:text-slate-200 transition-all hover:bg-slate-200 dark:hover:bg-white/[0.1] group cursor-pointer"
                 title="View Selected Items"
               >
                 <ShoppingBag className="w-4 h-4 text-brand-orange group-hover:scale-110 transition-transform" />
@@ -1050,27 +1113,27 @@ export default function OneAAStore() {
         </header>
 
         {/* --- LIVE WAREHOUSE DISPATCH COUNTDOWN STRIP --- */}
-        <div className="bg-gradient-to-r from-brand-orange/20 via-brand-blue/20 to-brand-orange/20 border-b border-white/[0.08] px-4 py-2.5 text-center text-xs backdrop-blur-md">
+        <div className="bg-gradient-to-r from-brand-orange/10 dark:from-brand-orange/20 via-brand-blue/10 dark:via-brand-blue/20 to-brand-orange/10 dark:to-brand-orange/20 border-b border-slate-200 dark:border-white/[0.08] px-4 py-2.5 text-center text-xs backdrop-blur-md transition-colors">
           <div className="max-w-7xl mx-auto flex flex-wrap items-center justify-center gap-3">
             <span className="flex items-center gap-1.5 font-bold text-brand-orange">
               <Flame className="w-4 h-4 text-brand-orange animate-bounce" />
               <span>TODAY'S MYSORE DISPATCH CUTOFF:</span>
             </span>
-            <div className="flex items-center gap-1 font-mono font-black text-white bg-black/50 px-2.5 py-0.5 rounded-lg border border-white/10">
+            <div className="flex items-center gap-1 font-mono font-black text-white bg-black/60 dark:bg-black/50 px-2.5 py-0.5 rounded-lg border border-slate-700 dark:border-white/10">
               <Clock className="w-3.5 h-3.5 text-brand-orange mr-0.5" />
               <span>{String(countdown.hours).padStart(2, "0")}h</span>:
               <span>{String(countdown.minutes).padStart(2, "0")}m</span>:
               <span>{String(countdown.seconds).padStart(2, "0")}s</span>
             </div>
-            <span className="text-slate-500 hidden sm:inline">•</span>
-            <span className="text-slate-300 hidden md:inline">
-              <span className="text-emerald-400 font-semibold">{CATALOG_PRODUCTS.length}+ Factory Lines</span> in Active Stock
+            <span className="text-slate-400 dark:text-slate-500 hidden sm:inline">•</span>
+            <span className="text-slate-700 dark:text-slate-300 hidden md:inline">
+              <span className="text-emerald-600 dark:text-emerald-400 font-semibold">{CATALOG_PRODUCTS.length}+ Factory Lines</span> in Active Stock
             </span>
-            <span className="text-slate-500 hidden sm:inline">•</span>
-            <div className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-amber-500/15 border border-amber-500/30 text-amber-300 text-[11px] font-semibold">
-              <span>👑 Customer is King: Flat 25% Margin • Zero Bargaining</span>
+            <span className="text-slate-400 dark:text-slate-500 hidden sm:inline">•</span>
+            <div className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-amber-500/15 border border-amber-500/30 text-amber-700 dark:text-amber-300 text-[11px] font-semibold">
+              <span>👑 Customer is King: Base Price with Tax + Flat 20% Margin • Zero Bargaining</span>
             </div>
-            <span className="text-slate-500 hidden sm:inline">•</span>
+            <span className="text-slate-400 dark:text-slate-500 hidden sm:inline">•</span>
             <button
               onClick={() => setShowSpinModal(true)}
               className="inline-flex items-center gap-1.5 text-[11px] px-3 py-1 rounded-full bg-gradient-to-r from-brand-orange to-brand-orange-light text-obsidian-950 font-bold hover:scale-105 transition-transform shadow-glow-orange cursor-pointer"
@@ -1078,26 +1141,26 @@ export default function OneAAStore() {
               <Gift className="w-3.5 h-3.5 text-obsidian-950" />
               <span>Spin for Voucher</span>
             </button>
-            <span className="text-slate-500 hidden sm:inline">•</span>
+            <span className="text-slate-400 dark:text-slate-500 hidden sm:inline">•</span>
             <button
               onClick={() => {
                 haptics.light();
                 setShowRestockBundlesModal(true);
               }}
-              className="inline-flex items-center gap-1.5 text-[11px] px-3 py-1 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 font-bold hover:scale-105 transition-transform cursor-pointer"
+              className="inline-flex items-center gap-1.5 text-[11px] px-3 py-1 rounded-full bg-indigo-500/15 dark:bg-indigo-500/20 text-indigo-700 dark:text-indigo-300 border border-indigo-500/30 font-bold hover:scale-105 transition-transform cursor-pointer"
               title="1-Click Curated Wholesale Restock Bundles"
             >
-              <Sparkles className="w-3.5 h-3.5 text-indigo-400" />
+              <Sparkles className="w-3.5 h-3.5 text-indigo-500 dark:text-indigo-400" />
               <span>1-Click Restock Kits</span>
             </button>
-            <span className="text-slate-500 hidden sm:inline">•</span>
+            <span className="text-slate-400 dark:text-slate-500 hidden sm:inline">•</span>
             <a
               href="https://wa.me/917406231167?text=Hi%201AA%2C%20please%20add%20me%20to%20the%201AA%20Daily%20Wholesale%20Deals%20Broadcast%20List"
               target="_blank"
               rel="noreferrer"
-              className="inline-flex items-center gap-1.5 text-[11px] px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 font-bold hover:scale-105 transition-transform"
+              className="inline-flex items-center gap-1.5 text-[11px] px-3 py-1 rounded-full bg-emerald-500/15 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 border border-emerald-500/30 font-bold hover:scale-105 transition-transform"
             >
-              <MessageSquare className="w-3.5 h-3.5 text-emerald-400" />
+              <MessageSquare className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
               <span>VIP Broadcast</span>
             </a>
           </div>
@@ -1110,15 +1173,15 @@ export default function OneAAStore() {
           <div className="relative text-center max-w-4xl mx-auto space-y-3 pt-2">
             
             {/* Apple Glowing Pill Tag */}
-            <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-white/[0.04] border border-white/10 backdrop-blur-xl text-xs font-semibold text-slate-300 shadow-sm">
+            <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-slate-100 dark:bg-white/[0.04] border border-slate-200 dark:border-white/10 backdrop-blur-xl text-xs font-semibold text-slate-700 dark:text-slate-300 shadow-sm">
               <span className="w-2 h-2 rounded-full bg-brand-orange animate-apple-pulse" />
               <span className="text-brand-orange font-bold">1st Available Always</span>
-              <span className="text-white/20">•</span>
-              <span>Mysore Hub • Flat 25% Margin • Door Courier Included</span>
+              <span className="text-slate-300 dark:text-white/20">•</span>
+              <span>Mysore Hub • Base Price with Tax • Flat 20% Margin • Door Courier Included</span>
             </div>
 
             {/* Apple Cinematic Headline (Compact & Crisp) */}
-            <h1 className="text-2xl sm:text-4xl lg:text-5xl font-black tracking-tight text-transparent bg-clip-text bg-gradient-to-b from-white via-slate-100 to-slate-400 leading-[1.12]">
+            <h1 className="text-2xl sm:text-4xl lg:text-5xl font-black tracking-tight text-transparent bg-clip-text bg-gradient-to-b from-slate-900 via-slate-800 to-slate-600 dark:from-white dark:via-slate-100 dark:to-slate-400 leading-[1.12]">
               Pro Sourcing. Factory Direct.<br />
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-brand-blue-azure via-brand-blue-light to-brand-orange">
                 Zero Marketplace Markup.
@@ -1128,10 +1191,10 @@ export default function OneAAStore() {
             {/* Compact Welcome & Onboarding Strip */}
             <div className="flex items-center justify-center gap-2 flex-wrap text-xs pt-1">
               {currentUser ? (
-                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand-orange/10 border border-brand-orange/30 text-white">
+                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand-orange/10 border border-brand-orange/30 text-slate-800 dark:text-white">
                   <span>👑 Welcome back, <strong className="text-brand-orange">{currentUser.username}</strong></span>
                   <span className="text-slate-400">•</span>
-                  <span className="text-emerald-400 font-mono text-[11px]">📍 {currentUser.city}</span>
+                  <span className="text-emerald-600 dark:text-emerald-400 font-mono text-[11px]">📍 {currentUser.city}</span>
                   <button
                     onClick={() => {
                       haptics.selection();
@@ -1141,10 +1204,10 @@ export default function OneAAStore() {
                   >
                     Edit
                   </button>
-                  <span className="text-white/20">|</span>
+                  <span className="text-slate-300 dark:text-white/20">|</span>
                   <button
                     onClick={handleUserLogout}
-                    className="text-[10px] text-red-400 hover:text-red-300 hover:underline cursor-pointer font-semibold flex items-center gap-0.5"
+                    className="text-[10px] text-red-500 dark:text-red-400 hover:text-red-600 dark:hover:text-red-300 hover:underline cursor-pointer font-semibold flex items-center gap-0.5"
                     title="Log out of 1AA session"
                   >
                     <LogOut className="w-2.5 h-2.5" />
@@ -1167,21 +1230,21 @@ export default function OneAAStore() {
 
             {/* Quick 3-feature reassurance bar */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 pt-1 text-left">
-              <div className="p-2.5 rounded-xl apple-glass border border-white/[0.06] flex items-center gap-2">
+              <div className="p-2.5 rounded-xl apple-glass border border-slate-200 dark:border-white/[0.06] flex items-center gap-2">
                 <CheckCircle2 className="w-4 h-4 text-brand-blue-light shrink-0" />
-                <div className="text-[11px] text-slate-300">
-                  <strong>Courier Included</strong> + Flat 25% Margin
+                <div className="text-[11px] text-slate-700 dark:text-slate-300">
+                  <strong>Doorstep Courier</strong> + Flat 20% Margin
                 </div>
               </div>
-              <div className="p-2.5 rounded-xl apple-glass border border-white/[0.06] flex items-center gap-2">
+              <div className="p-2.5 rounded-xl apple-glass border border-slate-200 dark:border-white/[0.06] flex items-center gap-2">
                 <Percent className="w-4 h-4 text-brand-orange shrink-0" />
-                <div className="text-[11px] text-slate-300">
+                <div className="text-[11px] text-slate-700 dark:text-slate-300">
                   <strong>5% Volume Rebate</strong> on 50+ units
                 </div>
               </div>
-              <div className="p-2.5 rounded-xl apple-glass border border-white/[0.06] flex items-center gap-2">
+              <div className="p-2.5 rounded-xl apple-glass border border-slate-200 dark:border-white/[0.06] flex items-center gap-2">
                 <Truck className="w-4 h-4 text-brand-orange shrink-0" />
-                <div className="text-[11px] text-slate-300">
+                <div className="text-[11px] text-slate-700 dark:text-slate-300">
                   <strong>10–15d</strong> (&lt;7d Express Priority)
                 </div>
               </div>
@@ -1202,7 +1265,7 @@ export default function OneAAStore() {
                   placeholder="Search products, SKUs, or voice search (e.g. 'electric kettle', 'RC car', 'toys')..."
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
-                  className="w-full bg-white/[0.06] border border-white/15 rounded-full pl-11 pr-28 py-3 text-xs sm:text-sm text-white placeholder-slate-400 focus:outline-none focus:border-brand-orange focus:ring-1 focus:ring-brand-orange transition-all backdrop-blur-md shadow-inner"
+                  className="w-full bg-slate-100 dark:bg-white/[0.06] border border-slate-300 dark:border-white/15 rounded-full pl-11 pr-28 py-3 text-xs sm:text-sm text-slate-900 dark:text-white placeholder-slate-500 dark:placeholder-slate-400 focus:outline-none focus:border-brand-orange focus:ring-1 focus:ring-brand-orange transition-all backdrop-blur-md shadow-inner"
                 />
                 <div className="absolute right-2.5 top-2 flex items-center gap-1.5">
                   {search && (
@@ -1212,7 +1275,7 @@ export default function OneAAStore() {
                         haptics.light();
                         setSearch("");
                       }}
-                      className="p-1.5 text-slate-400 hover:text-white rounded-full hover:bg-white/10 transition-colors cursor-pointer"
+                      className="p-1.5 text-slate-400 hover:text-slate-800 dark:hover:text-white rounded-full hover:bg-slate-200 dark:hover:bg-white/10 transition-colors cursor-pointer"
                       title="Clear search"
                       aria-label="Clear search"
                     >
@@ -1238,7 +1301,7 @@ export default function OneAAStore() {
               {/* Mode Toggle & Sort Dropdown */}
               <div className="flex items-center gap-2 flex-wrap justify-between lg:justify-end">
                 {/* Retail Sample vs B2B Master Carton Toggle */}
-                <div className="flex items-center p-1 rounded-full bg-white/[0.04] border border-white/10 text-xs">
+                <div className="flex items-center p-1 rounded-full bg-slate-100 dark:bg-white/[0.04] border border-slate-300 dark:border-white/10 text-xs">
                   <button
                     onClick={() => {
                       haptics.selection();
@@ -1247,7 +1310,7 @@ export default function OneAAStore() {
                     className={`px-3 py-1 rounded-full text-xs font-bold transition-all cursor-pointer ${
                       mode === "retail"
                         ? "bg-brand-orange text-obsidian-950 shadow-glow-orange"
-                        : "text-slate-400 hover:text-white"
+                        : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
                     }`}
                   >
                     Individual Pcs
@@ -1260,26 +1323,26 @@ export default function OneAAStore() {
                     className={`px-3 py-1 rounded-full text-xs font-bold transition-all cursor-pointer ${
                       mode === "b2b"
                         ? "bg-brand-orange text-obsidian-950 shadow-glow-orange"
-                        : "text-slate-400 hover:text-white"
+                        : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
                     }`}
                   >
                     Master Cartons (B2B)
                   </button>
                 </div>
 
-                <div className="flex items-center gap-2 bg-white/[0.04] border border-white/10 px-3.5 py-1.5 rounded-full text-xs backdrop-blur-md">
+                <div className="flex items-center gap-2 bg-slate-100 dark:bg-white/[0.04] border border-slate-300 dark:border-white/10 px-3.5 py-1.5 rounded-full text-xs backdrop-blur-md">
                   <ArrowUpDown className="w-3.5 h-3.5 text-brand-orange" />
-                  <span className="text-slate-400 text-[11px] hidden sm:inline">Sort:</span>
+                  <span className="text-slate-500 dark:text-slate-400 text-[11px] hidden sm:inline">Sort:</span>
                   <select
                     value={sortBy}
                     onChange={(e) => setSortBy(e.target.value as any)}
-                    className="bg-transparent text-white text-xs focus:outline-none cursor-pointer"
+                    className="bg-transparent text-slate-800 dark:text-white text-xs focus:outline-none cursor-pointer"
                   >
-                    <option value="recommended" className="bg-obsidian-900 text-white">Recommended</option>
-                    <option value="savings" className="bg-obsidian-900 text-white">Highest Savings (₹)</option>
-                    <option value="price-asc" className="bg-obsidian-900 text-white">Price: Low to High</option>
-                    <option value="price-desc" className="bg-obsidian-900 text-white">Price: High to Low</option>
-                    <option value="carton" className="bg-obsidian-900 text-white">Master Carton Size</option>
+                    <option value="recommended" className="bg-white dark:bg-obsidian-900 text-slate-900 dark:text-white">Recommended</option>
+                    <option value="savings" className="bg-white dark:bg-obsidian-900 text-slate-900 dark:text-white">Highest Savings (₹)</option>
+                    <option value="price-asc" className="bg-white dark:bg-obsidian-900 text-slate-900 dark:text-white">Price: Low to High</option>
+                    <option value="price-desc" className="bg-white dark:bg-obsidian-900 text-slate-900 dark:text-white">Price: High to Low</option>
+                    <option value="carton" className="bg-white dark:bg-obsidian-900 text-slate-900 dark:text-white">Master Carton Size</option>
                   </select>
                 </div>
               </div>
@@ -1298,12 +1361,12 @@ export default function OneAAStore() {
                   className={`px-3.5 py-1.5 rounded-full whitespace-nowrap transition-all duration-300 text-xs font-medium flex items-center gap-1.5 cursor-pointer ${
                     selectedCategory === cat
                       ? "bg-brand-orange text-obsidian-950 font-bold shadow-glow-orange scale-[1.02]"
-                      : "bg-white/[0.04] text-slate-300 hover:text-white border border-white/[0.08] hover:border-white/20"
+                      : "bg-slate-100 dark:bg-white/[0.04] text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white border border-slate-200 dark:border-white/[0.08] hover:border-slate-300 dark:hover:border-white/20"
                   }`}
                 >
                   <span>{cat}</span>
                   <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-mono ${
-                    selectedCategory === cat ? "bg-black/25 text-obsidian-950 font-black" : "bg-white/10 text-slate-400"
+                    selectedCategory === cat ? "bg-black/25 text-obsidian-950 font-black" : "bg-slate-200 dark:bg-white/10 text-slate-600 dark:text-slate-400"
                   }`}>
                     {categoryCounts[cat] || 0}
                   </span>
@@ -1313,7 +1376,7 @@ export default function OneAAStore() {
 
             {/* Quick Filters */}
             <div className="flex flex-wrap items-center gap-2 pt-0.5 text-xs">
-              <span className="text-[11px] text-slate-400 font-medium">Quick Filters:</span>
+              <span className="text-[11px] text-slate-500 dark:text-slate-400 font-medium">Quick Filters:</span>
               <button
                 onClick={() => {
                   haptics.selection();
@@ -1321,8 +1384,8 @@ export default function OneAAStore() {
                 }}
                 className={`px-3 py-1 rounded-full text-[11px] font-semibold transition-all cursor-pointer ${
                   quickFilter === "all"
-                    ? "bg-white/15 text-white border border-white/30"
-                    : "bg-white/[0.03] text-slate-400 hover:text-white border border-white/[0.06]"
+                    ? "bg-slate-900 dark:bg-white/15 text-white border border-slate-800 dark:border-white/30"
+                    : "bg-slate-100 dark:bg-white/[0.03] text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white border border-slate-200 dark:border-white/[0.06]"
                 }`}
               >
                 All ({CATALOG_PRODUCTS.length})
@@ -1334,11 +1397,11 @@ export default function OneAAStore() {
                 }}
                 className={`px-3 py-1 rounded-full text-[11px] font-semibold flex items-center gap-1.5 transition-all cursor-pointer ${
                   quickFilter === "high-margin"
-                    ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 shadow-sm"
-                    : "bg-white/[0.03] text-slate-400 hover:text-emerald-400 border border-white/[0.06]"
+                    ? "bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 border border-emerald-500/40 shadow-sm"
+                    : "bg-slate-100 dark:bg-white/[0.03] text-slate-600 dark:text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 border border-slate-200 dark:border-white/[0.06]"
                 }`}
               >
-                <TrendingUp className="w-3 h-3 text-emerald-400" />
+                <TrendingUp className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
                 High Margin (&gt;55% ROI)
               </button>
               <button
@@ -1349,7 +1412,7 @@ export default function OneAAStore() {
                 className={`px-3 py-1 rounded-full text-[11px] font-semibold flex items-center gap-1.5 transition-all cursor-pointer ${
                   quickFilter === "under-150"
                     ? "bg-brand-orange/20 text-brand-orange border border-brand-orange/40 shadow-sm"
-                    : "bg-white/[0.03] text-slate-400 hover:text-brand-orange border border-white/[0.06]"
+                    : "bg-slate-100 dark:bg-white/[0.03] text-slate-600 dark:text-slate-400 hover:text-brand-orange border border-slate-200 dark:border-white/[0.06]"
                 }`}
               >
                 <Zap className="w-3 h-3 text-brand-orange" />
@@ -1362,11 +1425,11 @@ export default function OneAAStore() {
                 }}
                 className={`px-3 py-1 rounded-full text-[11px] font-semibold flex items-center gap-1.5 transition-all cursor-pointer ${
                   quickFilter === "top-rated"
-                    ? "bg-amber-500/20 text-amber-400 border border-amber-500/40 shadow-sm"
-                    : "bg-white/[0.03] text-slate-400 hover:text-amber-400 border border-white/[0.06]"
+                    ? "bg-amber-500/20 text-amber-700 dark:text-amber-400 border border-amber-500/40 shadow-sm"
+                    : "bg-slate-100 dark:bg-white/[0.03] text-slate-600 dark:text-slate-400 hover:text-amber-600 dark:hover:text-amber-400 border border-slate-200 dark:border-white/[0.06]"
                 }`}
               >
-                <Star className="w-3 h-3 text-amber-400 fill-amber-400" />
+                <Star className="w-3 h-3 text-amber-500 dark:text-amber-400 fill-amber-500 dark:fill-amber-400" />
                 Top Rated (4.8★+)
               </button>
 
@@ -1483,13 +1546,13 @@ export default function OneAAStore() {
                             haptics.light();
                             setSelectedProductForModal(product);
                           }}
-                          className="absolute bottom-3.5 right-3.5 bg-obsidian-950/85 hover:bg-brand-blue text-white text-[11px] font-semibold px-3 py-1.5 rounded-full border border-white/10 opacity-0 group-hover:opacity-100 transition-all flex items-center gap-1.5 shadow-lg cursor-pointer"
+                          className="absolute bottom-3.5 right-3.5 bg-white/90 dark:bg-obsidian-950/85 hover:bg-brand-blue text-slate-800 dark:text-white hover:text-white text-[11px] font-semibold px-3 py-1.5 rounded-full border border-slate-200 dark:border-white/10 opacity-0 group-hover:opacity-100 transition-all flex items-center gap-1.5 shadow-lg cursor-pointer"
                         >
                           <Eye className="w-3 h-3" />
                           <span>Specs</span>
                         </button>
 
-                        <div className="absolute bottom-3.5 left-3.5 text-[9px] bg-obsidian-950/85 px-2.5 py-0.5 rounded-full font-mono text-emerald-400 border border-white/10">
+                        <div className="absolute bottom-3.5 left-3.5 text-[9px] bg-white/90 dark:bg-obsidian-950/85 px-2.5 py-0.5 rounded-full font-mono text-emerald-600 dark:text-emerald-400 border border-slate-200 dark:border-white/10">
                           {product.inStock} ready in Mysore
                         </div>
                       </div>
@@ -1498,17 +1561,17 @@ export default function OneAAStore() {
                       <div className="p-5 space-y-2.5 product-card-body">
                         <div className="text-[10px] text-brand-orange font-bold uppercase tracking-wider flex items-center justify-between">
                           <span>{product.category}</span>
-                          <span className="text-slate-400 font-mono text-[10px]">Box: {product.cartonSize} pcs</span>
+                          <span className="text-slate-500 dark:text-slate-400 font-mono text-[10px]">Box: {product.cartonSize} pcs</span>
                         </div>
 
                         {/* Verified Rating Display */}
                         <div className="flex items-center gap-1.5 text-[11px]">
-                          <div className="flex items-center text-amber-400">
-                            <Star className="w-3 h-3 fill-amber-400 text-amber-400" />
+                          <div className="flex items-center text-amber-500 dark:text-amber-400">
+                            <Star className="w-3 h-3 fill-amber-500 dark:fill-amber-400 text-amber-500 dark:text-amber-400" />
                           </div>
-                          <span className="font-bold text-white text-[11px]">{product.rating || 4.9}</span>
-                          <span className="text-slate-500">•</span>
-                          <span className="text-slate-400 text-[10px]">
+                          <span className="font-bold text-slate-900 dark:text-white text-[11px]">{product.rating || 4.9}</span>
+                          <span className="text-slate-400 dark:text-slate-500">•</span>
+                          <span className="text-slate-500 dark:text-slate-400 text-[10px]">
                             {product.reviewsCount || 100}+ reviews
                           </span>
                         </div>
@@ -1518,55 +1581,55 @@ export default function OneAAStore() {
                             haptics.light();
                             setSelectedProductForModal(product);
                           }}
-                          className="text-sm font-bold text-white line-clamp-2 leading-snug group-hover:text-brand-orange transition-colors cursor-pointer"
+                          className="text-sm font-bold text-slate-900 dark:text-white line-clamp-2 leading-snug group-hover:text-brand-orange transition-colors cursor-pointer"
                         >
                           {product.name}
                         </h3>
 
-                        <p className="text-[11px] text-slate-400 line-clamp-2 leading-relaxed">
+                        <p className="text-[11px] text-slate-600 dark:text-slate-400 line-clamp-2 leading-relaxed">
                           {product.highlight}
                         </p>
 
-                        <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-amber-500/10 border border-amber-500/25 text-amber-300 text-[10px] font-semibold">
+                        <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-amber-500/10 border border-amber-500/25 text-amber-700 dark:text-amber-300 text-[10px] font-semibold">
                           <span>👑 Customer is King: Zero Bargaining</span>
                         </div>
 
                         {/* Transparent Landed Cost & Courier Breakdown */}
-                        <div className="bg-white/[0.03] p-3 rounded-2xl border border-white/[0.06] space-y-1.5 mt-2 font-mono text-xs">
-                          <div className="flex justify-between text-[11px] text-slate-400">
-                            <span>Factory Direct Cost:</span>
-                            <span className="text-slate-300">₹{product.baseCost}</span>
+                        <div className="bg-slate-50 dark:bg-white/[0.03] p-3 rounded-2xl border border-slate-200 dark:border-white/[0.06] space-y-1.5 mt-2 font-mono text-xs">
+                          <div className="flex justify-between text-[11px] text-slate-600 dark:text-slate-400">
+                            <span>Base Price (with Tax):</span>
+                            <span className="text-slate-800 dark:text-slate-300 font-semibold">₹{product.baseCost}</span>
                           </div>
 
-                          <div className="flex justify-between text-[11px] text-slate-400">
+                          <div className="flex justify-between text-[11px] text-slate-600 dark:text-slate-400">
                             <span className="flex items-center gap-1">
                               <Truck className="w-3 h-3 text-brand-orange" />
-                              Door Courier Freight:
+                              Doorstep Courier Freight:
                             </span>
-                            <span className="text-emerald-400 font-semibold">₹{product.courierCost || 35} (Included)</span>
+                            <span className="text-emerald-600 dark:text-emerald-400 font-semibold">Included</span>
                           </div>
                           
                           <div className="flex justify-between text-[11px] text-brand-orange font-semibold">
                             <span className="flex items-center gap-1">
                               <TrendingUp className="w-3 h-3" />
-                              1AA Margin (25%):
+                              1AA Margin (20% Flat):
                             </span>
-                            <span>+₹{product.margin1AAAmount || Math.round(((product.baseCost || 0) + (product.courierCost || 35)) * 0.25)}</span>
+                            <span>+₹{product.margin1AAAmount || Math.round((product.baseCost || 0) * 0.20)}</span>
                           </div>
 
-                          <div className="border-t border-white/[0.08] pt-1.5 flex justify-between items-baseline">
-                            <span className="text-xs text-white font-bold font-sans">1AA Wholesale Price:</span>
+                          <div className="border-t border-slate-200 dark:border-white/[0.08] pt-1.5 flex justify-between items-baseline">
+                            <span className="text-xs text-slate-900 dark:text-white font-bold font-sans">1AA Wholesale Price:</span>
                             <span className="text-lg text-brand-orange font-black">₹{product.fairPrice}</span>
                           </div>
 
                           {/* Mathematical Verification Pill */}
-                          <div className="p-1.5 rounded-xl bg-black/40 border border-white/10 text-[9px] font-mono text-center space-y-0.5">
-                            <div className="text-slate-300">
-                              ₹{product.baseCost} (Factory) + ₹{product.courierCost || 35} (Courier) + ₹{product.margin1AAAmount} (25%) = <strong className="text-brand-orange font-bold">₹{product.fairPrice} Final Price</strong>
+                          <div className="p-1.5 rounded-xl bg-slate-100 dark:bg-black/40 border border-slate-200 dark:border-white/10 text-[9px] font-mono text-center space-y-0.5">
+                            <div className="text-slate-700 dark:text-slate-300">
+                              ₹{product.baseCost} (Base with Tax) + ₹{product.margin1AAAmount || Math.round((product.baseCost || 0) * 0.20)} (20%) = <strong className="text-brand-orange font-bold">₹{product.fairPrice} 1AA Buy Price</strong>
                             </div>
-                            <div className="flex items-center justify-between text-[8.5px] text-slate-400 px-1 pt-0.5">
-                              <span className="text-emerald-400 font-semibold">✓ 100% Bench QA Tested</span>
-                              <span className="text-amber-300 font-semibold">👑 Zero Bargaining Needed</span>
+                            <div className="flex items-center justify-between text-[8.5px] text-slate-500 dark:text-slate-400 px-1 pt-0.5">
+                              <span className="text-emerald-600 dark:text-emerald-400 font-semibold">✓ 100% Bench QA Tested</span>
+                              <span className="text-amber-600 dark:text-amber-300 font-semibold">👑 Zero Bargaining Needed</span>
                             </div>
                           </div>
 
@@ -1574,7 +1637,7 @@ export default function OneAAStore() {
                             <span>Amazon/Flipkart:</span>
                             <span className="line-through">₹{product.amazonPrice || product.marketPrice}</span>
                           </div>
-                          <div className="text-[10px] text-emerald-400 font-bold text-right">
+                          <div className="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold text-right">
                             Save ₹{(product.amazonPrice || product.marketPrice) - product.fairPrice} ({savingsPercent}% off)
                           </div>
 
@@ -1601,21 +1664,21 @@ export default function OneAAStore() {
                                 setCalcProduct(product);
                                 setShowCalcModal(true);
                               }}
-                              className="py-1 px-1.5 rounded-lg bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/25 text-emerald-400 text-[10px] font-semibold flex items-center justify-center gap-1 transition-colors cursor-pointer"
+                              className="py-1 px-1.5 rounded-lg bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/25 text-emerald-600 dark:text-emerald-400 text-[10px] font-semibold flex items-center justify-center gap-1 transition-colors cursor-pointer"
                               title="Calculate resale margin & ROI"
                             >
-                              <Calculator className="w-3 h-3 text-emerald-400" />
+                              <Calculator className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
                               <span>ROI (₹{(product.amazonPrice || product.marketPrice) - product.fairPrice})</span>
                             </button>
                           </div>
 
                           {/* Delivery SLA Badge on Card */}
-                          <div className="flex items-center justify-between text-[10px] text-slate-400 font-mono pt-1 border-t border-white/[0.04]">
-                            <span className="flex items-center gap-1 text-slate-300">
+                          <div className="flex items-center justify-between text-[10px] text-slate-500 dark:text-slate-400 font-mono pt-1 border-t border-slate-200 dark:border-white/[0.04]">
+                            <span className="flex items-center gap-1 text-slate-700 dark:text-slate-300">
                               <Truck className="w-3 h-3 text-brand-orange shrink-0" />
                               <span>10–15d (<strong className="text-brand-orange">&lt;7d Exp</strong>)</span>
                             </span>
-                            <span className="text-emerald-400 font-bold">Post-Payment</span>
+                            <span className="text-emerald-600 dark:text-emerald-400 font-bold">Post-Payment</span>
                           </div>
                         </div>
                       </div>
@@ -1631,7 +1694,7 @@ export default function OneAAStore() {
                               updateQty(product.sku, -1);
                             }}
                             disabled={qty === 0}
-                            className="w-9 h-9 rounded-full bg-white/[0.06] hover:bg-white/[0.12] text-white font-bold text-sm transition-colors flex items-center justify-center disabled:opacity-30 cursor-pointer"
+                            className="w-9 h-9 rounded-full bg-slate-100 dark:bg-white/[0.06] hover:bg-slate-200 dark:hover:bg-white/[0.12] text-slate-800 dark:text-white font-bold text-sm transition-colors flex items-center justify-center disabled:opacity-30 cursor-pointer"
                             title="Decrease quantity"
                           >
                             -
@@ -1643,7 +1706,7 @@ export default function OneAAStore() {
                             value={qty === 0 ? "" : qty}
                             placeholder="0"
                             onChange={(e) => setDirectQty(product.sku, parseInt(e.target.value) || 0)}
-                            className="flex-1 bg-obsidian-950 border border-white/10 rounded-full h-9 text-center text-xs font-mono text-white focus:outline-none focus:border-brand-orange"
+                            className="flex-1 bg-slate-100 dark:bg-obsidian-950 border border-slate-300 dark:border-white/10 rounded-full h-9 text-center text-xs font-mono text-slate-900 dark:text-white focus:outline-none focus:border-brand-orange"
                           />
 
                           <button
@@ -1665,7 +1728,7 @@ export default function OneAAStore() {
                                 haptics.success();
                                 updateQty(product.sku, product.cartonSize);
                               }}
-                              className="w-full py-2.5 bg-white/[0.06] hover:bg-brand-orange hover:text-obsidian-950 text-xs font-semibold text-slate-200 rounded-full border border-white/10 hover:border-brand-orange transition-all flex items-center justify-center gap-2 cursor-pointer"
+                              className="w-full py-2.5 bg-slate-100 dark:bg-white/[0.06] hover:bg-brand-orange hover:text-obsidian-950 text-xs font-semibold text-slate-800 dark:text-slate-200 rounded-full border border-slate-300 dark:border-white/10 hover:border-brand-orange transition-all flex items-center justify-center gap-2 cursor-pointer"
                             >
                               <Layers className="w-3.5 h-3.5 text-brand-orange" />
                               +1 Master Carton ({product.cartonSize} pcs)
@@ -1677,12 +1740,12 @@ export default function OneAAStore() {
                                   haptics.medium();
                                   updateQty(product.sku, -product.cartonSize);
                                 }}
-                                className="w-9 h-9 rounded-full bg-white/[0.06] hover:bg-white/[0.12] text-white font-bold text-xs transition-colors flex items-center justify-center cursor-pointer"
+                                className="w-9 h-9 rounded-full bg-slate-100 dark:bg-white/[0.06] hover:bg-slate-200 dark:hover:bg-white/[0.12] text-slate-800 dark:text-white font-bold text-xs transition-colors flex items-center justify-center cursor-pointer"
                                 title={`Remove 1 Carton (-${product.cartonSize} pcs)`}
                               >
                                 -1b
                               </button>
-                              <div className="flex-1 bg-obsidian-950 border border-brand-orange/40 rounded-full h-9 flex items-center justify-center text-xs font-mono text-brand-orange font-bold">
+                              <div className="flex-1 bg-slate-100 dark:bg-obsidian-950 border border-brand-orange/40 rounded-full h-9 flex items-center justify-center text-xs font-mono text-brand-orange font-bold">
                                 {Math.round((qty / product.cartonSize) * 10) / 10} Boxes ({qty} pcs)
                               </div>
                               <button
@@ -1697,14 +1760,14 @@ export default function OneAAStore() {
                               </button>
                             </div>
                           )}
-                          <div className="text-[10px] text-center text-slate-400 font-mono">
+                          <div className="text-[10px] text-center text-slate-500 dark:text-slate-400 font-mono">
                             Carton Cost: ₹{(product.cartonSize * product.fairPrice).toLocaleString("en-IN")} ({product.cartonSize} pcs/box)
                           </div>
                         </div>
                       )}
 
                       {qty > 0 && (
-                        <div className="text-[10px] text-right font-mono text-emerald-400 pt-0.5">
+                        <div className="text-[10px] text-right font-mono text-emerald-600 dark:text-emerald-400 pt-0.5">
                           Selected: {qty} pcs = ₹{(qty * product.fairPrice).toLocaleString("en-IN")}
                         </div>
                       )}
@@ -1715,10 +1778,10 @@ export default function OneAAStore() {
             </div>
 
             {filteredAndSorted.length === 0 && (
-              <div className="p-16 text-center apple-glass rounded-3xl border border-white/[0.08] space-y-4">
+              <div className="p-16 text-center apple-glass rounded-3xl border border-slate-200 dark:border-white/[0.08] space-y-4">
                 <Info className="w-8 h-8 text-slate-500 mx-auto" />
-                <div className="text-white font-bold text-base">No items match your criteria</div>
-                <p className="text-xs text-slate-400 max-w-sm mx-auto">
+                <div className="text-slate-900 dark:text-white font-bold text-base">No items match your criteria</div>
+                <p className="text-xs text-slate-600 dark:text-slate-400 max-w-sm mx-auto">
                   Try clearing your search terms or selecting 'All' categories to view available factory inventory.
                 </p>
                 <button
@@ -1727,7 +1790,7 @@ export default function OneAAStore() {
                     setSearch("");
                     setSelectedCategory("All");
                   }}
-                  className="px-5 py-2.5 bg-white/[0.08] hover:bg-white/[0.15] text-xs text-brand-orange rounded-full border border-white/10 cursor-pointer"
+                  className="px-5 py-2.5 bg-slate-100 dark:bg-white/[0.08] hover:bg-slate-200 dark:hover:bg-white/[0.15] text-xs text-brand-orange rounded-full border border-slate-200 dark:border-white/10 cursor-pointer font-bold"
                 >
                   Reset Filters
                 </button>
@@ -1738,20 +1801,20 @@ export default function OneAAStore() {
             {/* 👑 CUSTOMER IS KING • NO-BARGAIN FAIR PRICE GUARANTEE BANNER     */}
             {/* (Displayed at the bottom of the page so home page is undisturbed)*/}
             {/* ================================================================ */}
-            <div className="max-w-4xl mx-auto rounded-3xl p-6 sm:p-7 bg-gradient-to-r from-amber-500/15 via-brand-orange/15 to-amber-500/10 border-2 border-amber-500/40 shadow-2xl backdrop-blur-xl flex flex-col sm:flex-row items-center justify-between gap-5 text-left mt-10">
+            <div className="max-w-4xl mx-auto rounded-3xl p-6 sm:p-7 bg-gradient-to-r from-amber-500/10 via-brand-orange/10 to-amber-500/10 dark:from-amber-500/15 dark:via-brand-orange/15 dark:to-amber-500/10 border-2 border-amber-500/40 shadow-2xl backdrop-blur-xl flex flex-col sm:flex-row items-center justify-between gap-5 text-left mt-10 transition-colors">
               <div className="flex items-start sm:items-center gap-4">
-                <div className="w-14 h-14 rounded-2xl bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-amber-300 text-3xl shrink-0 shadow-glow-orange">
+                <div className="w-14 h-14 rounded-2xl bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-amber-500 dark:text-amber-300 text-3xl shrink-0 shadow-glow-orange">
                   👑
                 </div>
                 <div>
-                  <div className="text-base sm:text-lg font-black text-white flex items-center gap-2 flex-wrap">
+                  <div className="text-base sm:text-lg font-black text-slate-900 dark:text-white flex items-center gap-2 flex-wrap">
                     <span>Customer is King: No-Bargain Fair Price Guarantee</span>
                     <span className="px-2.5 py-0.5 rounded-full bg-amber-400 text-obsidian-950 font-black text-[10px] uppercase tracking-wider">
                       Zero Haggling
                     </span>
                   </div>
-                  <div className="text-xs text-slate-300 mt-1.5 leading-relaxed">
-                    Why bargain when you already get genuine factory-floor prices? We openly reveal our formula: <strong className="text-white">Factory Cost + Doorstep Courier Freight + Flat 25% 1AA Operating Margin = Final Wholesale Price</strong>. You save 40%–70% vs Amazon/Flipkart while getting 100% pre-dispatch bench tested quality from our Mysore Hub!
+                  <div className="text-xs text-slate-700 dark:text-slate-300 mt-1.5 leading-relaxed">
+                    Why bargain when you already get genuine factory-floor prices? We openly reveal our formula: <strong className="text-slate-900 dark:text-white">Base Price (with Tax) + Flat 20% 1AA Wholesale Margin = Final Wholesale Price</strong>. You save 40%–70% vs Amazon/Flipkart while getting 100% pre-dispatch bench tested quality from our Mysore Hub!
                   </div>
                 </div>
               </div>
@@ -1761,9 +1824,9 @@ export default function OneAAStore() {
                     haptics.selection();
                     setShowTransitGuaranteeModal(true);
                   }}
-                  className="w-full sm:w-auto px-4 py-3 rounded-full bg-white/[0.08] hover:bg-white/[0.15] text-amber-300 border border-amber-500/30 text-xs font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer shadow-sm active:scale-95"
+                  className="w-full sm:w-auto px-4 py-3 rounded-full bg-white dark:bg-white/[0.08] hover:bg-slate-100 dark:hover:bg-white/[0.15] text-amber-700 dark:text-amber-300 border border-amber-500/30 text-xs font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer shadow-sm active:scale-95"
                 >
-                  <ShieldCheck className="w-4 h-4 text-emerald-400" />
+                  <ShieldCheck className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
                   <span>Transit QA &amp; 1-Click Claim</span>
                 </button>
                 <button
@@ -1781,18 +1844,18 @@ export default function OneAAStore() {
             </div>
 
             {/* GOD-TIER PROMINENT DELIVERY TIMELINE & INTERACTIVE PINCODE ESTIMATOR BAR */}
-            <div className="max-w-4xl mx-auto rounded-3xl p-5 sm:p-6 bg-gradient-to-r from-brand-orange/15 via-white/[0.03] to-brand-blue/15 border border-brand-orange/30 shadow-2xl backdrop-blur-xl space-y-4">
+            <div className="max-w-4xl mx-auto rounded-3xl p-5 sm:p-6 bg-gradient-to-r from-brand-orange/10 via-slate-50 to-brand-blue/10 dark:from-brand-orange/15 dark:via-white/[0.03] dark:to-brand-blue/15 border border-brand-orange/30 shadow-2xl backdrop-blur-xl space-y-4 transition-colors">
               <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
                 <div className="flex items-center gap-3.5 text-left">
                   <div className="w-12 h-12 rounded-2xl bg-brand-orange/20 border border-brand-orange/40 flex items-center justify-center text-brand-orange shrink-0 shadow-glow-orange">
                     <Truck className="w-6 h-6" />
                   </div>
                   <div>
-                    <div className="text-sm sm:text-base font-bold text-white flex items-center gap-2">
+                    <div className="text-sm sm:text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
                       <span>Delivery Timeline: 10–15 Days</span>
                       <span className="px-2 py-0.5 rounded-full bg-brand-orange text-obsidian-950 font-black text-[10px]">Express: Within 7 Days</span>
                     </div>
-                    <div className="text-xs text-slate-300 mt-1 leading-snug">
+                    <div className="text-xs text-slate-600 dark:text-slate-300 mt-1 leading-snug">
                       Shipment process commences <strong>immediately post payment confirmation</strong>. 100% pre-dispatch bench tested in Mysore Central Hub.
                     </div>
                   </div>
@@ -1803,9 +1866,9 @@ export default function OneAAStore() {
                       haptics.light();
                       setShowTransitModal(true);
                     }}
-                    className="px-3.5 py-2 rounded-full bg-white/[0.06] hover:bg-white/[0.12] text-slate-200 border border-white/15 text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer"
+                    className="px-3.5 py-2 rounded-full bg-slate-100 dark:bg-white/[0.06] hover:bg-slate-200 dark:hover:bg-white/[0.12] text-slate-700 dark:text-slate-200 border border-slate-300 dark:border-white/15 text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer"
                   >
-                    <MapPin className="w-3.5 h-3.5 text-emerald-400" />
+                    <MapPin className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
                     <span>City Transit SLA</span>
                   </button>
                   <button
@@ -1822,7 +1885,7 @@ export default function OneAAStore() {
               </div>
 
               {/* Real-Time Indian Pincode Delivery SLA Engine */}
-              <div className="pt-3 border-t border-white/[0.08] flex flex-col gap-2.5 text-left">
+              <div className="pt-3 border-t border-slate-200 dark:border-white/[0.08] flex flex-col gap-2.5 text-left">
                 <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
                   <div className="flex items-center gap-2 w-full sm:w-auto">
                     <div className="relative flex-1 sm:w-64">
@@ -1832,7 +1895,7 @@ export default function OneAAStore() {
                         value={pincodeInput}
                         onChange={(e) => handlePincodeCheck(e.target.value)}
                         placeholder="Check Pincode (e.g. 570001)..."
-                        className="w-full bg-black/40 border border-white/15 rounded-xl px-3 py-1.5 text-xs text-white placeholder-slate-500 font-mono focus:outline-none focus:border-brand-orange"
+                        className="w-full bg-white dark:bg-black/40 border border-slate-300 dark:border-white/15 rounded-xl px-3 py-1.5 text-xs text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 font-mono focus:outline-none focus:border-brand-orange"
                       />
                       <MapPin className="w-3.5 h-3.5 text-brand-orange absolute right-2.5 top-2.5 pointer-events-none" />
                     </div>
@@ -1841,17 +1904,17 @@ export default function OneAAStore() {
                   {pincodeResult ? (
                     <div className="w-full sm:flex-1 p-2 rounded-xl bg-emerald-500/15 border border-emerald-500/30 text-[11px] font-mono flex items-center justify-between gap-2">
                       <div>
-                        <span className="text-white font-bold">{pincodeResult.city}: </span>
-                        <span className="text-emerald-300 font-bold">{pincodeResult.eta}</span>
-                        <span className="text-slate-400 hidden md:inline"> ({pincodeResult.expressEta})</span>
+                        <span className="text-slate-900 dark:text-white font-bold">{pincodeResult.city}: </span>
+                        <span className="text-emerald-700 dark:text-emerald-300 font-bold">{pincodeResult.eta}</span>
+                        <span className="text-slate-500 dark:text-slate-400 hidden md:inline"> ({pincodeResult.expressEta})</span>
                       </div>
-                      <span className="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 text-[10px] font-bold shrink-0">
+                      <span className="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 text-[10px] font-bold shrink-0">
                         ✓ Free Door Freight
                       </span>
                     </div>
                   ) : (
-                    <div className="text-[11px] text-slate-400 font-mono flex items-center gap-1.5">
-                      <ShieldCheck className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                    <div className="text-[11px] text-slate-500 dark:text-slate-400 font-mono flex items-center gap-1.5">
+                      <ShieldCheck className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
                       <span>Mysore Hub: 24h • Bangalore: 1–2d • All-India: 10–15d (&lt;7d Express Priority)</span>
                     </div>
                   )}
@@ -2034,7 +2097,7 @@ export default function OneAAStore() {
         </div>
       )}
 
-      {/* --- DEODAP / FLIPKART STYLE MOBILE BOTTOM APP NAVIGATION BAR --- */}
+      {/* --- MOBILE BOTTOM APP NAVIGATION BAR --- */}
       <MobileBottomNav
         onGoHome={() => {
           setSelectedCategory("All");
@@ -2893,20 +2956,20 @@ export default function OneAAStore() {
       </div>
 
       {/* --- APPLE-STYLE MINIMAL FOOTER --- */}
-      <footer className="border-t border-white/[0.08] py-16 bg-obsidian-950/80 text-xs text-slate-400 mt-16">
+      <footer className="border-t border-slate-200 dark:border-white/[0.08] py-16 bg-slate-50 dark:bg-obsidian-950/80 text-xs text-slate-600 dark:text-slate-400 mt-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 grid grid-cols-1 md:grid-cols-4 gap-10">
           
           <div className="md:col-span-2 space-y-4">
-            <OneAALogo size="md" variant="dark" />
-            <p className="leading-relaxed text-slate-400 max-w-md pt-1">
-              Industrial and retail procurement re-imagined. Transparent landed pricing with built-in courier freight, certified pre-dispatch testing in Mysore Central Hub, flat 25% transparent margin, and zero marketplace clutter.
+            <OneAALogo size="md" variant="adaptive" />
+            <p className="leading-relaxed text-slate-600 dark:text-slate-400 max-w-md pt-1">
+              Industrial and retail procurement re-imagined. Transparent landed pricing with built-in courier freight, certified pre-dispatch testing in Mysore Central Hub, flat 20% transparent margin, and zero marketplace clutter.
             </p>
-            <div className="flex items-center gap-3 pt-2 text-slate-300">
+            <div className="flex items-center gap-3 pt-2 text-slate-700 dark:text-slate-300">
               <span className="flex items-center gap-1.5">
                 <ShieldCheck className="w-4 h-4 text-brand-blue-light" />
                 100% Pre-Dispatch Inspection
               </span>
-              <span className="text-white/20">•</span>
+              <span className="text-slate-400 dark:text-white/20">•</span>
               <span className="flex items-center gap-1.5">
                 <Truck className="w-4 h-4 text-brand-orange" />
                 Pan-India Logistics Cover
@@ -2933,7 +2996,7 @@ export default function OneAAStore() {
                   haptics.light();
                   setShowDisplayModal(true);
                 }}
-                className="px-2.5 py-1 rounded-full bg-white/[0.04] hover:bg-white/[0.08] text-slate-300 border border-white/10 font-semibold flex items-center gap-1 transition-colors cursor-pointer"
+                className="px-2.5 py-1 rounded-full bg-slate-200 dark:bg-white/[0.04] hover:bg-slate-300 dark:hover:bg-white/[0.08] text-slate-700 dark:text-slate-300 border border-slate-300 dark:border-white/10 font-semibold flex items-center gap-1 transition-colors cursor-pointer"
               >
                 <Sliders className="w-2.5 h-2.5 text-brand-blue-light" />
                 <span>Display Resolution Settings</span>
@@ -2944,44 +3007,44 @@ export default function OneAAStore() {
                   haptics.light();
                   setShowTransitModal(true);
                 }}
-                className="px-2.5 py-1 rounded-full bg-white/[0.04] hover:bg-white/[0.08] text-emerald-400 border border-emerald-500/30 font-semibold flex items-center gap-1 transition-colors cursor-pointer"
+                className="px-2.5 py-1 rounded-full bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 font-semibold flex items-center gap-1 transition-colors cursor-pointer"
               >
-                <Truck className="w-2.5 h-2.5 text-emerald-400" />
+                <Truck className="w-2.5 h-2.5 text-emerald-600 dark:text-emerald-400" />
                 <span>City Transit Times</span>
               </button>
 
               <button
                 onClick={() => handleOpenTracking()}
-                className="px-2.5 py-1 rounded-full bg-white/[0.04] hover:bg-white/[0.08] text-emerald-400 border border-emerald-500/30 font-semibold flex items-center gap-1 transition-colors cursor-pointer"
+                className="px-2.5 py-1 rounded-full bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 font-semibold flex items-center gap-1 transition-colors cursor-pointer"
               >
-                <Navigation className="w-2.5 h-2.5 text-emerald-400" />
+                <Navigation className="w-2.5 h-2.5 text-emerald-600 dark:text-emerald-400" />
                 <span>Live Package Radar</span>
               </button>
             </div>
           </div>
 
           <div className="space-y-3">
-            <div className="text-white font-bold text-sm">Central Dispatch Facility</div>
-            <p className="leading-relaxed text-slate-400">
+            <div className="text-slate-900 dark:text-white font-bold text-sm">Central Dispatch Facility</div>
+            <p className="leading-relaxed text-slate-600 dark:text-slate-400">
               #195, 2nd Stage, 5th Cross,<br />
               Rajendra Nagar, Kesare,<br />
               Mysore - 570007, Karnataka, India
             </p>
-            <div className="text-[11px] text-emerald-400 font-mono pt-1">
+            <div className="text-[11px] text-emerald-600 dark:text-emerald-400 font-mono pt-1">
               Hub Hours: 08:30 AM - 08:00 PM IST
             </div>
           </div>
 
           <div className="space-y-3">
-            <div className="text-white font-bold text-sm">Direct Contact Channels</div>
+            <div className="text-slate-900 dark:text-white font-bold text-sm">Direct Contact Channels</div>
             <p>
               Email: <a href="mailto:1aaavailablealways@gmail.com" className="text-brand-orange hover:underline">1aaavailablealways@gmail.com</a>
             </p>
             <div className="space-y-1 pt-1">
               <p>
-                Owner Direct Hotline: <a href="tel:+917406231167" className="text-white hover:text-brand-orange font-bold font-mono">+91 74062 31167</a>
+                Owner Direct Hotline: <a href="tel:+917406231167" className="text-slate-900 dark:text-white hover:text-brand-orange font-bold font-mono">+91 74062 31167</a>
               </p>
-              <p className="text-[11px] text-slate-400">
+              <p className="text-[11px] text-slate-500 dark:text-slate-400">
                 Abdul Darvesh • Mysore Central Dispatch Desk
               </p>
             </div>
@@ -2992,9 +3055,9 @@ export default function OneAAStore() {
 
         </div>
 
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 pt-10 mt-10 border-t border-white/[0.06] flex flex-col sm:flex-row justify-between items-center gap-3 text-[11px] text-slate-500">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 pt-10 mt-10 border-t border-slate-200 dark:border-white/[0.06] flex flex-col sm:flex-row justify-between items-center gap-3 text-[11px] text-slate-500">
           <div>© {new Date().getFullYear()} 1AA (Available Always) — 1st Available Always. All rights reserved.</div>
-          <div className="font-mono">Direct Factory Sourcing • Built-In Courier Freight • Flat 25% Margin • 👑 Customer is King Guarantee</div>
+          <div className="font-mono">Direct Factory Sourcing • Built-In Courier Freight • Flat 20% Margin • 👑 Customer is King Guarantee</div>
         </div>
       </footer>
 

@@ -1230,7 +1230,7 @@ const RAW_CATALOG_PRODUCTS: Product[] = [
   {
     id: "prod-049",
     sku: "17969_dinosaurs_roaring_toy_1 pc",
-    name: "Dinosaur Roaring Toy- Interactive Sound & Light Model | DeoDap",
+    name: "Dinosaur Roaring Toy - Interactive Sound & Light Model",
     category: "Jewellery & Accessories",
     baseCost: 32,
     fairPrice: 71, // Landed + 25% Margin
@@ -2712,7 +2712,7 @@ const RAW_CATALOG_PRODUCTS: Product[] = [
   {
     id: "prod-106",
     sku: "17526_7in1_stationary_kit_set",
-    name: "Kids Stationery Set- 7-In-1 School Kit For Girls LJ & Boys | DeoDap",
+    name: "Kids Stationery Set - 7-In-1 School Kit For Girls & Boys",
     category: "Stationery & Desk Supplies",
     baseCost: 65,
     fairPrice: 113, // Landed + 25% Margin
@@ -5835,14 +5835,16 @@ export const CATALOG_PRODUCTS: Product[] = RAW_CATALOG_PRODUCTS.map((p) => {
   const pricing = calculate1AAPricing(p.baseCost, p.marketPrice, p.category, p.weight);
   return {
     ...p,
-    courierCost: pricing.courierCost,
-    landedCost: pricing.landedCost,
-    fairPrice: pricing.fairPrice,
+    baseCost: pricing.baseCost, // Actual DeoDap price with tax as base price
+    courierCost: 0,
+    landedCost: pricing.baseCost,
+    fairPrice: pricing.fairPrice, // 1AA Wholesale Price: Base Price + 20% Flat Margin
     margin1AAPercent: pricing.margin1AAPercent,
     margin1AAAmount: pricing.margin1AAAmount,
     amazonPrice: pricing.amazonPrice,
     flipkartPrice: pricing.flipkartPrice,
     chickpetPrice: pricing.chickpetPrice,
+    wholesaleMarketPrice: pricing.wholesaleMarketPrice,
   };
 });
 

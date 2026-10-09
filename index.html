@@ -1,15 +1,27 @@
 <!doctype html>
-<html lang="en" class="dark">
+<html lang="en">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover" />
+    <script>
+      (function() {
+        try {
+          var saved = localStorage.getItem('1aa_theme');
+          if (saved === 'dark') {
+            document.documentElement.classList.add('dark');
+          } else {
+            document.documentElement.classList.remove('dark');
+          }
+        } catch(e) {}
+      })();
+    </script>
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='25' fill='%23070d1e'/><path d='M25 25 L45 25 L45 80 L25 80 Z' fill='%230047AB'/><path d='M45 25 C65 15, 80 35, 75 55 C70 75, 45 70, 60 85 C70 95, 85 85, 85 70' stroke='%23FF8C00' stroke-width='14' stroke-linecap='round' fill='none'/><circle cx='35' cy='35' r='5' fill='%23FF8C00'/></svg>" />
-    <meta name="theme-color" content="#070d1e" />
+    <meta name="theme-color" content="#ffffff" />
 
     <!-- Search Engine Title & Meta Description -->
-    <title>1AA Store | India's #1 Factory Direct Wholesale Sourcing | Primary Sourcing vs DeoDap, Amazon &amp; Flipkart</title>
-    <meta name="description" content="1AA (Available Always) is India's leading direct primary factory B2B wholesale platform from Mysore Central Hub. Sourcing home, kitchen, automotive, electronics &amp; novelties at real factory cost with built-in doorstep courier freight, 18% GST input credit, and flat 25% margin. Zero marketplace markups. 👑 Customer is King Guarantee." />
-    <meta name="keywords" content="1AA store, 1aa wholesale, deodap wholesale, deodap alternative, wholesale market india, b2b sourcing platform, factory direct wholesale, mysore wholesale market, bangalore wholesale, chickpet wholesale alternative, reselling business supplies, wholesale dropshipping india, abdul darvesh 1aa" />
+    <title>1AA Store | India's #1 Factory Direct Wholesale Sourcing | Real-Time Wholesale vs Amazon &amp; Flipkart</title>
+    <meta name="description" content="1AA (Available Always) is India's leading direct primary factory B2B wholesale platform from Mysore Central Hub. Sourcing home, kitchen, automotive, electronics &amp; novelties at real factory cost with built-in doorstep courier freight, 18% GST input credit, and flat 20% margin. Zero marketplace markups. 👑 Customer is King Guarantee." />
+    <meta name="keywords" content="1AA store, 1aa wholesale, wholesale market india, b2b sourcing platform, factory direct wholesale, mysore wholesale market, bangalore wholesale, chickpet wholesale alternative, reselling business supplies, wholesale dropshipping india, abdul darvesh 1aa" />
     <meta name="author" content="Abdul Darvesh - 1AA Available Always" />
     <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
     <link rel="canonical" href="https://1aa-store.vercel.app/" />
@@ -26,7 +38,7 @@
     <meta property="og:site_name" content="1AA (Available Always)" />
     <meta property="og:url" content="https://1aa-store.vercel.app/" />
     <meta property="og:title" content="1AA Store | India's #1 Primary Factory Wholesale Platform" />
-    <meta property="og:description" content="Direct primary factory cost + built-in doorstep courier freight + flat 25% margin. Zero marketplace commissions vs Amazon, Flipkart &amp; DeoDap. 👑 Customer is King Guarantee." />
+    <meta property="og:description" content="Direct primary factory cost + built-in doorstep courier freight + flat 20% margin. Zero marketplace commissions vs Amazon &amp; Flipkart. 👑 Customer is King Guarantee." />
     <meta property="og:image" content="https://1aa-store.vercel.app/1AA-Brand-Logo.jpg" />
     <meta property="og:image:width" content="1200" />
     <meta property="og:image:height" content="630" />
@@ -99,10 +111,10 @@
       "mainEntity": [
         {
           "@type": "Question",
-          "name": "How does 1AA compare to DeoDap, Amazon, and Flipkart?",
+          "name": "How does 1AA compare to Amazon, Flipkart, and Wholesale Markets?",
           "acceptedAnswer": {
             "@type": "Answer",
-            "text": "1AA sources products directly from primary factories with an honest, transparent 25% margin. Built-in doorstep courier freight is already included in the price, along with 18% GST Input Tax Credit. Unlike DeoDap which tacks on extra courier fees per kg and extra GST at checkout, 1AA has zero surprise checkout charges and is 40% to 70% cheaper than Amazon or Flipkart retail prices."
+            "text": "1AA captures the actual base price with tax and applies a transparent flat 20% wholesale margin. Doorstep courier freight is already included in the price, along with 18% GST Input Tax Credit. 1AA delivers 40% to 70% cheaper prices than Amazon or Flipkart retail benchmarks with zero surprise checkout charges."
           }
         },
         {
@@ -125,7 +137,7 @@
     }
     </script>
   </head>
-  <body class="bg-midnight-950 text-slate-100 min-h-screen overflow-x-hidden w-full max-w-full">
+  <body class="bg-white dark:bg-midnight-950 text-slate-900 dark:text-slate-100 min-h-screen overflow-x-hidden w-full max-w-full">
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>

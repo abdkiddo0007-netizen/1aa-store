@@ -3,16 +3,17 @@ export interface Product {
   sku: string;
   name: string;
   category: string;
-  baseCost: number;     // Direct Factory Sourcing Price
-  fairPrice: number;    // Landed Cost + 25% Flat Margin (Inclusive of Courier)
+  baseCost: number;     // Base Price (Actual DeoDap Wholesale Price with Tax)
+  fairPrice: number;    // 1AA Final Wholesale Price (Base Price + Flat 20% Margin)
   marketPrice: number;  // Amazon / Flipkart Retail Benchmark
-  courierCost?: number; // Built-in Courier & Freight allocation from Mysore Central Hub
-  landedCost?: number;  // baseCost + courierCost
-  margin1AAPercent?: number; // 1AA Guaranteed Transparent Margin (25%)
-  margin1AAAmount?: number;  // 1AA Net Profit per unit
+  courierCost?: number; // Doorstep Courier Freight (Included)
+  landedCost?: number;  // Base Price with Tax
+  margin1AAPercent?: number; // Flat 20% Transparent 1AA Wholesale Margin
+  margin1AAAmount?: number;  // 1AA Operating Margin per unit (20%)
   amazonPrice?: number; // Real-time Amazon India Benchmark
   flipkartPrice?: number;// Real-time Flipkart Benchmark
-  chickpetPrice?: number;// Offline Bangalore Chickpet / Mysore Wholesale Benchmark
+  chickpetPrice?: number;// Real-time Wholesale Trade Market Benchmark
+  wholesaleMarketPrice?: number; // Real-time Wholesale Market Rate
   cartonSize: number;
   inStock: number;
   image: string;

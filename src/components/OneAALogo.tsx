@@ -22,13 +22,13 @@ export default function OneAALogo({
   const textColor = {
     light: 'text-obsidian-950',
     dark: 'text-white',
-    adaptive: 'text-white',
+    adaptive: 'text-slate-900 dark:text-white',
   }[variant];
 
   const subtextColor = {
     light: 'text-brand-blue font-serif italic',
     dark: 'text-brand-orange font-serif italic',
-    adaptive: 'text-slate-300 font-serif italic',
+    adaptive: 'text-slate-600 dark:text-slate-300 font-serif italic',
   }[variant];
 
   return (

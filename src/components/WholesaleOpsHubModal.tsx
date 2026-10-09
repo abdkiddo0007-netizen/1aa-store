@@ -122,7 +122,7 @@ export default function WholesaleOpsHubModal({
       title: "Real-Time Price Radar",
       badge: "LIVE ARBITRAGE",
       badgeColor: "bg-emerald-500/20 text-emerald-400 border-emerald-500/30",
-      desc: "Compare 1AA factory direct prices vs Amazon, Flipkart & Chickpet offline wholesale.",
+      desc: "Compare 1AA factory direct prices vs Amazon, Flipkart & Wholesale Market real-time.",
       icon: TrendingUp,
       iconColor: "text-brand-orange",
       action: () => {

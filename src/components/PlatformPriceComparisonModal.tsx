@@ -70,22 +70,17 @@ export default function PlatformPriceComparisonModal({
 
   // Breakdown figures
   const baseCost = activeProduct.baseCost;
-  const courierCost = activeProduct.courierCost || 35;
-  const landedCost = activeProduct.landedCost || baseCost + courierCost;
   const oneAAPrice = activeProduct.fairPrice;
-  const oneAAProfit = activeProduct.margin1AAAmount || Math.round(landedCost * 0.25);
-  const oneAAMarginPct = activeProduct.margin1AAPercent || 25;
+  const oneAAProfit = activeProduct.margin1AAAmount || Math.round(baseCost * 0.20);
 
   // Competitor benchmarks
   const amazonPrice = activeProduct.amazonPrice || activeProduct.marketPrice;
   const flipkartPrice = activeProduct.flipkartPrice || Math.round(amazonPrice * 0.96);
-  const chickpetPrice = activeProduct.chickpetPrice || Math.round(oneAAPrice * 1.25 + 30);
-  const deodapPrice = Math.round(oneAAPrice * 1.14 + 35); // Real DeoDap wholesale rate + extra shipping at checkout
+  const wholesaleMarketPrice = activeProduct.wholesaleMarketPrice || activeProduct.chickpetPrice || Math.round(oneAAPrice * 1.18 + 15);
 
   // Live platform verification URLs
   const amazonLiveUrl = `https://www.amazon.in/s?k=${encodeURIComponent(activeProduct.name)}`;
   const flipkartLiveUrl = `https://www.flipkart.com/search?q=${encodeURIComponent(activeProduct.name)}`;
-  const deodapLiveUrl = `https://deodap.in/search?q=${encodeURIComponent(activeProduct.name)}`;
 
   // Customer savings
   const savingsVsAmazon = Math.max(0, amazonPrice - oneAAPrice);
@@ -104,11 +99,10 @@ export default function PlatformPriceComparisonModal({
     msg += `🔖 *SKU:* \`${activeProduct.sku}\`\n\n`;
     msg += `━━━━━━━━━━━━━━━━━━━━\n`;
     msg += `💰 *CROSS-PLATFORM PRICE RADAR:*\n`;
-    msg += `• *1AA Mysore Direct:* ${formatCurrency(oneAAPrice, currency)} *(Free Built-in Courier Included)*\n`;
-    msg += `• *DeoDap Wholesale:* ${formatCurrency(deodapPrice, currency)} *(Extra GST & Shipping at checkout)*\n`;
+    msg += `• *1AA Mysore Direct:* ${formatCurrency(oneAAPrice, currency)} *(Base Price with Tax + Flat 20% Margin)*\n`;
+    msg += `• *Wholesale Market Real-Time:* ${formatCurrency(wholesaleMarketPrice, currency)} *(High MOQ + Extra Freight)*\n`;
     msg += `• *Amazon India:* ${formatCurrency(amazonPrice, currency)} (Retail Marketplace)\n`;
-    msg += `• *Flipkart:* ${formatCurrency(flipkartPrice, currency)} (Retail Marketplace)\n`;
-    msg += `• *Bangalore/Mysore Offline Wholesale:* ${formatCurrency(chickpetPrice, currency)} (High MOQ + Extra Freight)\n\n`;
+    msg += `• *Flipkart:* ${formatCurrency(flipkartPrice, currency)} (Retail Marketplace)\n\n`;
     msg += `━━━━━━━━━━━━━━━━━━━━\n`;
     msg += `💡 *DIRECT SAVINGS:* ${formatCurrency(savingsVsAmazon, currency)} (${savingsPctVsAmazon}% Cheaper than Amazon!)\n`;
     msg += `🚚 *Delivery:* 10–15 Days Standard (<7 Days Express) post-payment\n`;
@@ -128,25 +122,25 @@ export default function PlatformPriceComparisonModal({
         }
       }}
     >
-      <div className="relative w-full max-w-4xl bg-obsidian-900 border border-white/15 rounded-2xl sm:rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[92dvh] sm:max-h-[90vh]">
+      <div className="relative w-full max-w-4xl bg-white dark:bg-obsidian-900 border border-slate-200 dark:border-white/15 rounded-2xl sm:rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[92dvh] sm:max-h-[90vh]">
         
         {/* Modal Header */}
-        <div className="sticky top-0 z-30 shrink-0 px-4 py-3 sm:px-6 sm:py-4 bg-obsidian-950/95 backdrop-blur-md border-b border-white/10 flex items-center justify-between">
+        <div className="sticky top-0 z-30 shrink-0 px-4 py-3 sm:px-6 sm:py-4 bg-slate-50/95 dark:bg-obsidian-950/95 backdrop-blur-md border-b border-slate-200 dark:border-white/10 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-2xl bg-brand-orange/15 border border-brand-orange/30 flex items-center justify-center text-brand-orange shadow-glow-orange shrink-0">
               <TrendingUp className="w-5 h-5" />
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h2 className="text-sm sm:text-base font-black text-white tracking-tight">
+                <h2 className="text-sm sm:text-base font-black text-slate-900 dark:text-white tracking-tight">
                   Real-Time Cross-Platform Price Radar
                 </h2>
-                <span className="hidden sm:inline-block px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
+                <span className="hidden sm:inline-block px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30">
                   LIVE ARBITRAGE
                 </span>
               </div>
-              <p className="text-[11px] text-slate-400">
-                1AA Mysore Central Hub vs Amazon.in, Flipkart &amp; Karnataka Wholesale
+              <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                1AA Mysore Central Hub vs Amazon.in, Flipkart &amp; Wholesale Trade
               </p>
             </div>
           </div>
@@ -250,137 +244,122 @@ export default function PlatformPriceComparisonModal({
             </div>
           </div>
 
-          {/* SIDE-BY-SIDE PLATFORM COMPARISON GRID */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3.5">
+          {/* SIDE-BY-SIDE PLATFORM COMPARISON GRID (4 BENCHMARKS) */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             
             {/* 1AA MYSORE DIRECT (HERO CARD) */}
-            <div className="relative rounded-2xl p-4 bg-gradient-to-b from-brand-orange/15 via-obsidian-900/90 to-obsidian-900 border-2 border-brand-orange/60 shadow-glow-orange flex flex-col justify-between space-y-4">
+            <div className="relative rounded-2xl p-4 bg-gradient-to-b from-brand-orange/15 via-brand-orange/5 to-transparent dark:from-brand-orange/15 dark:via-obsidian-900/90 dark:to-obsidian-900 border-2 border-brand-orange/60 shadow-glow-orange flex flex-col justify-between space-y-4">
               <div className="space-y-3">
                 <div className="flex justify-between items-start">
                   <div className="inline-block px-2.5 py-0.5 rounded-full bg-brand-orange text-obsidian-950 text-[10px] font-black tracking-wide">
                     1AA DIRECT (FACTORY)
                   </div>
-                  <span className="text-[10px] font-mono text-emerald-400 font-bold flex items-center gap-1">
+                  <span className="text-[10px] font-mono text-emerald-600 dark:text-emerald-400 font-bold flex items-center gap-1">
                     <CheckCircle2 className="w-3 h-3" /> BEST VALUE
                   </span>
                 </div>
 
                 <div>
-                  <div className="text-[10px] text-slate-400 uppercase font-mono">1AA Sourcing Price</div>
+                  <div className="text-[10px] text-slate-500 dark:text-slate-400 uppercase font-mono">1AA Wholesale Buy Price</div>
                   <div className="text-2xl sm:text-3xl font-black text-brand-orange font-mono">
                     {formatCurrency(oneAAPrice, currency)}
                   </div>
-                  <div className="text-[10px] text-emerald-400 font-mono font-medium">
-                    ✓ Doorstep Courier Freight Included • Flat 25% Margin
+                  <div className="text-[10px] text-emerald-600 dark:text-emerald-400 font-mono font-medium">
+                    ✓ Base Price with Tax + Flat 20% Margin
                   </div>
                 </div>
 
-                <div className="space-y-1.5 text-[11px] border-t border-white/10 pt-2 font-mono">
-                  <div className="flex justify-between text-slate-400">
-                    <span>Base Factory Cost:</span>
-                    <span className="text-slate-300">₹{baseCost}</span>
-                  </div>
-                  <div className="flex justify-between text-slate-400">
-                    <span>Built-In Freight:</span>
-                    <span className="text-slate-300">₹{courierCost}</span>
+                <div className="space-y-1.5 text-[11px] border-t border-slate-200 dark:border-white/10 pt-2 font-mono">
+                  <div className="flex justify-between text-slate-600 dark:text-slate-400">
+                    <span>Base Price (with Tax):</span>
+                    <span className="text-slate-800 dark:text-slate-300 font-bold">₹{baseCost}</span>
                   </div>
                   <div className="flex justify-between text-brand-orange font-semibold">
-                    <span>1AA Wholesale Margin ({oneAAMarginPct}%):</span>
+                    <span>1AA Wholesale Margin (20%):</span>
                     <span>+₹{oneAAProfit}</span>
                   </div>
-                  <div className="flex justify-between text-slate-400">
+                  <div className="flex justify-between text-slate-600 dark:text-slate-400">
                     <span>Platform Commission:</span>
-                    <span className="text-emerald-400 font-bold">₹0 (Direct)</span>
+                    <span className="text-emerald-600 dark:text-emerald-400 font-bold">₹0 (Direct)</span>
+                  </div>
+                  <div className="flex justify-between text-slate-600 dark:text-slate-400">
+                    <span>Fulfillment Hub:</span>
+                    <span className="text-slate-800 dark:text-slate-300">Mysore Central</span>
                   </div>
                 </div>
               </div>
 
-              <div className="text-[10px] bg-black/40 p-2 rounded-xl border border-white/10 space-y-1">
-                <div className="text-slate-300 font-semibold flex items-center gap-1">
+              <div className="text-[10px] bg-slate-100 dark:bg-black/40 p-2.5 rounded-xl border border-slate-200 dark:border-white/10 space-y-1">
+                <div className="text-slate-800 dark:text-slate-300 font-semibold flex items-center gap-1">
                   <Truck className="w-3 h-3 text-brand-orange" />
                   <span>10–15d Standard (&lt;7d Priority)</span>
                 </div>
-                <div className="text-slate-400">
+                <div className="text-slate-600 dark:text-slate-400">
                   Pre-dispatch tested in Mysore Central Hub
                 </div>
               </div>
             </div>
 
-            {/* DEODAP WHOLESALE BENCHMARK */}
-            <div className="rounded-2xl p-4 bg-white/[0.02] border border-white/10 flex flex-col justify-between space-y-4">
+            {/* WHOLESALE REAL-TIME TRADE BENCHMARK */}
+            <div className="rounded-2xl p-4 bg-slate-50 dark:bg-white/[0.02] border border-slate-200 dark:border-white/10 flex flex-col justify-between space-y-4">
               <div className="space-y-3">
                 <div className="flex justify-between items-start">
-                  <span className="text-xs font-bold text-white flex items-center gap-1.5">
-                    <span className="text-red-500 font-black">DeoDap</span>
-                    <span className="text-[10px] text-slate-400 font-mono">Wholesale</span>
+                  <span className="text-xs font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
+                    <span className="text-amber-500 dark:text-amber-300 font-black">Wholesale Market</span>
                   </span>
-                  <span className="text-[10px] text-amber-400 font-mono font-bold">
-                    +{Math.round(((deodapPrice - oneAAPrice) / deodapPrice) * 100)}% HIGHER
-                  </span>
+                  <span className="text-[10px] text-slate-500 dark:text-slate-400 font-mono">Real-Time B2B</span>
                 </div>
 
                 <div>
-                  <div className="text-[10px] text-slate-400 uppercase font-mono">Landed Wholesale Rate</div>
-                  <div className="text-2xl font-bold text-white font-mono">
-                    {formatCurrency(deodapPrice, currency)}
+                  <div className="text-[10px] text-slate-500 dark:text-slate-400 uppercase font-mono">Trader Wholesale Rate</div>
+                  <div className="text-2xl font-bold text-slate-800 dark:text-slate-300 font-mono">
+                    {formatCurrency(wholesaleMarketPrice, currency)}
                   </div>
-                  <div className="text-[10px] text-slate-500 font-mono">
-                    Product rate + shipping at cart
+                  <div className="text-[10px] text-amber-600 dark:text-amber-400 font-mono">
+                    Requires 50-100 pcs MOQ
                   </div>
                 </div>
 
-                <div className="space-y-1.5 text-[11px] border-t border-white/10 pt-2 font-mono text-slate-400">
+                <div className="space-y-1.5 text-[11px] border-t border-slate-200 dark:border-white/10 pt-2 font-mono text-slate-600 dark:text-slate-400">
                   <div className="flex justify-between">
-                    <span>Product Base Price:</span>
-                    <span className="text-slate-300">₹{Math.round(oneAAPrice * 0.95)}</span>
+                    <span>Doorstep Delivery:</span>
+                    <span className="text-rose-500 dark:text-rose-400 font-bold">Extra ₹400-800</span>
                   </div>
                   <div className="flex justify-between">
-                    <span>Added Courier Freight:</span>
-                    <span className="text-rose-400 font-bold">+₹60 - ₹120/kg</span>
+                    <span>Replacement Warranty:</span>
+                    <span className="text-rose-500 dark:text-rose-400">None (As-is)</span>
                   </div>
                   <div className="flex justify-between">
-                    <span>Added GST on Invoice:</span>
-                    <span className="text-rose-400 font-bold">+18% extra</span>
+                    <span>Transit Loss Cover:</span>
+                    <span className="text-rose-500 dark:text-rose-400">Buyer's Risk</span>
                   </div>
                   <div className="flex justify-between text-slate-500">
-                    <span>1AA Net Advantage:</span>
-                    <span className="text-emerald-400 font-bold">{formatCurrency(deodapPrice - oneAAPrice, currency)}</span>
+                    <span>Sourcing Access:</span>
+                    <span className="text-slate-700 dark:text-slate-400">Travel required</span>
                   </div>
                 </div>
               </div>
 
-              <div className="space-y-2">
-                <div className="text-[10px] bg-white/[0.02] p-2 rounded-xl border border-white/5 text-slate-500">
-                  1AA includes door delivery &amp; zero surprise cart fees.
-                </div>
-                <a
-                  href={deodapLiveUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="w-full py-1.5 px-2.5 rounded-xl bg-red-600/15 hover:bg-red-600/25 text-red-300 border border-red-500/30 text-[10px] font-mono font-bold flex items-center justify-center gap-1 transition-all cursor-pointer"
-                  title="Verify price live on DeoDap.in"
-                >
-                  <span>Verify Live on DeoDap</span>
-                  <ExternalLink className="w-3 h-3 text-red-400" />
-                </a>
+              <div className="text-[10px] bg-slate-100 dark:bg-white/[0.02] p-2.5 rounded-xl border border-slate-200 dark:border-white/5 text-slate-600 dark:text-slate-400">
+                1AA gives you bottom factory wholesale pricing without high MOQ or travel expense.
               </div>
             </div>
 
             {/* AMAZON INDIA BENCHMARK */}
-            <div className="rounded-2xl p-4 bg-white/[0.02] border border-white/10 flex flex-col justify-between space-y-4">
+            <div className="rounded-2xl p-4 bg-slate-50 dark:bg-white/[0.02] border border-slate-200 dark:border-white/10 flex flex-col justify-between space-y-4">
               <div className="space-y-3">
                 <div className="flex justify-between items-start">
-                  <span className="text-xs font-bold text-white flex items-center gap-1.5">
-                    <span className="text-amber-400 font-black">amazon</span>.in
+                  <span className="text-xs font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
+                    <span className="text-amber-500 font-black">amazon</span>.in
                   </span>
-                  <span className="text-[10px] text-rose-400 font-mono font-bold">
+                  <span className="text-[10px] text-rose-500 dark:text-rose-400 font-mono font-bold">
                     +{savingsPctVsAmazon}% HIGHER
                   </span>
                 </div>
 
                 <div>
-                  <div className="text-[10px] text-slate-400 uppercase font-mono">Retail Marketplace Price</div>
-                  <div className="text-2xl font-bold text-white font-mono">
+                  <div className="text-[10px] text-slate-500 dark:text-slate-400 uppercase font-mono">Retail Marketplace Price</div>
+                  <div className="text-2xl font-bold text-slate-900 dark:text-white font-mono">
                     {formatCurrency(amazonPrice, currency)}
                   </div>
                   <div className="text-[10px] text-slate-500 font-mono">
@@ -388,58 +367,58 @@ export default function PlatformPriceComparisonModal({
                   </div>
                 </div>
 
-                <div className="space-y-1.5 text-[11px] border-t border-white/10 pt-2 font-mono text-slate-400">
+                <div className="space-y-1.5 text-[11px] border-t border-slate-200 dark:border-white/10 pt-2 font-mono text-slate-600 dark:text-slate-400">
                   <div className="flex justify-between">
                     <span>Referral Fee (15%):</span>
-                    <span className="text-rose-400">₹{Math.round(amazonPrice * 0.15)}</span>
+                    <span className="text-rose-500 dark:text-rose-400">₹{Math.round(amazonPrice * 0.15)}</span>
                   </div>
                   <div className="flex justify-between">
                     <span>Closing &amp; Pick Fee:</span>
-                    <span className="text-rose-400">₹65 - ₹85</span>
+                    <span className="text-rose-500 dark:text-rose-400">₹65 - ₹85</span>
                   </div>
                   <div className="flex justify-between">
                     <span>GST on Fees (18%):</span>
-                    <span className="text-rose-400">₹30 - ₹45</span>
+                    <span className="text-rose-500 dark:text-rose-400">₹30 - ₹45</span>
                   </div>
                   <div className="flex justify-between text-slate-500">
                     <span>Total Platform Tax:</span>
-                    <span className="text-rose-400 font-bold">~₹{Math.round(amazonPrice * 0.32)}</span>
+                    <span className="text-rose-500 dark:text-rose-400 font-bold">~₹{Math.round(amazonPrice * 0.32)}</span>
                   </div>
                 </div>
               </div>
 
               <div className="space-y-2">
-                <div className="text-[10px] bg-white/[0.02] p-2 rounded-xl border border-white/5 text-slate-500">
+                <div className="text-[10px] bg-slate-100 dark:bg-white/[0.02] p-2.5 rounded-xl border border-slate-200 dark:border-white/5 text-slate-600 dark:text-slate-400">
                   Buyer pays massive marketplace commissions &amp; ad charges.
                 </div>
                 <a
                   href={amazonLiveUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="w-full py-1.5 px-2.5 rounded-xl bg-amber-500/15 hover:bg-amber-500/25 text-amber-300 border border-amber-500/30 text-[10px] font-mono font-bold flex items-center justify-center gap-1 transition-all cursor-pointer"
+                  className="w-full py-1.5 px-2.5 rounded-xl bg-amber-500/15 hover:bg-amber-500/25 text-amber-700 dark:text-amber-300 border border-amber-500/30 text-[10px] font-mono font-bold flex items-center justify-center gap-1 transition-all cursor-pointer"
                   title="Verify price live on Amazon.in"
                 >
                   <span>Verify Live on Amazon</span>
-                  <ExternalLink className="w-3 h-3 text-amber-400" />
+                  <ExternalLink className="w-3 h-3 text-amber-500" />
                 </a>
               </div>
             </div>
 
             {/* FLIPKART BENCHMARK */}
-            <div className="rounded-2xl p-4 bg-white/[0.02] border border-white/10 flex flex-col justify-between space-y-4">
+            <div className="rounded-2xl p-4 bg-slate-50 dark:bg-white/[0.02] border border-slate-200 dark:border-white/10 flex flex-col justify-between space-y-4">
               <div className="space-y-3">
                 <div className="flex justify-between items-start">
-                  <span className="text-xs font-bold text-white flex items-center gap-1.5">
-                    <span className="text-blue-400 font-black">Flipkart</span>
+                  <span className="text-xs font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
+                    <span className="text-blue-500 dark:text-blue-400 font-black">Flipkart</span>
                   </span>
-                  <span className="text-[10px] text-rose-400 font-mono font-bold">
+                  <span className="text-[10px] text-rose-500 dark:text-rose-400 font-mono font-bold">
                     +{Math.round(((flipkartPrice - oneAAPrice) / flipkartPrice) * 100)}% HIGHER
                   </span>
                 </div>
 
                 <div>
-                  <div className="text-[10px] text-slate-400 uppercase font-mono">Retail Marketplace Price</div>
-                  <div className="text-2xl font-bold text-white font-mono">
+                  <div className="text-[10px] text-slate-500 dark:text-slate-400 uppercase font-mono">Retail Marketplace Price</div>
+                  <div className="text-2xl font-bold text-slate-900 dark:text-white font-mono">
                     {formatCurrency(flipkartPrice, currency)}
                   </div>
                   <div className="text-[10px] text-slate-500 font-mono">
@@ -447,85 +426,40 @@ export default function PlatformPriceComparisonModal({
                   </div>
                 </div>
 
-                <div className="space-y-1.5 text-[11px] border-t border-white/10 pt-2 font-mono text-slate-400">
+                <div className="space-y-1.5 text-[11px] border-t border-slate-200 dark:border-white/10 pt-2 font-mono text-slate-600 dark:text-slate-400">
                   <div className="flex justify-between">
                     <span>Platform Commission:</span>
-                    <span className="text-rose-400">12% - 18%</span>
+                    <span className="text-rose-500 dark:text-rose-400">12% - 18%</span>
                   </div>
                   <div className="flex justify-between">
                     <span>Logistics Cut:</span>
-                    <span className="text-rose-400">₹70+</span>
+                    <span className="text-rose-500 dark:text-rose-400">₹70+</span>
                   </div>
                   <div className="flex justify-between">
                     <span>Return Risk Markup:</span>
-                    <span className="text-rose-400">15%</span>
+                    <span className="text-rose-500 dark:text-rose-400">15%</span>
                   </div>
                   <div className="flex justify-between text-slate-500">
-                    <span>1AA Direct Savings:</span>
-                    <span className="text-emerald-400 font-bold">{formatCurrency(flipkartPrice - oneAAPrice, currency)}</span>
+                    <span>1AA Direct Advantage:</span>
+                    <span className="text-emerald-600 dark:text-emerald-400 font-bold">{formatCurrency(flipkartPrice - oneAAPrice, currency)}</span>
                   </div>
                 </div>
               </div>
 
               <div className="space-y-2">
-                <div className="text-[10px] bg-white/[0.02] p-2 rounded-xl border border-white/5 text-slate-500">
+                <div className="text-[10px] bg-slate-100 dark:bg-white/[0.02] p-2.5 rounded-xl border border-slate-200 dark:border-white/5 text-slate-600 dark:text-slate-400">
                   High return markup built into retail price.
                 </div>
                 <a
                   href={flipkartLiveUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="w-full py-1.5 px-2.5 rounded-xl bg-blue-500/15 hover:bg-blue-500/25 text-blue-300 border border-blue-500/30 text-[10px] font-mono font-bold flex items-center justify-center gap-1 transition-all cursor-pointer"
+                  className="w-full py-1.5 px-2.5 rounded-xl bg-blue-500/15 hover:bg-blue-500/25 text-blue-700 dark:text-blue-300 border border-blue-500/30 text-[10px] font-mono font-bold flex items-center justify-center gap-1 transition-all cursor-pointer"
                   title="Verify price live on Flipkart"
                 >
                   <span>Verify Live on Flipkart</span>
-                  <ExternalLink className="w-3 h-3 text-blue-400" />
+                  <ExternalLink className="w-3 h-3 text-blue-500 dark:text-blue-400" />
                 </a>
-              </div>
-            </div>
-
-            {/* BANGALORE CHICKPET / MYSORE OFFLINE WHOLESALE */}
-            <div className="rounded-2xl p-4 bg-white/[0.02] border border-white/10 flex flex-col justify-between space-y-4">
-              <div className="space-y-3">
-                <div className="flex justify-between items-start">
-                  <span className="text-xs font-bold text-white flex items-center gap-1.5">
-                    <span className="text-amber-300 font-black">Offline B2B</span>
-                  </span>
-                  <span className="text-[10px] text-slate-400 font-mono">Chickpet/Mysore</span>
-                </div>
-
-                <div>
-                  <div className="text-[10px] text-slate-400 uppercase font-mono">Offline Trader Rate</div>
-                  <div className="text-2xl font-bold text-slate-300 font-mono">
-                    {formatCurrency(chickpetPrice, currency)}
-                  </div>
-                  <div className="text-[10px] text-amber-400 font-mono">
-                    Requires 50-100 pcs MOQ
-                  </div>
-                </div>
-
-                <div className="space-y-1.5 text-[11px] border-t border-white/10 pt-2 font-mono text-slate-400">
-                  <div className="flex justify-between">
-                    <span>Doorstep Delivery:</span>
-                    <span className="text-rose-400 font-bold">Extra ₹400-800</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Replacement Warranty:</span>
-                    <span className="text-rose-400">None (As-is)</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Transit Loss Cover:</span>
-                    <span className="text-rose-400">Buyer's Risk</span>
-                  </div>
-                  <div className="flex justify-between text-slate-500">
-                    <span>Convenience:</span>
-                    <span className="text-slate-400">Travel required</span>
-                  </div>
-                </div>
-              </div>
-
-              <div className="text-[10px] bg-white/[0.02] p-2 rounded-xl border border-white/5 text-slate-500">
-                1AA gives you factory direct pricing at your doorstep with 0 travel cost.
               </div>
             </div>
 
@@ -635,15 +569,15 @@ export default function PlatformPriceComparisonModal({
           </div>
 
           {/* TRANSPARENT PRICING GUARANTEE & CUSTOMER IS KING PROMISE */}
-          <div className="p-4 rounded-2xl bg-gradient-to-r from-amber-500/10 via-brand-orange/10 to-transparent border border-amber-500/30 flex items-start gap-3 text-xs text-slate-400">
-            <ShieldCheck className="w-5 h-5 text-amber-400 shrink-0 mt-0.5" />
+          <div className="p-4 rounded-2xl bg-amber-50/70 dark:bg-gradient-to-r dark:from-amber-500/10 dark:via-brand-orange/10 dark:to-transparent border border-amber-200 dark:border-amber-500/30 flex items-start gap-3 text-xs text-slate-600 dark:text-slate-400">
+            <ShieldCheck className="w-5 h-5 text-amber-500 dark:text-amber-400 shrink-0 mt-0.5" />
             <div className="space-y-1">
-              <strong className="text-white flex items-center gap-1.5">
-                <span className="text-amber-400 font-black">👑 Customer is King:</span>
+              <strong className="text-slate-900 dark:text-white flex items-center gap-1.5">
+                <span className="text-amber-500 dark:text-amber-400 font-black">👑 Customer is King:</span>
                 <span>No-Bargain Fair Price Covenant</span>
               </strong>
               <p className="leading-relaxed">
-                Why bargain when you already get genuine factory-floor prices? We believe in 100% transparency: Factory Direct Cost + Door Courier Freight + Flat 25% 1AA Operating Margin = Final Wholesale Price. Zero inflated retail markups, zero haggling games. You save 40% to 70% compared to national e-commerce marketplaces while getting 100% pre-dispatch bench tested quality from our Mysore Central Hub.
+                Why bargain when you already get genuine factory-floor prices? We believe in 100% transparency: Base Price (with Tax) + Flat 20% 1AA Wholesale Margin = Final Wholesale Price. Zero inflated retail markups, zero haggling games. You save 40% to 70% compared to national e-commerce marketplaces while getting 100% pre-dispatch bench tested quality from our Mysore Central Hub.
               </p>
             </div>
           </div>
@@ -651,9 +585,9 @@ export default function PlatformPriceComparisonModal({
         </div>
 
         {/* Modal Footer */}
-        <div className="p-4 sm:p-5 border-t border-white/10 bg-obsidian-950/70 flex flex-col sm:flex-row justify-between items-center gap-3">
-          <div className="text-xs text-slate-400 text-center sm:text-left">
-            Need custom truckload or 100+ master carton quotes? Call Abdul Darvesh: <strong className="text-white">+91 74062 31167</strong>
+        <div className="p-4 sm:p-5 border-t border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-obsidian-950/70 flex flex-col sm:flex-row justify-between items-center gap-3">
+          <div className="text-xs text-slate-500 dark:text-slate-400 text-center sm:text-left">
+            Need custom truckload or 100+ master carton quotes? Call Abdul Darvesh: <strong className="text-slate-900 dark:text-white">+91 74062 31167</strong>
           </div>
 
           <div className="flex items-center gap-2.5 w-full sm:w-auto">
@@ -662,7 +596,7 @@ export default function PlatformPriceComparisonModal({
                 haptics.light();
                 onClose();
               }}
-              className="flex-1 sm:flex-none px-5 py-2.5 rounded-full bg-white/[0.06] hover:bg-white/[0.12] text-slate-300 text-xs font-semibold transition-colors cursor-pointer"
+              className="flex-1 sm:flex-none px-5 py-2.5 rounded-full bg-slate-200 dark:bg-white/[0.06] hover:bg-slate-300 dark:hover:bg-white/[0.12] text-slate-700 dark:text-slate-300 text-xs font-semibold transition-colors cursor-pointer"
             >
               Close
             </button>

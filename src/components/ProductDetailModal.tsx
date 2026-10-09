@@ -82,10 +82,10 @@ export default function ProductDetailModal({
         }
       }}
     >
-      <div className="relative w-full max-w-3xl bg-obsidian-900 border border-white/10 rounded-2xl sm:rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[92dvh] sm:max-h-[90vh] backdrop-blur-2xl">
+      <div className="relative w-full max-w-3xl bg-white dark:bg-obsidian-900 border border-slate-200 dark:border-white/10 rounded-2xl sm:rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[92dvh] sm:max-h-[90vh] backdrop-blur-2xl">
         
         {/* Sticky Header with Unmissable Close Button */}
-        <div className="sticky top-0 z-30 shrink-0 px-4 py-3 sm:px-6 sm:py-3.5 bg-obsidian-950/95 backdrop-blur-md border-b border-white/10 flex items-center justify-between">
+        <div className="sticky top-0 z-30 shrink-0 px-4 py-3 sm:px-6 sm:py-3.5 bg-slate-50/95 dark:bg-obsidian-950/95 backdrop-blur-md border-b border-slate-200 dark:border-white/10 flex items-center justify-between">
           <div className="flex items-center gap-2.5 min-w-0">
             <span className="px-2.5 py-1 rounded-full bg-brand-orange/15 text-brand-orange text-xs font-mono font-bold border border-brand-orange/30 truncate flex items-center gap-1.5">
               <Tag className="w-3.5 h-3.5 shrink-0" />
@@ -208,49 +208,49 @@ export default function ProductDetailModal({
                 <div className="flex items-center gap-2">
                   <span className="text-base">👑</span>
                   <div>
-                    <div className="text-white font-bold flex items-center gap-1.5">
+                    <div className="text-slate-900 dark:text-white font-bold flex items-center gap-1.5">
                       <span>Customer is King:</span>
-                      <span className="text-amber-400">No-Bargain Fair Price</span>
+                      <span className="text-amber-500 dark:text-amber-400">No-Bargain Fair Price</span>
                     </div>
-                    <div className="text-[10px] text-slate-300">
-                      Bottom factory cost + door courier + 25% 1AA margin. Zero haggling needed.
+                    <div className="text-[10px] text-slate-600 dark:text-slate-300">
+                      Base price with tax + flat 20% 1AA wholesale margin. Zero haggling needed.
                     </div>
                   </div>
                 </div>
-                <span className="px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 font-mono text-[10px] font-bold shrink-0">
+                <span className="px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-700 dark:text-amber-300 font-mono text-[10px] font-bold shrink-0">
                   Best in India
                 </span>
               </div>
 
-              {/* Price Breakdown Panel (Apple Pro Card with Courier Included & 25% Margin) */}
-              <div className="p-4 bg-white/[0.03] rounded-2xl border border-white/[0.08] space-y-2 font-mono text-xs">
-                <div className="flex justify-between text-slate-400">
-                  <span>Factory Direct Cost:</span>
-                  <span className="text-white font-semibold">₹{product.baseCost}</span>
+              {/* Price Breakdown Panel (Apple Pro Card with 20% Margin) */}
+              <div className="p-4 bg-slate-50 dark:bg-white/[0.03] rounded-2xl border border-slate-200 dark:border-white/[0.08] space-y-2 font-mono text-xs">
+                <div className="flex justify-between text-slate-600 dark:text-slate-400">
+                  <span>Base Price (with Tax):</span>
+                  <span className="text-slate-900 dark:text-white font-bold">₹{product.baseCost}</span>
                 </div>
-                <div className="flex justify-between text-slate-400">
+                <div className="flex justify-between text-slate-600 dark:text-slate-400">
                   <span className="flex items-center gap-1">
                     <Truck className="w-3.5 h-3.5 text-brand-orange" />
-                    Built-In Mysore Courier Freight:
+                    Doorstep Courier Freight:
                   </span>
-                  <span className="text-emerald-400 font-bold">₹{product.courierCost || 35} (Included)</span>
+                  <span className="text-emerald-600 dark:text-emerald-400 font-bold">Included</span>
                 </div>
                 <div className="flex justify-between text-brand-orange font-semibold">
                   <span className="flex items-center gap-1">
                     <TrendingUp className="w-3.5 h-3.5" />
-                    1AA Wholesale Margin (25%):
+                    1AA Wholesale Margin (20%):
                   </span>
-                  <span>+₹{product.margin1AAAmount || Math.round(((product.baseCost || 0) + (product.courierCost || 35)) * 0.25)}</span>
+                  <span>+₹{product.margin1AAAmount || Math.round((product.baseCost || 0) * 0.20)}</span>
                 </div>
-                <div className="border-t border-white/[0.08] pt-2 flex justify-between items-baseline">
-                  <span className="text-xs font-bold text-white font-sans">1AA Direct Price:</span>
+                <div className="border-t border-slate-200 dark:border-white/[0.08] pt-2 flex justify-between items-baseline">
+                  <span className="text-xs font-bold text-slate-900 dark:text-white font-sans">1AA Wholesale Buy Price:</span>
                   <span className="text-2xl font-black text-brand-orange">₹{product.fairPrice}</span>
                 </div>
-                <div className="flex justify-between text-[11px] text-slate-400 pt-1 border-t border-white/[0.05]">
+                <div className="flex justify-between text-[11px] text-slate-500 dark:text-slate-400 pt-1 border-t border-slate-200 dark:border-white/[0.05]">
                   <span>Amazon/Flipkart Benchmark:</span>
-                  <span className="line-through text-slate-500">₹{product.amazonPrice || product.marketPrice}</span>
+                  <span className="line-through text-slate-400 dark:text-slate-500">₹{product.amazonPrice || product.marketPrice}</span>
                 </div>
-                <div className="text-[11px] text-emerald-400 font-bold text-right pt-0.5">
+                <div className="text-[11px] text-emerald-600 dark:text-emerald-400 font-bold text-right pt-0.5">
                   Direct Savings: ₹{savings} ({savingsPercent}% off retail)
                 </div>
 

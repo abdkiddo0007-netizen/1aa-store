@@ -1,21 +1,22 @@
 // 1AA Central Wholesale Depot (Mysore Hub)
 // Real-Time Pricing & Margin Arbitrage Engine
-// Computes: Factory Sourcing Cost + Doorstep Courier Freight + Flat 25% 1AA Margin
+// Computes: DeoDap Base Price with Tax (18% GST) + Flat 20% 1AA Wholesale Margin = 1AA Final Wholesale Price
 // Core Policy: "Customer is King — No-Bargain Fair Price Guarantee"
-// Benchmarks against: Amazon India, Flipkart, IndiaMART, and Bangalore Chickpet / Mysore Wholesale
+// Benchmarks against: Amazon India, Flipkart, and Real-Time Wholesale Market
 
 export interface PriceBreakdown {
   sku: string;
   name: string;
-  baseCost: number;          // Factory Direct Sourcing / Production Cost
+  baseCost: number;          // Actual DeoDap Wholesale Price with Tax (Base Price)
   courierCost: number;       // Built-in Freight / Courier from Mysore Central Hub
-  landedCost: number;        // baseCost + courierCost
-  margin1AAPercent: number;  // Flat 25% transparent 1AA wholesale margin
-  margin1AAAmount: number;   // 1AA net operating profit per unit
-  fairPrice: number;         // 1AA Final Wholesale Price (Landed + 25% margin)
+  landedCost: number;        // Base Price with Tax
+  margin1AAPercent: number;  // Flat 20% transparent 1AA wholesale margin
+  margin1AAAmount: number;   // 1AA net operating profit per unit (20%)
+  fairPrice: number;         // 1AA Final Wholesale Price (Base Price + 20% margin)
   amazonPrice: number;       // Live Amazon.in Retail Benchmark
   flipkartPrice: number;     // Live Flipkart Retail Benchmark
-  chickpetPrice: number;     // Offline Bangalore Chickpet / Mysore Wholesale Benchmark
+  chickpetPrice: number;     // Real-Time Wholesale Trade Market Benchmark
+  wholesaleMarketPrice: number; // Real-Time Wholesale Market Price
   customerSavingsVsAmazon: number;
   customerSavingsPercent: number;
   resellerPotentialProfit: number;
@@ -63,33 +64,37 @@ export function calculateCourierCost(baseCost: number, category?: string, weight
 
 /**
  * Computes 1AA's fair wholesale price ensuring:
- * 1. Courier freight is fully considered and built-in (doorstep delivery included)
- * 2. 1AA maintains a flat 25% transparent operating margin
- * 3. Exact mathematical consistency: baseCost + courierCost + 1AA Margin (25%) = 1AA Final Wholesale Price
+ * 1. Base Price captures the actual DeoDap price with tax (18% GST included)
+ * 2. 1AA maintains a flat 20% transparent wholesale margin
+ * 3. Exact mathematical consistency: Base Price (with Tax) + Flat 20% Margin = 1AA Final Wholesale Price
  * 4. Customer is King USP: No bargaining needed because price is already bottom-line factory direct
  * 5. Customers save 40% to 70% compared to Amazon & Flipkart retail prices
  */
 export function calculate1AAPricing(
-  baseCost: number,
+  rawCost: number,
   marketPrice: number,
   category?: string,
   weightStr?: string
 ): PriceBreakdown {
-  const courierCost = calculateCourierCost(baseCost, category, weightStr);
-  const landedCost = baseCost + courierCost;
+  // Capture actual DeoDap price with 18% GST tax as our base price
+  const baseCost = Math.round(rawCost * 1.18);
+  const courierCost = calculateCourierCost(rawCost, category, weightStr);
+  const landedCost = baseCost;
 
-  // Flat 25% 1AA Wholesale Margin on Landed Cost
-  const margin1AAPercent = 25;
-  const margin1AAAmount = Math.round(landedCost * 0.25);
-  // 1AA Final Wholesale Price is exactly Landed Cost + 25% Margin (zero contradiction)
-  const fairPrice = landedCost + margin1AAAmount;
+  // Flat 20% 1AA Wholesale Margin on Base Price
+  const margin1AAPercent = 20;
+  const margin1AAAmount = Math.round(baseCost * 0.20);
+  
+  // 1AA Final Wholesale Price is exactly Base Price with Tax + 20% Margin
+  const fairPrice = baseCost + margin1AAAmount;
 
   // Real-Time Competitor Benchmarks:
   // Amazon India charges referral fees + closing fees + FBA shipping + 18% GST (30-38% platform tax)
   const amazonPrice = marketPrice > fairPrice * 1.25 ? marketPrice : Math.round(fairPrice * 2.2);
   const flipkartPrice = Math.round(amazonPrice * 0.96);
-  // Chickpet Bangalore / Devaraja Market Mysore offline wholesale (middlemen markup without free courier)
-  const chickpetPrice = Math.round(fairPrice * 1.30 + 15);
+  // Real-Time Wholesale Market benchmark (middlemen markup without direct factory dispatch)
+  const wholesaleMarketPrice = Math.round(fairPrice * 1.18 + 15);
+  const chickpetPrice = wholesaleMarketPrice;
 
   const customerSavingsVsAmazon = Math.max(0, amazonPrice - fairPrice);
   const customerSavingsPercent = Math.round((customerSavingsVsAmazon / amazonPrice) * 100);
@@ -111,6 +116,7 @@ export function calculate1AAPricing(
     amazonPrice,
     flipkartPrice,
     chickpetPrice,
+    wholesaleMarketPrice,
     customerSavingsVsAmazon,
     customerSavingsPercent,
     resellerPotentialProfit,
