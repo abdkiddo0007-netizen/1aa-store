@@ -29,7 +29,6 @@ import VoiceSearchModal2026 from "./components/VoiceSearchModal2026";
 import ArProductPreviewModal from "./components/ArProductPreviewModal";
 import WhatsAppOrderParserModal from "./components/WhatsAppOrderParserModal";
 import TransitDamageGuaranteeModal from "./components/TransitDamageGuaranteeModal";
-import ExplorePriceTiersSection, { PriceTierId, PRICE_TIERS } from "./components/ExplorePriceTiersSection";
 import AddressAndLocationModal from "./components/AddressAndLocationModal";
 import OrderFsmTrackerModal from "./components/OrderFsmTrackerModal";
 import MobileBottomNav from "./components/MobileBottomNav";
@@ -182,9 +181,6 @@ export default function OneAAStore() {
     return null;
   });
   const [showOnboardingModal, setShowOnboardingModal] = useState(false);
-
-  // DeoDap Style Price Stage Tier Filter
-  const [selectedPriceTier, setSelectedPriceTier] = useState<PriceTierId>(null);
 
   // User Logout Handler
   const handleUserLogout = () => {
@@ -586,8 +582,6 @@ export default function OneAAStore() {
 
   // Filter & Sort Products
   const filteredAndSorted = useMemo(() => {
-    const activeTier = selectedPriceTier ? PRICE_TIERS.find((t) => t.id === selectedPriceTier) : null;
-
     const filtered = liveCatalog.filter((p) => {
       const matchesCategory = selectedCategory === "All" || p.category === selectedCategory;
       const matchesSearch =
@@ -605,17 +599,7 @@ export default function OneAAStore() {
         matchesQuick = (p.rating || 4.8) >= 4.85;
       }
 
-      let matchesPriceTier = true;
-      if (activeTier) {
-        if (activeTier.maxPrice !== undefined && p.fairPrice > activeTier.maxPrice) {
-          matchesPriceTier = false;
-        }
-        if (activeTier.minPrice !== undefined && p.fairPrice <= activeTier.minPrice) {
-          matchesPriceTier = false;
-        }
-      }
-
-      return matchesCategory && matchesSearch && matchesQuick && matchesPriceTier;
+      return matchesCategory && matchesSearch && matchesQuick;
     });
 
     return filtered.sort((a, b) => {
@@ -633,7 +617,7 @@ export default function OneAAStore() {
       }
       return 0; // recommended order
     });
-  }, [search, selectedCategory, sortBy, quickFilter, selectedPriceTier, liveCatalog]);
+  }, [search, selectedCategory, sortBy, quickFilter, liveCatalog]);
 
   // Pre-filled WhatsApp message formatted as an Official Commercial Tax Invoice Receipt
   const getWhatsAppLink = (number: string = "7406231167") => {
@@ -1203,22 +1187,6 @@ export default function OneAAStore() {
               </div>
             </div>
 
-            {/* EXPLORE OUR RANGE - 9 ARCHED STAGE PRICE TIER TILES (DeoDap / Amazon Benchmark) */}
-            <div className="pt-2 text-left">
-              <ExplorePriceTiersSection
-                selectedTier={selectedPriceTier}
-                onSelectTier={(tier) => {
-                  setSelectedPriceTier(tier);
-                  if (tier) {
-                    const el = document.getElementById("catalog-products-section");
-                    if (el) {
-                      el.scrollIntoView({ behavior: "smooth", block: "start" });
-                    }
-                  }
-                }}
-              />
-            </div>
-
           </div>
 
           {/* AMAZON / FLIPKART STYLE DISCOVERY & SEARCH CONSOLE */}
@@ -1319,7 +1287,7 @@ export default function OneAAStore() {
             </div>
 
             {/* Category Pills with Dynamic Counts */}
-            <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none text-xs">
+            <div id="catalog-categories-bar" className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none text-xs">
               {categories.map((cat) => (
                 <button
                   key={cat}
@@ -1430,34 +1398,6 @@ export default function OneAAStore() {
             </div>
 
           </div>
-
-          {/* Active Price Tier Filter Pill */}
-          {selectedPriceTier && (
-            <div className="flex items-center justify-between p-3 rounded-2xl bg-gradient-to-r from-brand-orange/20 via-amber-500/10 to-transparent border border-brand-orange/30">
-              <div className="flex items-center gap-2 flex-wrap">
-                <span className="text-xs text-slate-300 font-medium">Filtered by Stage Range:</span>
-                <span className="px-3 py-1 rounded-full bg-red-600 text-white font-black text-xs uppercase tracking-wider shadow-sm flex items-center gap-1.5">
-                  <span>{PRICE_TIERS.find(t => t.id === selectedPriceTier)?.label}</span>
-                  <span className="text-[10px] bg-black/30 px-1.5 py-0.5 rounded-full font-mono">
-                    {PRICE_TIERS.find(t => t.id === selectedPriceTier)?.pillText}
-                  </span>
-                </span>
-                <span className="text-xs text-slate-400 font-mono">
-                  ({filteredAndSorted.length} products available)
-                </span>
-              </div>
-              <button
-                onClick={() => {
-                  haptics.selection();
-                  setSelectedPriceTier(null);
-                }}
-                className="text-xs text-brand-orange hover:text-white font-bold flex items-center gap-1 hover:underline cursor-pointer transition-colors"
-              >
-                <span>Clear Filter</span>
-                <X className="w-3.5 h-3.5" />
-              </button>
-            </div>
-          )}
 
           {/* PRODUCT CATALOG GRID (Immediately Visible Above The Fold!) */}
           <div id="catalog-products-section" className="catalog-grid grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 pt-2">
@@ -2098,13 +2038,12 @@ export default function OneAAStore() {
       <MobileBottomNav
         onGoHome={() => {
           setSelectedCategory("All");
-          setSelectedPriceTier(null);
           setSearch("");
           setQuickFilter("all");
           window.scrollTo({ top: 0, behavior: "smooth" });
         }}
         onOpenCategories={() => {
-          const el = document.getElementById("explore-range-section") || document.getElementById("catalog-products-section");
+          const el = document.getElementById("catalog-categories-bar") || document.getElementById("catalog-products-section");
           if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
         }}
         onOpenManifest={() => {
