@@ -32,6 +32,7 @@ import TransitDamageGuaranteeModal from "./components/TransitDamageGuaranteeModa
 import ExplorePriceTiersSection, { PriceTierId, PRICE_TIERS } from "./components/ExplorePriceTiersSection";
 import AddressAndLocationModal from "./components/AddressAndLocationModal";
 import OrderFsmTrackerModal from "./components/OrderFsmTrackerModal";
+import MobileBottomNav from "./components/MobileBottomNav";
 import { OrderAddressPackage } from "./types/address";
 import { OrderFsmState } from "./types/orderFsm";
 import { CurrencyCode } from "./utils/currency";
@@ -2016,7 +2017,7 @@ export default function OneAAStore() {
 
       {/* --- APPLE-STYLE FLOATING BOTTOM MANIFEST DOCK (Dynamic Island Style) --- */}
       {metrics.units > 0 && (
-        <div className="fixed bottom-5 inset-x-0 z-40 max-w-3xl mx-auto px-4 pointer-events-none animate-in fade-in slide-in-from-bottom-4 duration-300">
+        <div className="fixed bottom-16 lg:bottom-5 inset-x-0 z-40 max-w-3xl mx-auto px-4 pointer-events-none animate-in fade-in slide-in-from-bottom-4 duration-300">
           <div className="apple-dock rounded-2xl sm:rounded-full px-5 py-3 flex flex-col sm:flex-row items-center justify-between gap-3 pointer-events-auto shadow-dock border border-white/10 backdrop-blur-2xl bg-obsidian-950/90">
             
             <div className="flex items-center gap-4 w-full sm:w-auto justify-between sm:justify-start">
@@ -2092,6 +2093,34 @@ export default function OneAAStore() {
           </div>
         </div>
       )}
+
+      {/* --- DEODAP / FLIPKART STYLE MOBILE BOTTOM APP NAVIGATION BAR --- */}
+      <MobileBottomNav
+        onGoHome={() => {
+          setSelectedCategory("All");
+          setSelectedPriceTier(null);
+          setSearch("");
+          setQuickFilter("all");
+          window.scrollTo({ top: 0, behavior: "smooth" });
+        }}
+        onOpenCategories={() => {
+          const el = document.getElementById("explore-range-section") || document.getElementById("catalog-products-section");
+          if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+        }}
+        onOpenManifest={() => {
+          setShowOrderDrawer(true);
+        }}
+        onOpenAccount={() => {
+          setShowOnboardingModal(true);
+        }}
+        onOpenHelp={() => {
+          const whatsappUrl = `https://wa.me/917406231167?text=${encodeURIComponent("Hi Abdul bhai / 1AA Team, I need assistance with wholesale sourcing, carton pricing, and order dispatch from Mysore Central Hub.")}`;
+          window.open(whatsappUrl, "_blank");
+        }}
+        activeUnits={metrics.units}
+        totalAmount={metrics.finalAmount}
+        currentUser={currentUser}
+      />
 
       {/* --- ORDER / CART DRAWER MODAL --- */}
       {showOrderDrawer && (

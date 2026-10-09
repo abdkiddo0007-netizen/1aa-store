@@ -13,7 +13,9 @@ import {
   Plus, 
   Minus, 
   Trash2, 
-  ShieldCheck 
+  ShieldCheck,
+  FileSpreadsheet,
+  Boxes
 } from "lucide-react";
 import { OWNER_NAME, OWNER_PHONE, OWNER_EMAIL } from "../utils/notificationMatrix";
 
@@ -105,13 +107,51 @@ export default function WhatsAppOrderParserModal({
       car: "1AA-VAC-120W" // default car to vacuum if no other matches
     };
 
-    // Scan lines/words for quantity + keyword pairs
+    // 1. First pass: Line-by-line CSV / tabular / explicit SKU parsing
+    const rawLines = text.split(/\r?\n/);
+    const matchedSkus = new Set<string>();
+
+    for (const rawLine of rawLines) {
+      const lineTrim = rawLine.trim();
+      if (!lineTrim) continue;
+
+      // Check if line contains any explicit catalog SKU
+      for (const prod of CATALOG_PRODUCTS) {
+        if (matchedSkus.has(prod.sku)) continue;
+
+        if (lineTrim.toLowerCase().includes(prod.sku.toLowerCase())) {
+          // Look for number before SKU (e.g. "24 pcs 1AA-RULR-FLEX") or after SKU (e.g. "1AA-RULR-FLEX: 24" or "1AA-RULR-FLEX, 50")
+          const preNum = lineTrim.match(new RegExp(`(\\d+)\\s*(?:units?|pcs?|pieces?|box|cartons?)?\\s*(?:of\\s*)?${prod.sku}`, "i"));
+          const postNum = lineTrim.match(new RegExp(`${prod.sku}\\s*[:=,-]?\\s*(\\d+)`, "i"));
+          
+          let qty = prod.cartonSize || 24;
+          if (preNum && preNum[1]) {
+            qty = parseInt(preNum[1], 10);
+          } else if (postNum && postNum[1]) {
+            qty = parseInt(postNum[1], 10);
+          } else {
+            const anyNum = lineTrim.match(/\b(\d+)\b/);
+            if (anyNum) qty = parseInt(anyNum[1], 10);
+          }
+          
+          results.push({ product: prod, quantity: Math.max(1, qty) });
+          matchedSkus.add(prod.sku);
+          break;
+        }
+      }
+    }
+
+    // 2. Second pass: Natural Language keyword & token scanning
     CATALOG_PRODUCTS.forEach((product) => {
-      // Look for explicit product SKU
+      if (matchedSkus.has(product.sku)) return;
+
+      // Look for explicit product SKU in full text
       if (lower.includes(product.sku.toLowerCase())) {
         const match = lower.match(new RegExp(`(\\d+)\\s*(?:units?|pcs?|pieces?)?\\s*${product.sku.toLowerCase()}`));
-        const qty = match ? parseInt(match[1]) : 10;
+        const postMatch = lower.match(new RegExp(`${product.sku.toLowerCase()}\\s*[:=,-]?\\s*(\\d+)`));
+        const qty = match ? parseInt(match[1]) : (postMatch ? parseInt(postMatch[1]) : (product.cartonSize || 24));
         results.push({ product, quantity: qty });
+        matchedSkus.add(product.sku);
         return;
       }
 
@@ -123,7 +163,7 @@ export default function WhatsAppOrderParserModal({
           const kwRegex = new RegExp(`(\\d+)\\s*(?:units?|pcs?|pieces?|box|carton)?\\s*(?:of\\s*)?[a-z0-9\\s]{0,15}${token}`, "i");
           const altRegex = new RegExp(`${token}[a-z0-9\\s]{0,15}(\\d+)`, "i");
           
-          let qty = 10;
+          let qty = product.cartonSize || 10;
           const match1 = text.match(kwRegex);
           const match2 = text.match(altRegex);
 
@@ -142,6 +182,7 @@ export default function WhatsAppOrderParserModal({
 
           if (lower.includes(token) && !results.some(r => r.product.sku === product.sku)) {
             results.push({ product, quantity: Math.max(1, qty) });
+            matchedSkus.add(product.sku);
             break;
           }
         }
@@ -157,6 +198,34 @@ export default function WhatsAppOrderParserModal({
     setParsedItems(results);
     setIsParsed(true);
     haptics.success();
+  };
+
+  // Download blank wholesale CSV template for Excel
+  const handleDownloadCsvTemplate = () => {
+    haptics.chime();
+    const headers = "SKU,Product_Name,Quantity,Carton_Size,Factory_Price_INR\n";
+    const sampleRows = CATALOG_PRODUCTS.slice(0, 15).map(p => 
+      `"${p.sku}","${p.name.replace(/"/g, '""')}",${p.cartonSize || 24},${p.cartonSize || 24},${p.fairPrice}`
+    ).join("\n");
+    const blob = new Blob([headers + sampleRows], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "1AA-Wholesale-Order-Template.csv";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
+  // 1-Click Round All Quantities to Full Master Cartons
+  const handleRoundAllToCartons = () => {
+    haptics.selection();
+    setParsedItems(prev => prev.map(item => {
+      const carton = item.product.cartonSize || 24;
+      const rounded = Math.ceil(item.quantity / carton) * carton;
+      return { ...item, quantity: rounded };
+    }));
   };
 
   const updateItemQty = (sku: string, delta: number) => {
@@ -320,22 +389,34 @@ export default function WhatsAppOrderParserModal({
             className="w-full bg-obsidian-950 border border-white/10 focus:border-emerald-500/60 rounded-2xl p-3.5 text-white font-mono text-xs placeholder-slate-600 focus:outline-none transition-colors"
           />
 
-          {/* Quick Sample Prompts */}
-          <div className="flex items-center gap-2 flex-wrap">
-            <span className="text-[10px] text-slate-400 font-mono">Try sample:</span>
-            {SAMPLE_MESSAGES.map((s, idx) => (
-              <button
-                key={idx}
-                type="button"
-                onClick={() => {
-                  setInputText(s.text);
-                  parseWhatsAppText(s.text);
-                }}
-                className="px-2.5 py-1 rounded-full bg-white/[0.04] hover:bg-white/[0.08] text-slate-300 text-[10px] border border-white/10 hover:border-emerald-400/40 transition-all cursor-pointer font-mono"
-              >
-                {s.title}
-              </button>
-            ))}
+          {/* Quick Sample Prompts & CSV Template Download */}
+          <div className="flex items-center justify-between gap-2 flex-wrap">
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="text-[10px] text-slate-400 font-mono">Try sample:</span>
+              {SAMPLE_MESSAGES.map((s, idx) => (
+                <button
+                  key={idx}
+                  type="button"
+                  onClick={() => {
+                    setInputText(s.text);
+                    parseWhatsAppText(s.text);
+                  }}
+                  className="px-2.5 py-1 rounded-full bg-white/[0.04] hover:bg-white/[0.08] text-slate-300 text-[10px] border border-white/10 hover:border-emerald-400/40 transition-all cursor-pointer font-mono"
+                >
+                  {s.title}
+                </button>
+              ))}
+            </div>
+
+            <button
+              type="button"
+              onClick={handleDownloadCsvTemplate}
+              className="px-2.5 py-1 rounded-full bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-300 text-[10px] border border-emerald-500/30 flex items-center gap-1 transition-all cursor-pointer font-mono font-bold"
+              title="Download 1AA Wholesale CSV Template for Excel / Sheets"
+            >
+              <FileSpreadsheet className="w-3 h-3 text-emerald-400" />
+              <span>Download CSV Template</span>
+            </button>
           </div>
 
           <button
@@ -363,7 +444,16 @@ export default function WhatsAppOrderParserModal({
                 </p>
               </div>
 
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 flex-wrap">
+                <button
+                  type="button"
+                  onClick={handleRoundAllToCartons}
+                  className="px-2.5 py-1.5 rounded-lg bg-brand-orange/15 hover:bg-brand-orange/25 text-brand-orange border border-brand-orange/30 text-[10px] font-mono font-bold flex items-center gap-1 transition-all cursor-pointer active:scale-95"
+                  title="Round every item quantity up to full factory master cartons for maximum freight savings"
+                >
+                  <Boxes className="w-3.5 h-3.5" />
+                  <span>Round to Cartons</span>
+                </button>
                 <input
                   type="text"
                   value={buyerName}

@@ -1,5 +1,6 @@
 import { haptics } from "../utils/haptics";
 import { ChevronRight, Sparkles, ShieldCheck, Users, CreditCard, Percent } from "lucide-react";
+import { getProductSvgFallback } from "../utils/imageFallback";
 
 export type PriceTierId = 
   | "under-9"
@@ -144,7 +145,7 @@ export default function ExplorePriceTiersSection({
   onSelectTier
 }: ExplorePriceTiersSectionProps) {
   return (
-    <section className="w-full max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-10 space-y-6">
+    <section id="explore-range-section" className="w-full max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-10 space-y-6">
       
       {/* DeoDap Style Trust Bar */}
       <div className="w-full rounded-2xl bg-gradient-to-r from-obsidian-950 via-brand-blue-deep/60 to-obsidian-950 border border-white/10 p-3 sm:p-4 shadow-xl">
@@ -266,8 +267,11 @@ export default function ExplorePriceTiersSection({
                         className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                         loading="lazy"
                         onError={(e) => {
-                          // Fallback to solid stylish placeholder if network error
-                          (e.target as HTMLElement).style.display = "none";
+                          const target = e.currentTarget;
+                          const fallback = getProductSvgFallback(item.name, "1AA-TIER", "Wholesale");
+                          if (target.src !== fallback) {
+                            target.src = fallback;
+                          }
                         }}
                       />
                       <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent flex items-end p-1">
