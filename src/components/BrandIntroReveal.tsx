@@ -59,32 +59,37 @@ export default function BrandIntroReveal({ onComplete, forceShow = false }: Bran
           })
           .catch(() => {
             // If browser blocks unmuted autoplay without user gesture on cold start,
-            // play muted temporarily so the visual doesn't freeze,
-            // but register an instant document listener to UNMUTE immediately on first tap!
+            // play muted temporarily under the hood so video starts playing immediately,
+            // but keep UI state as Sound: ON and automatically unmute on the very first micro-gesture or pointer move!
             if (videoRef.current) {
               videoRef.current.muted = true;
-              setIsMuted(true);
               videoRef.current.play().catch(() => {
                 setHasVideoError(true);
               });
 
-              const handleFirstUserGesture = () => {
+              const handleAutoUnmuteOnFirstMove = () => {
                 if (videoRef.current) {
                   videoRef.current.muted = false;
                   videoRef.current.volume = 1.0;
                   setIsMuted(false);
                   haptics.chime();
                 }
-                window.removeEventListener("pointerdown", handleFirstUserGesture);
-                window.removeEventListener("touchstart", handleFirstUserGesture);
-                window.removeEventListener("click", handleFirstUserGesture);
-                window.removeEventListener("keydown", handleFirstUserGesture);
+                window.removeEventListener("pointermove", handleAutoUnmuteOnFirstMove);
+                window.removeEventListener("mousemove", handleAutoUnmuteOnFirstMove);
+                window.removeEventListener("pointerdown", handleAutoUnmuteOnFirstMove);
+                window.removeEventListener("touchstart", handleAutoUnmuteOnFirstMove);
+                window.removeEventListener("click", handleAutoUnmuteOnFirstMove);
+                window.removeEventListener("keydown", handleAutoUnmuteOnFirstMove);
+                window.removeEventListener("scroll", handleAutoUnmuteOnFirstMove);
               };
 
-              window.addEventListener("pointerdown", handleFirstUserGesture, { once: true });
-              window.addEventListener("touchstart", handleFirstUserGesture, { once: true });
-              window.addEventListener("click", handleFirstUserGesture, { once: true });
-              window.addEventListener("keydown", handleFirstUserGesture, { once: true });
+              window.addEventListener("pointermove", handleAutoUnmuteOnFirstMove, { once: true });
+              window.addEventListener("mousemove", handleAutoUnmuteOnFirstMove, { once: true });
+              window.addEventListener("pointerdown", handleAutoUnmuteOnFirstMove, { once: true });
+              window.addEventListener("touchstart", handleAutoUnmuteOnFirstMove, { once: true });
+              window.addEventListener("click", handleAutoUnmuteOnFirstMove, { once: true });
+              window.addEventListener("keydown", handleAutoUnmuteOnFirstMove, { once: true });
+              window.addEventListener("scroll", handleAutoUnmuteOnFirstMove, { once: true });
             }
           });
       }

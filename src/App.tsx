@@ -29,6 +29,7 @@ import VoiceSearchModal2026 from "./components/VoiceSearchModal2026";
 import ArProductPreviewModal from "./components/ArProductPreviewModal";
 import WhatsAppOrderParserModal from "./components/WhatsAppOrderParserModal";
 import TransitDamageGuaranteeModal from "./components/TransitDamageGuaranteeModal";
+import ExplorePriceTiersSection, { PriceTierId, PRICE_TIERS } from "./components/ExplorePriceTiersSection";
 import AddressAndLocationModal from "./components/AddressAndLocationModal";
 import OrderFsmTrackerModal from "./components/OrderFsmTrackerModal";
 import { OrderAddressPackage } from "./types/address";
@@ -78,7 +79,8 @@ import {
   Globe,
   Mic,
   User,
-  Rotate3d
+  Rotate3d,
+  LogOut
 } from "lucide-react";
 
 export default function OneAAStore() {
@@ -179,6 +181,19 @@ export default function OneAAStore() {
     return null;
   });
   const [showOnboardingModal, setShowOnboardingModal] = useState(false);
+
+  // DeoDap Style Price Stage Tier Filter
+  const [selectedPriceTier, setSelectedPriceTier] = useState<PriceTierId>(null);
+
+  // User Logout Handler
+  const handleUserLogout = () => {
+    haptics.selection();
+    if (typeof window !== "undefined") {
+      localStorage.removeItem("1aa_user_profile");
+    }
+    setCurrentUser(null);
+    haptics.success();
+  };
 
   // 2026 Trend Voice Search Modal
   const [showVoiceModal2026, setShowVoiceModal2026] = useState(false);
@@ -570,6 +585,8 @@ export default function OneAAStore() {
 
   // Filter & Sort Products
   const filteredAndSorted = useMemo(() => {
+    const activeTier = selectedPriceTier ? PRICE_TIERS.find((t) => t.id === selectedPriceTier) : null;
+
     const filtered = liveCatalog.filter((p) => {
       const matchesCategory = selectedCategory === "All" || p.category === selectedCategory;
       const matchesSearch =
@@ -587,7 +604,17 @@ export default function OneAAStore() {
         matchesQuick = (p.rating || 4.8) >= 4.85;
       }
 
-      return matchesCategory && matchesSearch && matchesQuick;
+      let matchesPriceTier = true;
+      if (activeTier) {
+        if (activeTier.maxPrice !== undefined && p.fairPrice > activeTier.maxPrice) {
+          matchesPriceTier = false;
+        }
+        if (activeTier.minPrice !== undefined && p.fairPrice <= activeTier.minPrice) {
+          matchesPriceTier = false;
+        }
+      }
+
+      return matchesCategory && matchesSearch && matchesQuick && matchesPriceTier;
     });
 
     return filtered.sort((a, b) => {
@@ -605,7 +632,7 @@ export default function OneAAStore() {
       }
       return 0; // recommended order
     });
-  }, [search, selectedCategory, sortBy, quickFilter]);
+  }, [search, selectedCategory, sortBy, quickFilter, selectedPriceTier, liveCatalog]);
 
   // Pre-filled WhatsApp message formatted as an Official Commercial Tax Invoice Receipt
   const getWhatsAppLink = (number: string = "7406231167") => {
@@ -756,24 +783,34 @@ export default function OneAAStore() {
 
             {/* Right: Personalization, Currency, Sound FX, Delivery SLA */}
             <div className="flex flex-wrap items-center gap-2.5">
-              {/* Dynamic AI Personalization Badge */}
+              {/* Dynamic AI Personalization Badge & Logout */}
               {currentUser ? (
-                <button
-                  onClick={() => {
-                    haptics.selection();
-                    setShowOnboardingModal(true);
-                  }}
-                  className="flex items-center gap-1.5 px-3 py-0.5 rounded-full bg-gradient-to-r from-brand-orange/20 via-brand-blue/20 to-purple-500/20 border border-brand-orange/40 text-white hover:border-brand-orange transition-all cursor-pointer shadow-glow-orange group"
-                  title="Click to view/edit your 1AA VIP Merchant Profile"
-                >
-                  <Crown className="w-3.5 h-3.5 text-amber-400 group-hover:scale-110 transition-transform" />
-                  <span className="font-bold text-brand-orange text-[11px]">
-                    Welcome back, {currentUser.username}!
-                  </span>
-                  <span className="text-[9px] uppercase px-1.5 py-0.2 rounded bg-white/10 text-slate-300 font-mono hidden sm:inline">
-                    {currentUser.merchantType}
-                  </span>
-                </button>
+                <div className="flex items-center gap-1.5">
+                  <button
+                    onClick={() => {
+                      haptics.selection();
+                      setShowOnboardingModal(true);
+                    }}
+                    className="flex items-center gap-1.5 px-3 py-0.5 rounded-full bg-gradient-to-r from-brand-orange/20 via-brand-blue/20 to-purple-500/20 border border-brand-orange/40 text-white hover:border-brand-orange transition-all cursor-pointer shadow-glow-orange group"
+                    title="Click to view/edit your 1AA VIP Merchant Profile"
+                  >
+                    <Crown className="w-3.5 h-3.5 text-amber-400 group-hover:scale-110 transition-transform" />
+                    <span className="font-bold text-brand-orange text-[11px]">
+                      Welcome back, {currentUser.username}!
+                    </span>
+                    <span className="text-[9px] uppercase px-1.5 py-0.2 rounded bg-white/10 text-slate-300 font-mono hidden sm:inline">
+                      {currentUser.merchantType}
+                    </span>
+                  </button>
+                  <button
+                    onClick={handleUserLogout}
+                    className="flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/30 text-[10px] font-bold transition-all cursor-pointer shadow-sm active:scale-95"
+                    title="Log out of current merchant profile"
+                  >
+                    <LogOut className="w-3 h-3" />
+                    <span className="hidden sm:inline">Logout</span>
+                  </button>
+                </div>
               ) : (
                 <button
                   onClick={() => {
@@ -783,7 +820,7 @@ export default function OneAAStore() {
                   className="flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-brand-orange/15 hover:bg-brand-orange text-brand-orange hover:text-obsidian-950 border border-brand-orange/30 font-bold text-[10px] transition-all cursor-pointer shadow-glow-orange"
                 >
                   <User className="w-3 h-3" />
-                  <span>Register Username</span>
+                  <span>Register / Login</span>
                 </button>
               )}
 
@@ -1115,9 +1152,18 @@ export default function OneAAStore() {
                       haptics.selection();
                       setShowOnboardingModal(true);
                     }}
-                    className="text-[10px] text-brand-orange hover:underline cursor-pointer"
+                    className="text-[10px] text-brand-orange hover:underline cursor-pointer font-semibold"
                   >
                     Edit
+                  </button>
+                  <span className="text-white/20">|</span>
+                  <button
+                    onClick={handleUserLogout}
+                    className="text-[10px] text-red-400 hover:text-red-300 hover:underline cursor-pointer font-semibold flex items-center gap-0.5"
+                    title="Log out of 1AA session"
+                  >
+                    <LogOut className="w-2.5 h-2.5" />
+                    Logout
                   </button>
                 </div>
               ) : (
@@ -1126,10 +1172,10 @@ export default function OneAAStore() {
                     haptics.selection();
                     setShowOnboardingModal(true);
                   }}
-                  className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-brand-orange/15 hover:bg-brand-orange/25 border border-brand-orange/30 text-brand-orange text-xs font-bold transition-all cursor-pointer shadow-glow-orange active:scale-95"
+                  className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-brand-orange/15 hover:bg-brand-orange/25 border border-brand-orange/30 text-brand-orange text-xs font-bold transition-all cursor-pointer shadow-glow-orange active:scale-95"
                 >
                   <User className="w-3.5 h-3.5" />
-                  <span>New Reseller? Create Merchant Username (30s)</span>
+                  <span>New Reseller? Create Merchant Username / Login (30s)</span>
                 </button>
               )}
             </div>
@@ -1154,6 +1200,22 @@ export default function OneAAStore() {
                   <strong>10–15d</strong> (&lt;7d Express Priority)
                 </div>
               </div>
+            </div>
+
+            {/* EXPLORE OUR RANGE - 9 ARCHED STAGE PRICE TIER TILES (DeoDap / Amazon Benchmark) */}
+            <div className="pt-2 text-left">
+              <ExplorePriceTiersSection
+                selectedTier={selectedPriceTier}
+                onSelectTier={(tier) => {
+                  setSelectedPriceTier(tier);
+                  if (tier) {
+                    const el = document.getElementById("catalog-products-section");
+                    if (el) {
+                      el.scrollIntoView({ behavior: "smooth", block: "start" });
+                    }
+                  }
+                }}
+              />
             </div>
 
           </div>
@@ -1367,6 +1429,34 @@ export default function OneAAStore() {
             </div>
 
           </div>
+
+          {/* Active Price Tier Filter Pill */}
+          {selectedPriceTier && (
+            <div className="flex items-center justify-between p-3 rounded-2xl bg-gradient-to-r from-brand-orange/20 via-amber-500/10 to-transparent border border-brand-orange/30">
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="text-xs text-slate-300 font-medium">Filtered by Stage Range:</span>
+                <span className="px-3 py-1 rounded-full bg-red-600 text-white font-black text-xs uppercase tracking-wider shadow-sm flex items-center gap-1.5">
+                  <span>{PRICE_TIERS.find(t => t.id === selectedPriceTier)?.label}</span>
+                  <span className="text-[10px] bg-black/30 px-1.5 py-0.5 rounded-full font-mono">
+                    {PRICE_TIERS.find(t => t.id === selectedPriceTier)?.pillText}
+                  </span>
+                </span>
+                <span className="text-xs text-slate-400 font-mono">
+                  ({filteredAndSorted.length} products available)
+                </span>
+              </div>
+              <button
+                onClick={() => {
+                  haptics.selection();
+                  setSelectedPriceTier(null);
+                }}
+                className="text-xs text-brand-orange hover:text-white font-bold flex items-center gap-1 hover:underline cursor-pointer transition-colors"
+              >
+                <span>Clear Filter</span>
+                <X className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          )}
 
           {/* PRODUCT CATALOG GRID (Immediately Visible Above The Fold!) */}
           <div id="catalog-products-section" className="catalog-grid grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 pt-2">
@@ -2735,6 +2825,7 @@ export default function OneAAStore() {
           setShowOnboardingModal(false);
           haptics.success();
         }}
+        onLogout={handleUserLogout}
         onAdminLoginSuccess={handleAdminLoginSuccess}
       />
 

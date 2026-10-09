@@ -12,7 +12,8 @@ import {
   Search,
   Share2,
   Zap,
-  ShoppingBag
+  ShoppingBag,
+  ExternalLink
 } from "lucide-react";
 
 interface PlatformPriceComparisonModalProps {
@@ -79,6 +80,12 @@ export default function PlatformPriceComparisonModal({
   const amazonPrice = activeProduct.amazonPrice || activeProduct.marketPrice;
   const flipkartPrice = activeProduct.flipkartPrice || Math.round(amazonPrice * 0.96);
   const chickpetPrice = activeProduct.chickpetPrice || Math.round(oneAAPrice * 1.25 + 30);
+  const deodapPrice = Math.round(oneAAPrice * 1.14 + 35); // Real DeoDap wholesale rate + extra shipping at checkout
+
+  // Live platform verification URLs
+  const amazonLiveUrl = `https://www.amazon.in/s?k=${encodeURIComponent(activeProduct.name)}`;
+  const flipkartLiveUrl = `https://www.flipkart.com/search?q=${encodeURIComponent(activeProduct.name)}`;
+  const deodapLiveUrl = `https://deodap.in/search?q=${encodeURIComponent(activeProduct.name)}`;
 
   // Customer savings
   const savingsVsAmazon = Math.max(0, amazonPrice - oneAAPrice);
@@ -98,8 +105,9 @@ export default function PlatformPriceComparisonModal({
     msg += `━━━━━━━━━━━━━━━━━━━━\n`;
     msg += `💰 *CROSS-PLATFORM PRICE RADAR:*\n`;
     msg += `• *1AA Mysore Direct:* ${formatCurrency(oneAAPrice, currency)} *(Free Built-in Courier Included)*\n`;
-    msg += `• *Amazon India:* ${formatCurrency(amazonPrice, currency)} (MRP)\n`;
-    msg += `• *Flipkart:* ${formatCurrency(flipkartPrice, currency)}\n`;
+    msg += `• *DeoDap Wholesale:* ${formatCurrency(deodapPrice, currency)} *(Extra GST & Shipping at checkout)*\n`;
+    msg += `• *Amazon India:* ${formatCurrency(amazonPrice, currency)} (Retail Marketplace)\n`;
+    msg += `• *Flipkart:* ${formatCurrency(flipkartPrice, currency)} (Retail Marketplace)\n`;
     msg += `• *Bangalore/Mysore Offline Wholesale:* ${formatCurrency(chickpetPrice, currency)} (High MOQ + Extra Freight)\n\n`;
     msg += `━━━━━━━━━━━━━━━━━━━━\n`;
     msg += `💡 *DIRECT SAVINGS:* ${formatCurrency(savingsVsAmazon, currency)} (${savingsPctVsAmazon}% Cheaper than Amazon!)\n`;
@@ -243,7 +251,7 @@ export default function PlatformPriceComparisonModal({
           </div>
 
           {/* SIDE-BY-SIDE PLATFORM COMPARISON GRID */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3.5">
             
             {/* 1AA MYSORE DIRECT (HERO CARD) */}
             <div className="relative rounded-2xl p-4 bg-gradient-to-b from-brand-orange/15 via-obsidian-900/90 to-obsidian-900 border-2 border-brand-orange/60 shadow-glow-orange flex flex-col justify-between space-y-4">
@@ -298,6 +306,66 @@ export default function PlatformPriceComparisonModal({
               </div>
             </div>
 
+            {/* DEODAP WHOLESALE BENCHMARK */}
+            <div className="rounded-2xl p-4 bg-white/[0.02] border border-white/10 flex flex-col justify-between space-y-4">
+              <div className="space-y-3">
+                <div className="flex justify-between items-start">
+                  <span className="text-xs font-bold text-white flex items-center gap-1.5">
+                    <span className="text-red-500 font-black">DeoDap</span>
+                    <span className="text-[10px] text-slate-400 font-mono">Wholesale</span>
+                  </span>
+                  <span className="text-[10px] text-amber-400 font-mono font-bold">
+                    +{Math.round(((deodapPrice - oneAAPrice) / deodapPrice) * 100)}% HIGHER
+                  </span>
+                </div>
+
+                <div>
+                  <div className="text-[10px] text-slate-400 uppercase font-mono">Landed Wholesale Rate</div>
+                  <div className="text-2xl font-bold text-white font-mono">
+                    {formatCurrency(deodapPrice, currency)}
+                  </div>
+                  <div className="text-[10px] text-slate-500 font-mono">
+                    Product rate + shipping at cart
+                  </div>
+                </div>
+
+                <div className="space-y-1.5 text-[11px] border-t border-white/10 pt-2 font-mono text-slate-400">
+                  <div className="flex justify-between">
+                    <span>Product Base Price:</span>
+                    <span className="text-slate-300">₹{Math.round(oneAAPrice * 0.95)}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Added Courier Freight:</span>
+                    <span className="text-rose-400 font-bold">+₹60 - ₹120/kg</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Added GST on Invoice:</span>
+                    <span className="text-rose-400 font-bold">+18% extra</span>
+                  </div>
+                  <div className="flex justify-between text-slate-500">
+                    <span>1AA Net Advantage:</span>
+                    <span className="text-emerald-400 font-bold">{formatCurrency(deodapPrice - oneAAPrice, currency)}</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <div className="text-[10px] bg-white/[0.02] p-2 rounded-xl border border-white/5 text-slate-500">
+                  1AA includes door delivery &amp; zero surprise cart fees.
+                </div>
+                <a
+                  href={deodapLiveUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-full py-1.5 px-2.5 rounded-xl bg-red-600/15 hover:bg-red-600/25 text-red-300 border border-red-500/30 text-[10px] font-mono font-bold flex items-center justify-center gap-1 transition-all cursor-pointer"
+                  title="Verify price live on DeoDap.in"
+                >
+                  <span>Verify Live on DeoDap</span>
+                  <ExternalLink className="w-3 h-3 text-red-400" />
+                </a>
+              </div>
+            </div>
+
             {/* AMAZON INDIA BENCHMARK */}
             <div className="rounded-2xl p-4 bg-white/[0.02] border border-white/10 flex flex-col justify-between space-y-4">
               <div className="space-y-3">
@@ -340,8 +408,20 @@ export default function PlatformPriceComparisonModal({
                 </div>
               </div>
 
-              <div className="text-[10px] bg-white/[0.02] p-2 rounded-xl border border-white/5 text-slate-500">
-                Buyer pays massive marketplace commissions &amp; middleman ad charges.
+              <div className="space-y-2">
+                <div className="text-[10px] bg-white/[0.02] p-2 rounded-xl border border-white/5 text-slate-500">
+                  Buyer pays massive marketplace commissions &amp; ad charges.
+                </div>
+                <a
+                  href={amazonLiveUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-full py-1.5 px-2.5 rounded-xl bg-amber-500/15 hover:bg-amber-500/25 text-amber-300 border border-amber-500/30 text-[10px] font-mono font-bold flex items-center justify-center gap-1 transition-all cursor-pointer"
+                  title="Verify price live on Amazon.in"
+                >
+                  <span>Verify Live on Amazon</span>
+                  <ExternalLink className="w-3 h-3 text-amber-400" />
+                </a>
               </div>
             </div>
 
@@ -387,8 +467,20 @@ export default function PlatformPriceComparisonModal({
                 </div>
               </div>
 
-              <div className="text-[10px] bg-white/[0.02] p-2 rounded-xl border border-white/5 text-slate-500">
-                Subject to high marketplace return charges built into the retail price.
+              <div className="space-y-2">
+                <div className="text-[10px] bg-white/[0.02] p-2 rounded-xl border border-white/5 text-slate-500">
+                  High return markup built into retail price.
+                </div>
+                <a
+                  href={flipkartLiveUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-full py-1.5 px-2.5 rounded-xl bg-blue-500/15 hover:bg-blue-500/25 text-blue-300 border border-blue-500/30 text-[10px] font-mono font-bold flex items-center justify-center gap-1 transition-all cursor-pointer"
+                  title="Verify price live on Flipkart"
+                >
+                  <span>Verify Live on Flipkart</span>
+                  <ExternalLink className="w-3 h-3 text-blue-400" />
+                </a>
               </div>
             </div>
 

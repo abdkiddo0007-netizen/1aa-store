@@ -1,0 +1,15 @@
+# 1AA (Available Always) Wholesale Search Engine Directives
+User-agent: *
+Allow: /
+
+# Googlebot & Bingbot Optimization
+User-agent: Googlebot
+Allow: /
+Crawl-delay: 0
+
+User-agent: Bingbot
+Allow: /
+Crawl-delay: 0
+
+# Official Sitemap Location
+Sitemap: https://1aa-store.vercel.app/sitemap.xml

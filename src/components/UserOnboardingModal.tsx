@@ -16,7 +16,8 @@ import {
   Crown,
   Receipt,
   LogIn,
-  UserPlus
+  UserPlus,
+  LogOut
 } from "lucide-react";
 import { lookupPincode } from "../types/address";
 import { 
@@ -48,6 +49,7 @@ interface UserOnboardingModalProps {
   onProfileSaved: (profile: UserProfile) => void;
   existingProfile?: UserProfile | null;
   onAdminLoginSuccess?: (initialTab?: "agentic-ai") => void;
+  onLogout?: () => void;
 }
 
 export default function UserOnboardingModal({
@@ -56,6 +58,7 @@ export default function UserOnboardingModal({
   onProfileSaved,
   existingProfile,
   onAdminLoginSuccess,
+  onLogout,
 }: UserOnboardingModalProps) {
   // Mode: "signin" for returning buyers / admin, "register" for new buyers creating password
   const [authMode, setAuthMode] = useState<"signin" | "register">("signin");
@@ -404,6 +407,40 @@ export default function UserOnboardingModal({
             </button>
           )}
         </div>
+
+        {/* Active Logged-In Account Banner */}
+        {existingProfile && (
+          <div className="mx-5 mt-4 p-3 rounded-2xl bg-white/[0.04] border border-brand-orange/30 flex items-center justify-between">
+            <div className="flex items-center gap-2.5">
+              <div className="w-8 h-8 rounded-full bg-brand-orange/20 border border-brand-orange/40 flex items-center justify-center text-brand-orange font-bold text-xs">
+                {existingProfile.username.charAt(0).toUpperCase()}
+              </div>
+              <div>
+                <div className="text-xs font-bold text-white flex items-center gap-1.5">
+                  <span>{existingProfile.username}</span>
+                  <span className="text-[10px] text-amber-400 font-mono uppercase">({existingProfile.merchantType})</span>
+                </div>
+                <div className="text-[10px] text-slate-400 font-mono">
+                  📍 {existingProfile.city}, {existingProfile.state} • {existingProfile.mobile}
+                </div>
+              </div>
+            </div>
+
+            {onLogout && (
+              <button
+                type="button"
+                onClick={() => {
+                  haptics.selection();
+                  onLogout();
+                }}
+                className="px-3 py-1.5 rounded-xl bg-red-500/15 hover:bg-red-500/25 text-red-300 border border-red-500/30 text-xs font-mono font-bold flex items-center gap-1.5 transition-all cursor-pointer"
+              >
+                <LogOut className="w-3.5 h-3.5" />
+                <span>Log Out</span>
+              </button>
+            )}
+          </div>
+        )}
 
         {/* Auth Mode Toggle Bar */}
         <div className="px-5 pt-4 bg-obsidian-950/40 border-b border-white/[0.06] flex items-center gap-2 shrink-0">
