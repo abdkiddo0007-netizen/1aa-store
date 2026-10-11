@@ -258,7 +258,7 @@ export default function AIAssistantAgentModal({
   const MULTILINGUAL_CHIPS: Record<"en" | "hi" | "kn" | "ta", { label: string; query: string }[]> = {
     en: [
       { label: "🪔 Navratri Festive Special (36 SKUs)", query: "Show me Navratri special jewellery and festive decor" },
-      { label: "⚡ ₹1.50 to ₹1000 Daily Deals (820+ SKUs)", query: "Show me daily deals under 50 rupees" },
+      { label: "🏭 ₹1.50 to ₹1000 Wholesale Catalog (820+ SKUs)", query: "Show me wholesale products under 50 rupees" },
       { label: "🛰️ Track My Package (Live Radar)", query: "How do I track my package in real-time?" },
       { label: "🧸 Trending Toys (87 SKUs)", query: "What are the trending toys?" },
       { label: "👓 3D AR Product Tryout", query: "Can I inspect products in 3D AR before buying?" },
@@ -482,11 +482,11 @@ export default function AIAssistantAgentModal({
         `*Click any item below to inspect in 3D AR or load directly into your wholesale invoice drawer!*`;
       action = "catalog";
     }
-    // 4c. Daily Deals under ₹50 (1.50 to 1000 rupees)
+    // 4c. Budget Wholesale Lines under ₹50 (1.50 to 1000 rupees)
     else if (q.includes("deal") || q.includes("1.50") || q.includes("50") || q.includes("under 10") || q.includes("budget") || q.includes("cheap") || q.includes("peeler") || q.includes("hook")) {
       suggested = CATALOG_PRODUCTS.filter((p) => p.fairPrice <= 25).slice(0, 6);
       replyText = 
-        `⚡ **1AA ₹1.50 to ₹1000 Factory Daily Deals Catalog Live!**\n\n` +
+        `🏭 **1AA ₹1.50 to ₹1000 Factory Wholesale Catalog Live!**\n\n` +
         `Explore over **820+ verified wholesale lines** across Kitchen, Home Utility, Stationery, Toys & Smart Tech:\n\n` +
         `• 🍊 **Ring Orange Peelers & Snail Cutters:** Starting at just **₹3 to ₹5**\n` +
         `• 🚿 **Waterproof Shower Caps & Adhesive Wall Hooks:** High recurring retail volume from **₹3 to ₹5**\n` +

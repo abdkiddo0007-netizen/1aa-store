@@ -62,13 +62,13 @@ export default function BroadcastStudioModal({
   const storeUrl = "https://1aa-store.vercel.app/";
   const broadcastText = useMemo(() => {
     let title = "🔥 *1AA DAILY FACTORY SOURCING BROADCAST | MYSORE HUB* 🔥";
-    if (preset === "top-margin") title = "🚀 *1AA RESELLER SPECIAL: HIGH PROFIT (>55% ROI) DEALS* 🚀";
+    if (preset === "top-margin") title = "🚀 *1AA RESELLER SPECIAL: HIGH PROFIT (>55% ROI) WHOLESALE LINES* 🚀";
     if (preset === "fast-movers") title = "⚡ *1AA FAST-MOVERS UNDER ₹150: TOP RETAIL PICKS* ⚡";
     if (preset === "toys-kids") title = "🧸 *1AA TOYS & KIDS ESSENTIALS: DIRECT FACTORY WHOLESALE* 🧸";
     if (preset === "gadgets-home") title = "💡 *1AA SMART GADGETS & HOME BESTSELLERS* 💡";
 
     let body = `${title}\n`;
-    body += `Direct Factory Sourcing • Door Courier Freight Included + Flat 20% 1AA Margin • 👑 Customer is King Fair Price\n\n`;
+    body += `Direct Factory Sourcing • Flat 20% 1AA Margin • Universal Real-Time MRP • 👑 Customer is King Fair Price\n\n`;
     body += `📦 *TODAY'S FEATURED WHOLESALE DISPATCHES:*\n`;
 
     selectedProducts.forEach((p, index) => {
@@ -149,7 +149,7 @@ export default function BroadcastStudioModal({
                 <span className="truncate">WhatsApp Catalog Broadcast</span>
                 <span className="px-2 py-0.5 rounded-full bg-brand-orange/20 text-brand-orange text-[10px] font-mono shrink-0">1AA Outreach</span>
               </h3>
-              <p className="text-[11px] sm:text-xs text-slate-400 truncate">Broadcast deals, new arrivals, and high-margin products</p>
+              <p className="text-[11px] sm:text-xs text-slate-400 truncate">Broadcast wholesale stock, new arrivals, and high-margin products</p>
             </div>
           </div>
 

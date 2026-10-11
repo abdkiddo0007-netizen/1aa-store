@@ -62,9 +62,10 @@ export default function ProductDetailModal({
 
   if (!product) return null;
 
-  const benchmarkPrice = product.amazonPrice || product.marketPrice;
-  const savings = Math.max(0, benchmarkPrice - product.fairPrice);
-  const savingsPercent = Math.round((savings / benchmarkPrice) * 100);
+  const benchmarkPrice = product.marketPrice || product.amazonPrice || Math.round(product.fairPrice * 1.30);
+  const resellerProfit = Math.max(0, benchmarkPrice - product.fairPrice);
+  const profitMargin = benchmarkPrice > 0 ? Math.round((resellerProfit / benchmarkPrice) * 100) : 0;
+  const savingsPercent = profitMargin;
 
   const directWhatsAppLink = `https://wa.me/917406231167?text=${encodeURIComponent(
     `Hello Abdul Darvesh (1AA Dispatch), I am inquiring about the ${product.name} (SKU: ${product.sku}).\n` +
@@ -236,36 +237,37 @@ export default function ProductDetailModal({
                 </span>
               </div>
 
-              {/* Price Breakdown Panel (Apple Pro Card with 20% Margin) */}
-              <div className="p-4 bg-slate-50 dark:bg-white/[0.03] rounded-2xl border border-slate-200 dark:border-white/[0.08] space-y-2 font-mono text-xs">
+              {/* Price Breakdown Panel (Factory Cost + 20% Margin + Universal MRP & Reseller Profit) */}
+              <div className="p-4 bg-slate-50 dark:bg-white/[0.03] rounded-2xl border border-slate-200 dark:border-white/[0.08] space-y-2.5 font-mono text-xs">
                 <div className="flex justify-between text-slate-600 dark:text-slate-400">
-                  <span>Base Price (with Tax):</span>
+                  <span>Factory Actual Cost:</span>
                   <span className="text-slate-900 dark:text-white font-bold">₹{product.baseCost}</span>
                 </div>
-                <div className="flex justify-between text-slate-600 dark:text-slate-400">
-                  <span className="flex items-center gap-1">
-                    <Truck className="w-3.5 h-3.5 text-brand-orange" />
-                    Doorstep Courier Freight:
-                  </span>
-                  <span className="text-emerald-600 dark:text-emerald-400 font-bold">Included</span>
-                </div>
+                
                 <div className="flex justify-between text-brand-orange font-semibold">
                   <span className="flex items-center gap-1">
                     <TrendingUp className="w-3.5 h-3.5" />
-                    1AA Wholesale Margin (20%):
+                    1AA Margin (20% Flat):
                   </span>
                   <span>+₹{product.margin1AAAmount || Math.round((product.baseCost || 0) * 0.20)}</span>
                 </div>
+
                 <div className="border-t border-slate-200 dark:border-white/[0.08] pt-2 flex justify-between items-baseline">
                   <span className="text-xs font-bold text-slate-900 dark:text-white font-sans">1AA Wholesale Buy Price:</span>
                   <span className="text-2xl font-black text-brand-orange">₹{product.fairPrice}</span>
                 </div>
-                <div className="flex justify-between text-[11px] text-slate-500 dark:text-slate-400 pt-1 border-t border-slate-200 dark:border-white/[0.05]">
-                  <span>Amazon/Flipkart Benchmark:</span>
-                  <span className="line-through text-slate-400 dark:text-slate-500">₹{product.amazonPrice || product.marketPrice}</span>
+
+                <div className="flex justify-between text-[11px] text-slate-600 dark:text-slate-400 pt-1.5 border-t border-slate-200 dark:border-white/[0.05]">
+                  <span>Universal Market MRP:</span>
+                  <span className="text-slate-900 dark:text-white font-bold">₹{benchmarkPrice}</span>
                 </div>
-                <div className="text-[11px] text-emerald-600 dark:text-emerald-400 font-bold text-right pt-0.5">
-                  Direct Savings: ₹{savings} ({savingsPercent}% off retail)
+
+                {/* Reseller Profit */}
+                <div className="p-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/25 text-emerald-700 dark:text-emerald-300 flex justify-between items-center text-xs font-bold">
+                  <span>Your Reseller Profit:</span>
+                  <span className="font-mono text-sm">
+                    ₹{resellerProfit}/pc • {profitMargin}% Margin
+                  </span>
                 </div>
 
                 {/* Wholesale Volume Tiers & GST ITC */}

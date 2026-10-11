@@ -1167,7 +1167,7 @@ export default function OneAAStore() {
             </button>
             <span className="text-slate-400 dark:text-slate-500 hidden sm:inline">•</span>
             <a
-              href="https://wa.me/917406231167?text=Hi%201AA%2C%20please%20add%20me%20to%20the%201AA%20Daily%20Wholesale%20Deals%20Broadcast%20List"
+              href="https://wa.me/917406231167?text=Hi%201AA%2C%20please%20add%20me%20to%20the%201AA%20Wholesale%20Stock%20Broadcast%20List"
               target="_blank"
               rel="noreferrer"
               className="inline-flex items-center gap-1.5 text-[11px] px-3 py-1 rounded-full bg-emerald-500/15 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 border border-emerald-500/30 font-bold hover:scale-105 transition-transform"
@@ -1189,7 +1189,7 @@ export default function OneAAStore() {
               <span className="w-2 h-2 rounded-full bg-brand-orange animate-apple-pulse" />
               <span className="text-brand-orange font-bold">1st Available Always</span>
               <span className="text-slate-300 dark:text-white/20">•</span>
-              <span>Mysore Hub • Base Price with Tax • Flat 20% Margin • Door Courier Included</span>
+              <span>Mysore Hub • Factory Actual Cost • Flat 20% Margin • Universal MRP Benchmark</span>
             </div>
 
             {/* Apple Cinematic Headline (Compact & Crisp) */}
@@ -1245,7 +1245,7 @@ export default function OneAAStore() {
               <div className="p-2.5 rounded-xl apple-glass border border-slate-200 dark:border-white/[0.06] flex items-center gap-2">
                 <CheckCircle2 className="w-4 h-4 text-brand-blue-light shrink-0" />
                 <div className="text-[11px] text-slate-700 dark:text-slate-300">
-                  <strong>Doorstep Courier</strong> + Flat 20% Margin
+                  <strong>Factory Direct Cost</strong> + Flat 20% Margin
                 </div>
               </div>
               <div className="p-2.5 rounded-xl apple-glass border border-slate-200 dark:border-white/[0.06] flex items-center gap-2">
@@ -1337,8 +1337,7 @@ export default function OneAAStore() {
                     }}
                     className="px-2.5 py-0.5 rounded-full bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 whitespace-nowrap font-bold flex items-center gap-1 cursor-pointer transition-all shadow-sm"
                   >
-                    <span>⚡</span>
-                    <span>Daily Deals Under ₹50</span>
+                    <span>Under ₹50 Wholesale</span>
                   </button>
                   <button
                     type="button"
@@ -1494,8 +1493,8 @@ export default function OneAAStore() {
                     : "bg-slate-100 dark:bg-white/[0.03] text-slate-600 dark:text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 border border-slate-200 dark:border-white/[0.06]"
                 }`}
               >
-                <Zap className="w-3 h-3 text-emerald-500" />
-                <span>⚡ Under ₹50 ({CATALOG_PRODUCTS.filter((p) => p.fairPrice <= 50).length})</span>
+                <Layers className="w-3 h-3 text-emerald-500" />
+                <span>Under ₹50 ({CATALOG_PRODUCTS.filter((p) => p.fairPrice <= 50).length})</span>
               </button>
               <button
                 onClick={() => {
@@ -1573,8 +1572,11 @@ export default function OneAAStore() {
           <div id="catalog-products-section" className="catalog-grid grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 pt-2">
               {filteredAndSorted.map((product) => {
                 const qty = quantities[product.sku] || 0;
-                const savings = product.marketPrice - product.fairPrice;
-                const savingsPercent = Math.round((savings / product.marketPrice) * 100);
+                const mPrice = product.marketPrice || product.amazonPrice || Math.round(product.fairPrice * 1.30);
+                const resellerProfit = Math.max(0, mPrice - product.fairPrice);
+                const profitMargin = mPrice > 0 ? Math.round((resellerProfit / mPrice) * 100) : 0;
+                const savings = mPrice - product.fairPrice;
+                const savingsPercent = Math.round((savings / mPrice) * 100);
 
                 return (
                   <div
@@ -1603,17 +1605,11 @@ export default function OneAAStore() {
                           {product.sku}
                         </div>
 
-                        {/* Special Festive / Deal Badges */}
+                        {/* Special Festive Badges */}
                         {product.isNavratriSpecial && (
                           <div className="absolute top-10 left-3.5 bg-gradient-to-r from-amber-500 via-rose-500 to-amber-600 text-white font-extrabold px-2.5 py-0.5 rounded-full text-[9px] shadow-glow-orange flex items-center gap-1 z-10 animate-pulse border border-amber-300/40">
                             <span>🪔</span>
                             <span>Navratri Special</span>
-                          </div>
-                        )}
-                        {product.fairPrice <= 10 && !product.isNavratriSpecial && (
-                          <div className="absolute top-10 left-3.5 bg-gradient-to-r from-emerald-600 to-teal-500 text-white font-extrabold px-2.5 py-0.5 rounded-full text-[9px] shadow-sm flex items-center gap-1 z-10 border border-emerald-300/30">
-                            <Zap className="w-2.5 h-2.5 text-white" />
-                            <span>Deal ₹{product.fairPrice}</span>
                           </div>
                         )}
 
@@ -1715,21 +1711,13 @@ export default function OneAAStore() {
                           <span>👑 Customer is King: Zero Bargaining</span>
                         </div>
 
-                        {/* Transparent Landed Cost & Courier Breakdown */}
-                        <div className="bg-slate-50 dark:bg-white/[0.03] p-3 rounded-2xl border border-slate-200 dark:border-white/[0.06] space-y-1.5 mt-2 font-mono text-xs">
+                        {/* Transparent Pricing: Factory Cost + 20% Margin + Universal MRP & Reseller Profit */}
+                        <div className="bg-slate-50 dark:bg-white/[0.03] p-3 rounded-2xl border border-slate-200 dark:border-white/[0.06] space-y-2 mt-2 font-mono text-xs">
                           <div className="flex justify-between text-[11px] text-slate-600 dark:text-slate-400">
-                            <span>Base Price (with Tax):</span>
-                            <span className="text-slate-800 dark:text-slate-300 font-semibold">₹{product.baseCost}</span>
+                            <span>Factory Actual Cost:</span>
+                            <span className="text-slate-800 dark:text-slate-200 font-bold">₹{product.baseCost}</span>
                           </div>
 
-                          <div className="flex justify-between text-[11px] text-slate-600 dark:text-slate-400">
-                            <span className="flex items-center gap-1">
-                              <Truck className="w-3 h-3 text-brand-orange" />
-                              Doorstep Courier Freight:
-                            </span>
-                            <span className="text-emerald-600 dark:text-emerald-400 font-semibold">Included</span>
-                          </div>
-                          
                           <div className="flex justify-between text-[11px] text-brand-orange font-semibold">
                             <span className="flex items-center gap-1">
                               <TrendingUp className="w-3 h-3" />
@@ -1739,27 +1727,21 @@ export default function OneAAStore() {
                           </div>
 
                           <div className="border-t border-slate-200 dark:border-white/[0.08] pt-1.5 flex justify-between items-baseline">
-                            <span className="text-xs text-slate-900 dark:text-white font-bold font-sans">1AA Wholesale Price:</span>
+                            <span className="text-xs text-slate-900 dark:text-white font-bold font-sans">1AA Wholesale Buy Price:</span>
                             <span className="text-lg text-brand-orange font-black">₹{product.fairPrice}</span>
                           </div>
 
-                          {/* Mathematical Verification Pill */}
-                          <div className="p-1.5 rounded-xl bg-slate-100 dark:bg-black/40 border border-slate-200 dark:border-white/10 text-[9px] font-mono text-center space-y-0.5">
-                            <div className="text-slate-700 dark:text-slate-300">
-                              ₹{product.baseCost} (Base with Tax) + ₹{product.margin1AAAmount || Math.round((product.baseCost || 0) * 0.20)} (20%) = <strong className="text-brand-orange font-bold">₹{product.fairPrice} 1AA Buy Price</strong>
-                            </div>
-                            <div className="flex items-center justify-between text-[8.5px] text-slate-500 dark:text-slate-400 px-1 pt-0.5">
-                              <span className="text-emerald-600 dark:text-emerald-400 font-semibold">✓ 100% Bench QA Tested</span>
-                              <span className="text-amber-600 dark:text-amber-300 font-semibold">👑 Zero Bargaining Needed</span>
-                            </div>
+                          <div className="flex justify-between text-[11px] text-slate-600 dark:text-slate-400 pt-1 border-t border-slate-200 dark:border-white/[0.06]">
+                            <span>Universal Market MRP:</span>
+                            <span className="text-slate-800 dark:text-slate-200 font-bold">₹{mPrice}</span>
                           </div>
 
-                          <div className="flex justify-between text-[10px] text-slate-500 pt-0.5">
-                            <span>Amazon/Flipkart:</span>
-                            <span className="line-through">₹{product.amazonPrice || product.marketPrice}</span>
-                          </div>
-                          <div className="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold text-right">
-                            Save ₹{(product.amazonPrice || product.marketPrice) - product.fairPrice} ({savingsPercent}% off)
+                          {/* Reseller Profit */}
+                          <div className="p-2 rounded-xl bg-emerald-500/10 border border-emerald-500/25 text-emerald-700 dark:text-emerald-300 flex justify-between items-center text-[11px]">
+                            <span className="font-semibold">Your Reseller Profit:</span>
+                            <span className="font-mono font-bold text-xs">
+                              ₹{resellerProfit}/pc • {profitMargin}% Margin
+                            </span>
                           </div>
 
                           {/* Real-time Comparison Button & Reseller ROI */}
@@ -3178,7 +3160,7 @@ export default function OneAAStore() {
 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 pt-10 mt-10 border-t border-slate-200 dark:border-white/[0.06] flex flex-col sm:flex-row justify-between items-center gap-3 text-[11px] text-slate-500">
           <div>© {new Date().getFullYear()} 1AA (Available Always) — 1st Available Always. All rights reserved.</div>
-          <div className="font-mono">Direct Factory Sourcing • Built-In Courier Freight • Flat 20% Margin • 👑 Customer is King Guarantee</div>
+          <div className="font-mono">Direct Factory Sourcing • Flat 20% Margin • Universal Real-Time MRP • 👑 Customer is King Guarantee</div>
         </div>
       </footer>
 
