@@ -27,6 +27,29 @@ interface RestockBundle {
 
 const BUNDLE_DEFINITIONS: RestockBundle[] = [
   {
+    id: "bundle-navratri",
+    name: "🪔 Navratri Festive Special Fast-Selling Assortment",
+    badge: "FESTIVE SPOTLIGHT",
+    badgeColor: "bg-gradient-to-r from-amber-500/20 to-rose-500/20 text-amber-300 border-amber-500/40",
+    targetBudget: "₹7,500 – ₹8,500",
+    description: "Curated high-turnover festive lines: Fancy Wooden Bajot, Meenakari Anklet, Temple Peacock Jhumka, Oxidised Dandiya Earrings & Pooja Essentials for Dandiya/Garba season.",
+    idealFor: "Jewellery Stalls, Gift Shops, Garba Event Organizers & Festive Retailers",
+    items: [
+      { sku: "1AA-2512", quantity: 15 },
+      { sku: "1AA-NV-7F89", quantity: 10 },
+      { sku: "1AA-NV-433A", quantity: 20 },
+      { sku: "1AA-NV-C383", quantity: 20 },
+      { sku: "1AA-NV-D808", quantity: 25 },
+      { sku: "1AA-NV-C1DB", quantity: 5 },
+    ],
+    perks: [
+      "100% Pre-tested Zero-DOA assurance at Mysore Central Hub",
+      "Door courier freight included with live tracking",
+      "Flat 20% transparent 1AA wholesale margin",
+      "High seasonal demand with 60% to 75% retail resale markup",
+    ],
+  },
+  {
     id: "bundle-starter",
     name: "Starter Merchant Trial Assortment",
     badge: "LOW-RISK ENTRY",

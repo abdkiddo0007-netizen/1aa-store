@@ -27,6 +27,8 @@ export interface Product {
   leadTime?: string;
   reviewsCount?: number;
   rating?: number;
+  isNavratriSpecial?: boolean;
+  tags?: string[];
 }
 
 export interface OrderMetrics {

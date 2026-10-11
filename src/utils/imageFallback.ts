@@ -9,6 +9,14 @@ export function getProductSvgFallback(name: string, sku: string, category: strin
   // Category-specific iconography
   let iconPath = '';
   switch (category) {
+    case 'Navratri & Festive Special':
+      // Diya & Festive ceremonial flame motif
+      iconPath = '<ellipse cx="100" cy="125" rx="35" ry="12" fill="%23FF8C00"/><path d="M100 65 Q115 95 100 115 Q85 95 100 65 Z" fill="%23FFD700"/><circle cx="100" cy="98" r="8" fill="%23FF4500" opacity="0.8"/>';
+      break;
+    case 'Jewellery & Accessories':
+      // Sparkling diamond jewel motif
+      iconPath = '<polygon points="100,65 130,95 100,135 70,95" fill="%23FFD700" opacity="0.85"/><polygon points="85,95 100,75 115,95 100,125" fill="%23FF8C00"/>';
+      break;
     case 'Kitchen & Travel':
     case 'Kitchen & Dining':
       // Kettle / Utensil motif

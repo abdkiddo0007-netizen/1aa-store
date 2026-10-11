@@ -40,6 +40,10 @@ const SAMPLE_MESSAGES = [
     text: "Urgent dispatch for tomorrow: 25 wireless car vacuum 120W, 10 heat sealers, and 12 astronaut galaxy projectors. Check bulk discount."
   },
   {
+    title: "🪔 Navratri Festive Stall Booking",
+    text: "Urgent Garba season stock: 30 wooden designer bajot, 50 peacock jhumka earrings, 25 meenakari anklet payal, and 20 led diya tealight candles to Ahmedabad."
+  },
+  {
     title: "Hubli Wholesale Stockist",
     text: "Hi 1AA team, quote for master cartons: 50 travel kettles, 30 electric lint removers, and 40 sonic toothbrushes to Hubli warehouse."
   }
@@ -77,6 +81,21 @@ export default function WhatsAppOrderParserModal({
 
     // Keyword mapping to catalog SKUs
     const keywordsMap: { [keyword: string]: string } = {
+      bajot: "1AA-2512",
+      chowki: "1AA-2512",
+      jhumka: "1AA-NV-433A",
+      jhumkas: "1AA-NV-433A",
+      earring: "1AA-NV-433A",
+      earrings: "1AA-NV-433A",
+      anklet: "1AA-NV-7F89",
+      payal: "1AA-NV-7F89",
+      diya: "1AA-NV-C1DB",
+      diyas: "1AA-NV-C1DB",
+      thali: "1AA-NV-D808",
+      agarbatti: "1AA-NV-3752",
+      incense: "1AA-NV-3752",
+      peeler: "1AA-DD-58BB",
+      mould: "1AA-0797",
       kettle: "1AA-KETL-FOLD",
       kettles: "1AA-KETL-FOLD",
       travel: "1AA-KETL-FOLD",

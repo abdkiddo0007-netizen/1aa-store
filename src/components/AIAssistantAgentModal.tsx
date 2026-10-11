@@ -257,6 +257,8 @@ export default function AIAssistantAgentModal({
   // Multilingual Quick Action Chips
   const MULTILINGUAL_CHIPS: Record<"en" | "hi" | "kn" | "ta", { label: string; query: string }[]> = {
     en: [
+      { label: "🪔 Navratri Festive Special (36 SKUs)", query: "Show me Navratri special jewellery and festive decor" },
+      { label: "⚡ ₹1.50 to ₹1000 Daily Deals (820+ SKUs)", query: "Show me daily deals under 50 rupees" },
       { label: "🛰️ Track My Package (Live Radar)", query: "How do I track my package in real-time?" },
       { label: "🧸 Trending Toys (87 SKUs)", query: "What are the trending toys?" },
       { label: "👓 3D AR Product Tryout", query: "Can I inspect products in 3D AR before buying?" },
@@ -465,6 +467,32 @@ export default function AIAssistantAgentModal({
       replyText = 
         `🍳 **Home, Kitchen & Smart Utility Fast Movers:**\n\n` +
         `Popular daily household essentials with proven retail velocity and zero defect returns:`;
+      action = "catalog";
+    }
+    // 4b. Navratri & Festive Season Inquiry
+    else if (q.includes("navratri") || q.includes("festive") || q.includes("garba") || q.includes("dandiya") || q.includes("jhumka") || q.includes("bajot") || q.includes("pooja") || q.includes("puja") || q.includes("diya") || q.includes("chowki")) {
+      suggested = CATALOG_PRODUCTS.filter((p) => p.isNavratriSpecial || p.category === "Navratri & Festive Special").slice(0, 6);
+      replyText = 
+        `🪔 **1AA Navratri & Festive Season Wholesale Hub Live!**\n\n` +
+        `We have stocked **36 high-demand Festive Jewellery & Sacred Decor SKUs** directly from factory floors with **Flat 20% 1AA Margin** and **Pre-Dispatch Mysore QA**:\n\n` +
+        `• 🪵 **Handcrafted Pooja Chowki & Bajot:** Starting from just **₹53 to ₹58** (Retail: ₹99–₹199)\n` +
+        `• 🦚 **Temple Peacock & Kundan Jhumkas:** From **₹48 to ₹102** (Retail: ₹199–₹499)\n` +
+        `• 💃 **Dandiya Dancer Statement Earrings & Enamel Anklets:** High viral demand for Garba season\n` +
+        `• 🪔 **LED Diya Tealights & Storm Lanterns:** Safe smokeless festive lighting for homes & pandals\n\n` +
+        `*Click any item below to inspect in 3D AR or load directly into your wholesale invoice drawer!*`;
+      action = "catalog";
+    }
+    // 4c. Daily Deals under ₹50 (1.50 to 1000 rupees)
+    else if (q.includes("deal") || q.includes("1.50") || q.includes("50") || q.includes("under 10") || q.includes("budget") || q.includes("cheap") || q.includes("peeler") || q.includes("hook")) {
+      suggested = CATALOG_PRODUCTS.filter((p) => p.fairPrice <= 25).slice(0, 6);
+      replyText = 
+        `⚡ **1AA ₹1.50 to ₹1000 Factory Daily Deals Catalog Live!**\n\n` +
+        `Explore over **820+ verified wholesale lines** across Kitchen, Home Utility, Stationery, Toys & Smart Tech:\n\n` +
+        `• 🍊 **Ring Orange Peelers & Snail Cutters:** Starting at just **₹3 to ₹5**\n` +
+        `• 🚿 **Waterproof Shower Caps & Adhesive Wall Hooks:** High recurring retail volume from **₹3 to ₹5**\n` +
+        `• 🧁 **Silicone Baking Moulds & Spatulas:** Food-grade silicone from **₹6 to ₹10**\n` +
+        `• 🧲 **Multi-Functional Triangle Hangers & ABS Corner Clips:** Everyday organizational problem solvers\n\n` +
+        `Direct Mysore dispatch with zero marketplace commissions!`;
       action = "catalog";
     }
     // 5. Delivery SLA Timelines

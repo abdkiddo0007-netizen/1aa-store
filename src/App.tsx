@@ -141,7 +141,7 @@ export default function OneAAStore() {
   const [search, setSearch] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string>("All");
   const [sortBy, setSortBy] = useState<"recommended" | "savings" | "price-asc" | "price-desc" | "carton">("recommended");
-  const [quickFilter, setQuickFilter] = useState<"all" | "high-margin" | "under-150" | "top-rated">("all");
+  const [quickFilter, setQuickFilter] = useState<"all" | "navratri-special" | "under-50" | "high-margin" | "under-150" | "top-rated">("all");
   const [deliverySpeed, setDeliverySpeed] = useState<"standard" | "express">("standard");
   
   // Modals and Drawers
@@ -483,7 +483,8 @@ export default function OneAAStore() {
 
   const categories = useMemo(() => {
     const set = new Set(CATALOG_PRODUCTS.map((p) => p.category));
-    return ["All", ...Array.from(set)];
+    const rest = Array.from(set).filter((c) => c !== "Navratri & Festive Special");
+    return ["All", "Navratri & Festive Special", ...rest];
   }, []);
 
   const categoryCounts = useMemo(() => {
@@ -618,7 +619,18 @@ export default function OneAAStore() {
         p.highlight.toLowerCase().includes(search.toLowerCase());
 
       let matchesQuick = true;
-      if (quickFilter === "high-margin") {
+      if (quickFilter === "navratri-special") {
+        matchesQuick = Boolean(
+          p.isNavratriSpecial ||
+          p.category === "Navratri & Festive Special" ||
+          p.name.toLowerCase().includes("navratri") ||
+          p.name.toLowerCase().includes("festive") ||
+          p.name.toLowerCase().includes("jhumka") ||
+          p.name.toLowerCase().includes("bajot")
+        );
+      } else if (quickFilter === "under-50") {
+        matchesQuick = p.fairPrice <= 50;
+      } else if (quickFilter === "high-margin") {
         matchesQuick = ((p.marketPrice - p.fairPrice) / p.marketPrice) >= 0.55;
       } else if (quickFilter === "under-150") {
         matchesQuick = p.fairPrice <= 150;
@@ -1258,42 +1270,95 @@ export default function OneAAStore() {
             <div className="flex flex-col lg:flex-row justify-between items-stretch lg:items-center gap-3">
               
               {/* Prominent Capsule Search Bar with Real-Time Voice Search */}
-              <div className="relative flex-1 max-w-xl">
-                <Search className="w-4 h-4 text-slate-400 absolute left-4 top-3.5" />
-                <input
-                  type="text"
-                  placeholder="Search products, SKUs, or voice search (e.g. 'electric kettle', 'RC car', 'toys')..."
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                  className="w-full bg-slate-100 dark:bg-white/[0.06] border border-slate-300 dark:border-white/15 rounded-full pl-11 pr-28 py-3 text-xs sm:text-sm text-slate-900 dark:text-white placeholder-slate-500 dark:placeholder-slate-400 focus:outline-none focus:border-brand-orange focus:ring-1 focus:ring-brand-orange transition-all backdrop-blur-md shadow-inner"
-                />
-                <div className="absolute right-2.5 top-2 flex items-center gap-1.5">
-                  {search && (
-                    <button 
+              <div className="flex-1 max-w-xl flex flex-col gap-1.5">
+                <div className="relative w-full">
+                  <Search className="w-4 h-4 text-slate-400 absolute left-4 top-3.5" />
+                  <input
+                    type="text"
+                    placeholder="Search 820+ factory products, SKUs, or voice search (e.g. 'Bajot', 'Jhumka', 'Diya', 'Kettle')..."
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                    className="w-full bg-slate-100 dark:bg-white/[0.06] border border-slate-300 dark:border-white/15 rounded-full pl-11 pr-28 py-3 text-xs sm:text-sm text-slate-900 dark:text-white placeholder-slate-500 dark:placeholder-slate-400 focus:outline-none focus:border-brand-orange focus:ring-1 focus:ring-brand-orange transition-all backdrop-blur-md shadow-inner"
+                  />
+                  <div className="absolute right-2.5 top-2 flex items-center gap-1.5">
+                    {search && (
+                      <button 
+                        type="button"
+                        onClick={() => {
+                          haptics.light();
+                          setSearch("");
+                        }}
+                        className="p-1.5 text-slate-400 hover:text-slate-800 dark:hover:text-white rounded-full hover:bg-slate-200 dark:hover:bg-white/10 transition-colors cursor-pointer"
+                        title="Clear search"
+                        aria-label="Clear search"
+                      >
+                        <X className="w-3.5 h-3.5" />
+                      </button>
+                    )}
+                    <button
                       type="button"
                       onClick={() => {
-                        haptics.light();
-                        setSearch("");
+                        haptics.selection();
+                        setShowVoiceModal2026(true);
                       }}
-                      className="p-1.5 text-slate-400 hover:text-slate-800 dark:hover:text-white rounded-full hover:bg-slate-200 dark:hover:bg-white/10 transition-colors cursor-pointer"
-                      title="Clear search"
-                      aria-label="Clear search"
+                      className="p-1.5 rounded-full bg-gradient-to-r from-brand-orange to-amber-500 hover:brightness-110 text-obsidian-950 border border-brand-orange/50 transition-all cursor-pointer shadow-glow-orange flex items-center gap-1.5 text-xs font-black px-3"
+                      title="Real-Time Streaming Voice Search (Amazon / Flipkart / YouTube Style)"
+                      aria-label="Real-time voice search"
                     >
-                      <X className="w-3.5 h-3.5" />
+                      <Mic className="w-3.5 h-3.5 text-obsidian-950 animate-pulse" />
+                      <span className="font-mono">Voice</span>
                     </button>
-                  )}
+                  </div>
+                </div>
+
+                {/* Trending Search Chips */}
+                <div className="flex items-center gap-1.5 overflow-x-auto pb-0.5 scrollbar-none text-[11px]">
+                  <span className="text-slate-400 text-[10px] font-medium uppercase tracking-wider whitespace-nowrap hidden sm:inline">Trending:</span>
                   <button
                     type="button"
                     onClick={() => {
                       haptics.selection();
-                      setShowVoiceModal2026(true);
+                      setQuickFilter("navratri-special");
+                      setSelectedCategory("All");
+                      setSearch("");
                     }}
-                    className="p-1.5 rounded-full bg-gradient-to-r from-brand-orange to-amber-500 hover:brightness-110 text-obsidian-950 border border-brand-orange/50 transition-all cursor-pointer shadow-glow-orange flex items-center gap-1.5 text-xs font-black px-3"
-                    title="Real-Time Streaming Voice Search (Amazon / Flipkart / YouTube Style)"
-                    aria-label="Real-time voice search"
+                    className="px-2.5 py-0.5 rounded-full bg-amber-500/15 hover:bg-amber-500/25 text-amber-600 dark:text-amber-400 border border-amber-500/30 whitespace-nowrap font-bold flex items-center gap-1 cursor-pointer transition-all shadow-sm"
                   >
-                    <Mic className="w-3.5 h-3.5 text-obsidian-950 animate-pulse" />
-                    <span className="font-mono">Voice</span>
+                    <span>🪔</span>
+                    <span>Navratri Special</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      haptics.selection();
+                      setQuickFilter("under-50");
+                      setSelectedCategory("All");
+                      setSearch("");
+                    }}
+                    className="px-2.5 py-0.5 rounded-full bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 whitespace-nowrap font-bold flex items-center gap-1 cursor-pointer transition-all shadow-sm"
+                  >
+                    <span>⚡</span>
+                    <span>Daily Deals Under ₹50</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      haptics.selection();
+                      setSearch("Bajot");
+                    }}
+                    className="px-2 py-0.5 rounded-full bg-slate-200 dark:bg-white/[0.05] hover:bg-slate-300 dark:hover:bg-white/10 text-slate-700 dark:text-slate-300 border border-slate-300 dark:border-white/10 whitespace-nowrap cursor-pointer transition-all"
+                  >
+                    Pooja Bajot
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      haptics.selection();
+                      setSearch("Jhumka");
+                    }}
+                    className="px-2 py-0.5 rounded-full bg-slate-200 dark:bg-white/[0.05] hover:bg-slate-300 dark:hover:bg-white/10 text-slate-700 dark:text-slate-300 border border-slate-300 dark:border-white/10 whitespace-nowrap cursor-pointer transition-all"
+                  >
+                    Peacock Jhumka
                   </button>
                 </div>
               </div>
@@ -1351,27 +1416,40 @@ export default function OneAAStore() {
 
             {/* Category Pills with Dynamic Counts */}
             <div id="catalog-categories-bar" className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none text-xs">
-              {categories.map((cat) => (
-                <button
-                  key={cat}
-                  onClick={() => {
-                    haptics.selection();
-                    setSelectedCategory(cat);
-                  }}
-                  className={`px-3.5 py-1.5 rounded-full whitespace-nowrap transition-all duration-300 text-xs font-medium flex items-center gap-1.5 cursor-pointer ${
-                    selectedCategory === cat
-                      ? "bg-brand-orange text-obsidian-950 font-bold shadow-glow-orange scale-[1.02]"
-                      : "bg-slate-100 dark:bg-white/[0.04] text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white border border-slate-200 dark:border-white/[0.08] hover:border-slate-300 dark:hover:border-white/20"
-                  }`}
-                >
-                  <span>{cat}</span>
-                  <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-mono ${
-                    selectedCategory === cat ? "bg-black/25 text-obsidian-950 font-black" : "bg-slate-200 dark:bg-white/10 text-slate-600 dark:text-slate-400"
-                  }`}>
-                    {categoryCounts[cat] || 0}
-                  </span>
-                </button>
-              ))}
+              {categories.map((cat) => {
+                const isNavratri = cat === "Navratri & Festive Special";
+                return (
+                  <button
+                    key={cat}
+                    onClick={() => {
+                      haptics.selection();
+                      setSelectedCategory(cat);
+                      if (isNavratri) {
+                        setQuickFilter("all");
+                      }
+                    }}
+                    className={`px-3.5 py-1.5 rounded-full whitespace-nowrap transition-all duration-300 text-xs font-medium flex items-center gap-1.5 cursor-pointer ${
+                      selectedCategory === cat
+                        ? isNavratri
+                          ? "bg-gradient-to-r from-amber-500 via-rose-500 to-amber-600 text-white font-extrabold shadow-glow-orange scale-[1.04] border border-amber-300 ring-2 ring-amber-400/40"
+                          : "bg-brand-orange text-obsidian-950 font-bold shadow-glow-orange scale-[1.02]"
+                        : isNavratri
+                          ? "bg-gradient-to-r from-amber-500/15 to-rose-500/15 text-amber-600 dark:text-amber-300 border border-amber-500/30 hover:border-amber-500/60 font-semibold"
+                          : "bg-slate-100 dark:bg-white/[0.04] text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white border border-slate-200 dark:border-white/[0.08] hover:border-slate-300 dark:hover:border-white/20"
+                    }`}
+                  >
+                    {isNavratri && <span className="text-sm animate-pulse">🪔</span>}
+                    <span>{cat}</span>
+                    <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-mono ${
+                      selectedCategory === cat
+                        ? isNavratri ? "bg-black/30 text-white font-black" : "bg-black/25 text-obsidian-950 font-black"
+                        : isNavratri ? "bg-amber-500/20 text-amber-700 dark:text-amber-300 font-bold" : "bg-slate-200 dark:bg-white/10 text-slate-600 dark:text-slate-400"
+                    }`}>
+                      {categoryCounts[cat] || 0}
+                    </span>
+                  </button>
+                );
+              })}
             </div>
 
             {/* Quick Filters */}
@@ -1389,6 +1467,35 @@ export default function OneAAStore() {
                 }`}
               >
                 All ({CATALOG_PRODUCTS.length})
+              </button>
+              <button
+                onClick={() => {
+                  haptics.selection();
+                  setQuickFilter(quickFilter === "navratri-special" ? "all" : "navratri-special");
+                  if (quickFilter !== "navratri-special") setSelectedCategory("All");
+                }}
+                className={`px-3 py-1 rounded-full text-[11px] font-bold flex items-center gap-1.5 transition-all cursor-pointer ${
+                  quickFilter === "navratri-special"
+                    ? "bg-gradient-to-r from-amber-500 to-rose-500 text-white border border-amber-300 shadow-glow-orange scale-105"
+                    : "bg-amber-500/10 text-amber-600 dark:text-amber-400 hover:text-amber-500 border border-amber-500/30"
+                }`}
+              >
+                <Sparkles className="w-3 h-3 text-amber-400 animate-spin" />
+                <span>🪔 Navratri Special ({CATALOG_PRODUCTS.filter((p) => p.isNavratriSpecial || p.category === "Navratri & Festive Special").length})</span>
+              </button>
+              <button
+                onClick={() => {
+                  haptics.selection();
+                  setQuickFilter(quickFilter === "under-50" ? "all" : "under-50");
+                }}
+                className={`px-3 py-1 rounded-full text-[11px] font-semibold flex items-center gap-1.5 transition-all cursor-pointer ${
+                  quickFilter === "under-50"
+                    ? "bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 border border-emerald-500/40 shadow-sm"
+                    : "bg-slate-100 dark:bg-white/[0.03] text-slate-600 dark:text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 border border-slate-200 dark:border-white/[0.06]"
+                }`}
+              >
+                <Zap className="w-3 h-3 text-emerald-500" />
+                <span>⚡ Under ₹50 ({CATALOG_PRODUCTS.filter((p) => p.fairPrice <= 50).length})</span>
               </button>
               <button
                 onClick={() => {
@@ -1495,6 +1602,20 @@ export default function OneAAStore() {
                         <div className="absolute top-3.5 left-3.5 bg-obsidian-950/80 backdrop-blur-md px-3 py-1 rounded-full text-[10px] font-mono text-brand-orange border border-white/10 font-bold">
                           {product.sku}
                         </div>
+
+                        {/* Special Festive / Deal Badges */}
+                        {product.isNavratriSpecial && (
+                          <div className="absolute top-10 left-3.5 bg-gradient-to-r from-amber-500 via-rose-500 to-amber-600 text-white font-extrabold px-2.5 py-0.5 rounded-full text-[9px] shadow-glow-orange flex items-center gap-1 z-10 animate-pulse border border-amber-300/40">
+                            <span>🪔</span>
+                            <span>Navratri Special</span>
+                          </div>
+                        )}
+                        {product.fairPrice <= 10 && !product.isNavratriSpecial && (
+                          <div className="absolute top-10 left-3.5 bg-gradient-to-r from-emerald-600 to-teal-500 text-white font-extrabold px-2.5 py-0.5 rounded-full text-[9px] shadow-sm flex items-center gap-1 z-10 border border-emerald-300/30">
+                            <Zap className="w-2.5 h-2.5 text-white" />
+                            <span>Deal ₹{product.fairPrice}</span>
+                          </div>
+                        )}
 
                         {/* Savings Badge */}
                         <div className="absolute top-3.5 right-3.5 bg-brand-orange text-obsidian-950 text-[10px] font-black px-2.5 py-1 rounded-full shadow-glow-orange">
