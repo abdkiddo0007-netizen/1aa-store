@@ -85,6 +85,30 @@ import {
   Moon
 } from "lucide-react";
 
+export const CATEGORY_ICONS: Record<string, string> = {
+  "All": "🌐",
+  "Navratri & Festive Special": "🪔",
+  "Kitchenware & Dining": "🍽️",
+  "Drinkware, Bottles & Flasks": "🍶",
+  "Jewellery & Accessories": "💍",
+  "Health, Beauty & Personal Care": "✨",
+  "Tools & Home Improvement": "🛠️",
+  "Home Storage & Organization": "📦",
+  "Stationery & Desk Supplies": "📚",
+  "Baby & Kids Care": "👶",
+  "Sports, Fitness & Outdoor": "🏃",
+  "Electronics & Smart Tech": "⚡",
+  "Home Appliances & Living": "🏠",
+  "Cleaning & Household Utility": "🧹",
+  "Pooja & Festive Decor": "🪔",
+  "Gifting & Party Supplies": "🎁",
+  "Luggage & Travel Bags": "🧳",
+  "Pet Supplies & Care": "🐾",
+  "Gourmet, Tea & Coffee": "☕",
+  "Toys & STEM Games": "🧩",
+  "Home, Kitchen & Utility": "🏡",
+};
+
 export default function OneAAStore() {
   // Theme State: Pristine White Light Mode (Default) & Dark Mode
   const [theme, setTheme] = useState<"light" | "dark">(() => {
@@ -141,7 +165,8 @@ export default function OneAAStore() {
   const [search, setSearch] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string>("All");
   const [sortBy, setSortBy] = useState<"recommended" | "savings" | "price-asc" | "price-desc" | "carton">("recommended");
-  const [quickFilter, setQuickFilter] = useState<"all" | "fresh-arrivals" | "navratri-special" | "under-50" | "high-margin" | "under-150" | "top-rated">("all");
+  const [quickFilter, setQuickFilter] = useState<"all" | "fresh-arrivals" | "navratri-special" | "under-50" | "high-margin" | "under-150" | "top-rated" | "sub-100">("all");
+  const [visibleCount, setVisibleCount] = useState<number>(64);
   const [deliverySpeed, setDeliverySpeed] = useState<"standard" | "express">("standard");
   
   // Modals and Drawers
@@ -645,6 +670,8 @@ export default function OneAAStore() {
         matchesQuick = p.fairPrice <= 150;
       } else if (quickFilter === "top-rated") {
         matchesQuick = (p.rating || 4.8) >= 4.85;
+      } else if (quickFilter === "sub-100") {
+        matchesQuick = p.baseCost < 100;
       }
 
       return matchesCategory && matchesSearch && matchesQuick;
@@ -666,6 +693,11 @@ export default function OneAAStore() {
       return 0; // recommended order
     });
   }, [search, selectedCategory, sortBy, quickFilter, liveCatalog]);
+
+  // Reset pagination on filter or category changes
+  useEffect(() => {
+    setVisibleCount(64);
+  }, [search, selectedCategory, sortBy, quickFilter]);
 
   // Pre-filled WhatsApp message formatted as an Official Commercial Tax Invoice Receipt
   const getWhatsAppLink = (number: string = "7406231167") => {
@@ -1450,6 +1482,7 @@ export default function OneAAStore() {
                     onClick={() => {
                       haptics.selection();
                       setSelectedCategory(cat);
+                      setVisibleCount(64);
                       if (isNavratri) {
                         setQuickFilter("all");
                       }
@@ -1464,7 +1497,11 @@ export default function OneAAStore() {
                           : "bg-slate-100 dark:bg-white/[0.04] text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white border border-slate-200 dark:border-white/[0.08] hover:border-slate-300 dark:hover:border-white/20"
                     }`}
                   >
-                    {isNavratri && <span className="text-sm animate-pulse">🪔</span>}
+                    {isNavratri ? (
+                      <span className="text-sm animate-pulse">🪔</span>
+                    ) : (
+                      <span className="text-xs">{CATEGORY_ICONS[cat] || "🏷️"}</span>
+                    )}
                     <span>{cat}</span>
                     <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-mono ${
                       selectedCategory === cat
@@ -1523,6 +1560,21 @@ export default function OneAAStore() {
               >
                 <Sparkles className="w-3 h-3 text-amber-400 animate-spin" />
                 <span>🪔 Navratri Special ({CATALOG_PRODUCTS.filter((p) => p.isNavratriSpecial || p.category === "Navratri & Festive Special").length})</span>
+              </button>
+              <button
+                onClick={() => {
+                  haptics.selection();
+                  setQuickFilter(quickFilter === "sub-100" ? "all" : "sub-100");
+                  if (quickFilter !== "sub-100") setSelectedCategory("All");
+                }}
+                className={`px-3 py-1 rounded-full text-[11px] font-bold flex items-center gap-1.5 transition-all cursor-pointer ${
+                  quickFilter === "sub-100"
+                    ? "bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-500 text-white border border-emerald-300 shadow-glow-emerald scale-105"
+                    : "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 hover:text-emerald-500 border border-emerald-500/30"
+                }`}
+              >
+                <Zap className="w-3 h-3 text-emerald-400 animate-pulse" />
+                <span>⚡ Sub-₹100 Flat ₹10 Margin ({CATALOG_PRODUCTS.filter((p) => p.baseCost < 100).length})</span>
               </button>
               <button
                 onClick={() => {
@@ -1612,7 +1664,7 @@ export default function OneAAStore() {
 
           {/* PRODUCT CATALOG GRID (Immediately Visible Above The Fold!) */}
           <div id="catalog-products-section" className="catalog-grid grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 pt-2">
-              {filteredAndSorted.map((product) => {
+              {filteredAndSorted.slice(0, visibleCount).map((product) => {
                 const qty = quantities[product.sku] || 0;
                 const mPrice = product.marketPrice || product.amazonPrice || Math.round(product.fairPrice * 1.30);
                 const resellerProfit = Math.max(0, mPrice - product.fairPrice);
@@ -1936,6 +1988,48 @@ export default function OneAAStore() {
                 );
               })}
             </div>
+
+            {/* Progressive Loading & Wholesale Catalog Counter */}
+            {visibleCount < filteredAndSorted.length && (
+              <div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-6 rounded-3xl bg-slate-900/40 dark:bg-white/[0.03] backdrop-blur-xl border border-slate-200/20 dark:border-white/[0.08] shadow-2xl mt-8">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-2xl bg-brand-orange/20 border border-brand-orange/40 flex items-center justify-center text-brand-orange">
+                    <Sparkles className="w-5 h-5 animate-pulse" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-bold text-slate-900 dark:text-white">
+                      Showing {Math.min(visibleCount, filteredAndSorted.length)} of {filteredAndSorted.length} Wholesale Products
+                    </p>
+                    <p className="text-xs text-slate-500 dark:text-slate-400">
+                      Central Mysore Wholesale Depot • Zero Middlemen • 100% Bench QA Tested
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-3 w-full sm:w-auto">
+                  <button
+                    onClick={() => {
+                      haptics.selection();
+                      setVisibleCount((prev) => Math.min(prev + 64, filteredAndSorted.length));
+                    }}
+                    className="flex-1 sm:flex-none px-6 py-3 rounded-2xl bg-gradient-to-r from-brand-orange to-amber-500 hover:brightness-110 text-obsidian-950 font-black text-xs uppercase tracking-wider shadow-glow-orange transition-all cursor-pointer flex items-center justify-center gap-2"
+                  >
+                    <span>Load Next 64 Products</span>
+                    <ChevronRight className="w-4 h-4" />
+                  </button>
+
+                  <button
+                    onClick={() => {
+                      haptics.selection();
+                      setVisibleCount(filteredAndSorted.length);
+                    }}
+                    className="px-5 py-3 rounded-2xl bg-slate-100 dark:bg-white/10 hover:bg-slate-200 dark:hover:bg-white/20 text-slate-900 dark:text-white font-bold text-xs border border-slate-300 dark:border-white/20 transition-all cursor-pointer whitespace-nowrap"
+                  >
+                    View All ({filteredAndSorted.length})
+                  </button>
+                </div>
+              </div>
+            )}
 
             {filteredAndSorted.length === 0 && (
               <div className="p-16 text-center apple-glass rounded-3xl border border-slate-200 dark:border-white/[0.08] space-y-4">

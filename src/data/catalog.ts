@@ -22009,26 +22009,57 @@ const RAW_CATALOG_PRODUCTS: Product[] = [
 ];
 
 import freshArrivalsData from './freshArrivals.json';
+import allDepartmentCatalogsData from './allDepartmentCatalogs.json';
 
-const ALL_RAW_PRODUCTS: Product[] = [
+const COMBINED_RAW: Product[] = [
   ...RAW_CATALOG_PRODUCTS,
-  ...(freshArrivalsData as unknown as Product[])
+  ...(freshArrivalsData as unknown as Product[]),
+  ...(allDepartmentCatalogsData as unknown as Product[])
 ];
 
-export const CATALOG_PRODUCTS: Product[] = ALL_RAW_PRODUCTS.map((p) => {
-  const pricing = calculate1AAPricing(p.baseCost, p.marketPrice, p.category, p.weight);
+// Clean deduplication strictly by SKU and normalized name to eliminate any duplicates
+const seenSkus = new Set<string>();
+const seenNames = new Set<string>();
+const DEDUPED_RAW_PRODUCTS: Product[] = [];
+
+for (const p of COMBINED_RAW) {
+  if (!p || !p.sku) continue;
+  const normName = (p.name || "").trim().toLowerCase();
+  if (seenSkus.has(p.sku) || (normName && seenNames.has(normName))) {
+    continue;
+  }
+  seenSkus.add(p.sku);
+  if (normName) seenNames.add(normName);
+  DEDUPED_RAW_PRODUCTS.push(p);
+}
+
+export const CATALOG_PRODUCTS: Product[] = DEDUPED_RAW_PRODUCTS.map((p) => {
+  const rawCost = (p as any).rawCost !== undefined ? (p as any).rawCost : p.baseCost;
+  const pricing = calculate1AAPricing(rawCost, p.marketPrice, p.category, p.weight);
+  
+  // Enforce consistent baseCost and fairPrice:
+  // Base Cost = DeoDap cost with 18% GST tax
+  // If baseCost < ₹100: automatic flat ₹10 margin added
+  // If baseCost >= ₹100: flat 20% margin added
+  const baseCost = p.baseCost && p.baseCost > 0 ? p.baseCost : pricing.baseCost;
+  const isBelow100 = baseCost < 100;
+  const margin1AAAmount = isBelow100 ? 10 : Math.round(baseCost * 0.20);
+  const fairPrice = p.fairPrice && p.fairPrice > 0 ? p.fairPrice : (baseCost + margin1AAAmount);
+  const margin1AAPercent = isBelow100 ? Math.round((10 / Math.max(1, baseCost)) * 100) : 20;
+
   return {
     ...p,
-    baseCost: pricing.baseCost, // Actual DeoDap price with tax as base price
+    baseCost,
     courierCost: 0,
-    landedCost: pricing.baseCost,
-    fairPrice: pricing.fairPrice, // 1AA Wholesale Price: Base Price + Margin (Flat ₹10 if < ₹100, 20% if >= ₹100)
-    margin1AAPercent: pricing.margin1AAPercent,
-    margin1AAAmount: pricing.margin1AAAmount,
+    landedCost: baseCost,
+    fairPrice,
+    margin1AAPercent,
+    margin1AAAmount,
     amazonPrice: pricing.amazonPrice,
     flipkartPrice: pricing.flipkartPrice,
     chickpetPrice: pricing.chickpetPrice,
     wholesaleMarketPrice: pricing.wholesaleMarketPrice,
   };
 });
+
 
