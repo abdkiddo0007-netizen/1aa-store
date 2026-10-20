@@ -70,7 +70,7 @@ export default function PlatformPriceComparisonModal({
   // Breakdown figures
   const baseCost = activeProduct.baseCost;
   const oneAAPrice = activeProduct.fairPrice;
-  const oneAAProfit = activeProduct.margin1AAAmount || Math.round(baseCost * 0.20);
+  const oneAAProfit = activeProduct.margin1AAAmount ?? (baseCost < 100 ? 10 : Math.round(baseCost * 0.20));
 
   // Competitor benchmarks strictly grounded in authentic universal MRP (90%-100% match)
   const universalMrp = activeProduct.marketPrice || activeProduct.amazonPrice || Math.round(oneAAPrice * 1.25);
@@ -90,12 +90,13 @@ export default function PlatformPriceComparisonModal({
 
   // WhatsApp Comparison Share Link
   const getWhatsAppShareLink = () => {
+    const marginDesc = baseCost < 100 ? "Base Price with Tax + Flat ₹10 Margin" : "Base Price with Tax + Flat 20% Margin";
     let msg = `🔥 *REAL-TIME PRICE COMPARISON: 1AA FACTORY DIRECT*\n\n`;
     msg += `📦 *Product:* ${activeProduct.name}\n`;
     msg += `🔖 *SKU:* \`${activeProduct.sku}\`\n\n`;
     msg += `━━━━━━━━━━━━━━━━━━━━\n`;
     msg += `💰 *CROSS-PLATFORM PRICE RADAR:*\n`;
-    msg += `• *1AA Mysore Direct:* ${formatCurrency(oneAAPrice, currency)} *(Base Price with Tax + Flat 20% Margin)*\n`;
+    msg += `• *1AA Mysore Direct:* ${formatCurrency(oneAAPrice, currency)} *(${marginDesc})*\n`;
     msg += `• *Wholesale Market Real-Time:* ${formatCurrency(wholesaleMarketPrice, currency)} *(High MOQ + Extra Freight)*\n`;
     msg += `• *Amazon India:* ${formatCurrency(amazonPrice, currency)} (Retail Marketplace)\n`;
     msg += `• *Flipkart:* ${formatCurrency(flipkartPrice, currency)} (Retail Marketplace)\n\n`;
@@ -261,7 +262,7 @@ export default function PlatformPriceComparisonModal({
                     {formatCurrency(oneAAPrice, currency)}
                   </div>
                   <div className="text-[10px] text-emerald-600 dark:text-emerald-400 font-mono font-medium">
-                    ✓ Base Price with Tax + Flat 20% Margin
+                    ✓ Base Price with Tax + {baseCost < 100 ? "Flat ₹10 Margin" : "Flat 20% Margin"}
                   </div>
                 </div>
 
@@ -271,9 +272,15 @@ export default function PlatformPriceComparisonModal({
                     <span className="text-slate-800 dark:text-slate-300 font-bold">₹{baseCost}</span>
                   </div>
                   <div className="flex justify-between text-brand-orange font-semibold">
-                    <span>1AA Wholesale Margin (20%):</span>
+                    <span>{baseCost < 100 ? "1AA Wholesale Margin (Flat ₹10):" : "1AA Wholesale Margin (20%):"}</span>
                     <span>+₹{oneAAProfit}</span>
                   </div>
+                  {baseCost < 100 && (
+                    <div className="p-1.5 rounded-lg bg-cyan-500/10 border border-cyan-500/25 text-cyan-700 dark:text-cyan-300 flex items-center gap-1.5 text-[10px] font-sans font-medium">
+                      <Zap className="w-3 h-3 text-cyan-500 shrink-0" />
+                      <span>Sub-₹100 Rule: Fixed ₹10 margin protects maximum reseller upside!</span>
+                    </div>
+                  )}
                   <div className="flex justify-between text-slate-600 dark:text-slate-400">
                     <span>Platform Commission:</span>
                     <span className="text-emerald-600 dark:text-emerald-400 font-bold">₹0 (Direct)</span>

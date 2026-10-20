@@ -28,6 +28,8 @@ export interface Product {
   reviewsCount?: number;
   rating?: number;
   isNavratriSpecial?: boolean;
+  isFreshArrival?: boolean;
+  isTrending?: boolean;
   tags?: string[];
 }
 

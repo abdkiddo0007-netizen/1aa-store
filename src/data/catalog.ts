@@ -22008,14 +22008,21 @@ const RAW_CATALOG_PRODUCTS: Product[] = [
   },
 ];
 
-export const CATALOG_PRODUCTS: Product[] = RAW_CATALOG_PRODUCTS.map((p) => {
+import freshArrivalsData from './freshArrivals.json';
+
+const ALL_RAW_PRODUCTS: Product[] = [
+  ...RAW_CATALOG_PRODUCTS,
+  ...(freshArrivalsData as unknown as Product[])
+];
+
+export const CATALOG_PRODUCTS: Product[] = ALL_RAW_PRODUCTS.map((p) => {
   const pricing = calculate1AAPricing(p.baseCost, p.marketPrice, p.category, p.weight);
   return {
     ...p,
     baseCost: pricing.baseCost, // Actual DeoDap price with tax as base price
     courierCost: 0,
     landedCost: pricing.baseCost,
-    fairPrice: pricing.fairPrice, // 1AA Wholesale Price: Base Price + 20% Flat Margin
+    fairPrice: pricing.fairPrice, // 1AA Wholesale Price: Base Price + Margin (Flat ₹10 if < ₹100, 20% if >= ₹100)
     margin1AAPercent: pricing.margin1AAPercent,
     margin1AAAmount: pricing.margin1AAAmount,
     amazonPrice: pricing.amazonPrice,
@@ -22024,3 +22031,4 @@ export const CATALOG_PRODUCTS: Product[] = RAW_CATALOG_PRODUCTS.map((p) => {
     wholesaleMarketPrice: pricing.wholesaleMarketPrice,
   };
 });
+

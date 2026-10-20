@@ -81,11 +81,14 @@ export function calculate1AAPricing(
   const courierCost = calculateCourierCost(rawCost, category, weightStr);
   const landedCost = baseCost;
 
-  // Flat 20% 1AA Wholesale Margin on Base Price
-  const margin1AAPercent = 20;
-  const margin1AAAmount = Math.round(baseCost * 0.20);
+  // 1AA Margin Strategy:
+  // - Any items/SKUs below ₹100 base cost: Automatic flat ₹10 margin added as flat Margin price
+  // - Items/SKUs ₹100 and above: Flat 20% transparent wholesale margin
+  const isBelow100 = baseCost < 100;
+  const margin1AAAmount = isBelow100 ? 10 : Math.round(baseCost * 0.20);
+  const margin1AAPercent = isBelow100 ? Math.round((10 / Math.max(1, baseCost)) * 100) : 20;
   
-  // 1AA Final Wholesale Price is exactly Base Price with Tax + 20% Margin
+  // 1AA Final Wholesale Price: Base Cost with Tax + Margin
   const fairPrice = baseCost + margin1AAAmount;
 
   // Authentic Real-Time Competitor Benchmarks (90% - 100% Match):

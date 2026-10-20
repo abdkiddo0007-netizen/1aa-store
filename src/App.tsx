@@ -141,7 +141,7 @@ export default function OneAAStore() {
   const [search, setSearch] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string>("All");
   const [sortBy, setSortBy] = useState<"recommended" | "savings" | "price-asc" | "price-desc" | "carton">("recommended");
-  const [quickFilter, setQuickFilter] = useState<"all" | "navratri-special" | "under-50" | "high-margin" | "under-150" | "top-rated">("all");
+  const [quickFilter, setQuickFilter] = useState<"all" | "fresh-arrivals" | "navratri-special" | "under-50" | "high-margin" | "under-150" | "top-rated">("all");
   const [deliverySpeed, setDeliverySpeed] = useState<"standard" | "express">("standard");
   
   // Modals and Drawers
@@ -619,7 +619,16 @@ export default function OneAAStore() {
         p.highlight.toLowerCase().includes(search.toLowerCase());
 
       let matchesQuick = true;
-      if (quickFilter === "navratri-special") {
+      if (quickFilter === "fresh-arrivals") {
+        matchesQuick = Boolean(
+          p.isFreshArrival ||
+          p.isTrending ||
+          p.tags?.includes("Fresh Arrival") ||
+          p.tags?.includes("New Trending") ||
+          p.highlight?.toLowerCase().includes("fresh arrival") ||
+          p.highlight?.toLowerCase().includes("trending")
+        );
+      } else if (quickFilter === "navratri-special") {
         matchesQuick = Boolean(
           p.isNavratriSpecial ||
           p.category === "Navratri & Festive Special" ||
@@ -1142,8 +1151,13 @@ export default function OneAAStore() {
               <span className="text-emerald-600 dark:text-emerald-400 font-semibold">{CATALOG_PRODUCTS.length}+ Factory Lines</span> in Active Stock
             </span>
             <span className="text-slate-400 dark:text-slate-500 hidden sm:inline">•</span>
-            <div className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-amber-500/15 border border-amber-500/30 text-amber-700 dark:text-amber-300 text-[11px] font-semibold">
-              <span>👑 Customer is King: Base Price with Tax + Flat 20% Margin • Zero Bargaining</span>
+            <div className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full bg-gradient-to-r from-amber-500/15 via-cyan-500/15 to-emerald-500/15 border border-amber-500/30 text-amber-700 dark:text-amber-300 text-[11px] font-semibold">
+              <span>👑 Customer is King: Base Price with Tax + Flat 20% Margin (Flat ₹10 for Sub-₹100) • Zero Bargaining</span>
+            </div>
+            <span className="text-slate-400 dark:text-slate-500 hidden sm:inline">•</span>
+            <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-cyan-500/15 border border-cyan-500/30 text-cyan-700 dark:text-cyan-300 text-[11px] font-bold">
+              <Sparkles className="w-3 h-3 text-cyan-400 animate-pulse" />
+              <span>1,148+ Fresh Arrivals & Trending Live</span>
             </div>
             <span className="text-slate-400 dark:text-slate-500 hidden sm:inline">•</span>
             <button
@@ -1245,7 +1259,7 @@ export default function OneAAStore() {
               <div className="p-2.5 rounded-xl apple-glass border border-slate-200 dark:border-white/[0.06] flex items-center gap-2">
                 <CheckCircle2 className="w-4 h-4 text-brand-blue-light shrink-0" />
                 <div className="text-[11px] text-slate-700 dark:text-slate-300">
-                  <strong>Factory Direct Cost</strong> + Flat 20% Margin
+                  <strong>Factory Direct Cost</strong> + Flat 20% (Flat ₹10 for &lt;₹100)
                 </div>
               </div>
               <div className="p-2.5 rounded-xl apple-glass border border-slate-200 dark:border-white/[0.06] flex items-center gap-2">
@@ -1275,7 +1289,7 @@ export default function OneAAStore() {
                   <Search className="w-4 h-4 text-slate-400 absolute left-4 top-3.5" />
                   <input
                     type="text"
-                    placeholder="Search 820+ factory products, SKUs, or voice search (e.g. 'Bajot', 'Jhumka', 'Diya', 'Kettle')..."
+                    placeholder={`Search ${CATALOG_PRODUCTS.length}+ factory products, SKUs, or voice search (e.g. 'Pig Stand', 'Bajot', 'Diya', 'Brush')...`}
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}
                     className="w-full bg-slate-100 dark:bg-white/[0.06] border border-slate-300 dark:border-white/15 rounded-full pl-11 pr-28 py-3 text-xs sm:text-sm text-slate-900 dark:text-white placeholder-slate-500 dark:placeholder-slate-400 focus:outline-none focus:border-brand-orange focus:ring-1 focus:ring-brand-orange transition-all backdrop-blur-md shadow-inner"
@@ -1314,6 +1328,19 @@ export default function OneAAStore() {
                 {/* Trending Search Chips */}
                 <div className="flex items-center gap-1.5 overflow-x-auto pb-0.5 scrollbar-none text-[11px]">
                   <span className="text-slate-400 text-[10px] font-medium uppercase tracking-wider whitespace-nowrap hidden sm:inline">Trending:</span>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      haptics.selection();
+                      setQuickFilter("fresh-arrivals");
+                      setSelectedCategory("All");
+                      setSearch("");
+                    }}
+                    className="px-2.5 py-0.5 rounded-full bg-cyan-500/15 hover:bg-cyan-500/25 text-cyan-600 dark:text-cyan-400 border border-cyan-500/30 whitespace-nowrap font-bold flex items-center gap-1 cursor-pointer transition-all shadow-sm"
+                  >
+                    <Sparkles className="w-3 h-3 text-cyan-400 animate-pulse" />
+                    <span>✨ Fresh Arrivals ({CATALOG_PRODUCTS.filter((p) => p.isFreshArrival).length})</span>
+                  </button>
                   <button
                     type="button"
                     onClick={() => {
@@ -1470,6 +1497,21 @@ export default function OneAAStore() {
               <button
                 onClick={() => {
                   haptics.selection();
+                  setQuickFilter(quickFilter === "fresh-arrivals" ? "all" : "fresh-arrivals");
+                  if (quickFilter !== "fresh-arrivals") setSelectedCategory("All");
+                }}
+                className={`px-3 py-1 rounded-full text-[11px] font-bold flex items-center gap-1.5 transition-all cursor-pointer ${
+                  quickFilter === "fresh-arrivals"
+                    ? "bg-gradient-to-r from-cyan-500 via-blue-500 to-indigo-500 text-white border border-cyan-300 shadow-[0_0_15px_rgba(6,182,212,0.4)] scale-105"
+                    : "bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 hover:text-cyan-500 border border-cyan-500/30"
+                }`}
+              >
+                <Sparkles className="w-3 h-3 text-cyan-400 animate-pulse" />
+                <span>✨ Fresh Arrivals & Trending ({CATALOG_PRODUCTS.filter((p) => p.isFreshArrival).length})</span>
+              </button>
+              <button
+                onClick={() => {
+                  haptics.selection();
                   setQuickFilter(quickFilter === "navratri-special" ? "all" : "navratri-special");
                   if (quickFilter !== "navratri-special") setSelectedCategory("All");
                 }}
@@ -1613,6 +1655,14 @@ export default function OneAAStore() {
                           </div>
                         )}
 
+                        {/* Fresh Arrival & Trending Badge */}
+                        {(product.isFreshArrival || product.tags?.includes("Fresh Arrival")) && (
+                          <div className="absolute top-10 left-3.5 bg-gradient-to-r from-cyan-600 via-blue-600 to-indigo-600 text-white font-extrabold px-2.5 py-0.5 rounded-full text-[9px] shadow-[0_0_12px_rgba(6,182,212,0.5)] flex items-center gap-1 z-10 border border-cyan-300/40">
+                            <Sparkles className="w-2.5 h-2.5 text-cyan-200 animate-pulse" />
+                            <span>Fresh Arrival</span>
+                          </div>
+                        )}
+
                         {/* Savings Badge */}
                         <div className="absolute top-3.5 right-3.5 bg-brand-orange text-obsidian-950 text-[10px] font-black px-2.5 py-1 rounded-full shadow-glow-orange">
                           Save {savingsPercent}%
@@ -1721,10 +1771,17 @@ export default function OneAAStore() {
                           <div className="flex justify-between text-[11px] text-brand-orange font-semibold">
                             <span className="flex items-center gap-1">
                               <TrendingUp className="w-3 h-3" />
-                              1AA Margin (20% Flat):
+                              {product.baseCost < 100 ? "1AA Margin (Flat ₹10):" : "1AA Margin (20% Flat):"}
                             </span>
-                            <span>+₹{product.margin1AAAmount || Math.round((product.baseCost || 0) * 0.20)}</span>
+                            <span className="font-mono font-bold">+₹{product.margin1AAAmount ?? (product.baseCost < 100 ? 10 : Math.round((product.baseCost || 0) * 0.20))}</span>
                           </div>
+
+                          {product.baseCost < 100 && (
+                            <div className="flex items-center gap-1 text-[10px] text-cyan-700 dark:text-cyan-300 bg-cyan-500/10 px-2 py-0.5 rounded-lg border border-cyan-500/20 font-sans font-semibold">
+                              <Zap className="w-3 h-3 text-cyan-500 shrink-0" />
+                              <span>Sub-₹100 Automatic Flat ₹10 Margin</span>
+                            </div>
+                          )}
 
                           <div className="border-t border-slate-200 dark:border-white/[0.08] pt-1.5 flex justify-between items-baseline">
                             <span className="text-xs text-slate-900 dark:text-white font-bold font-sans">1AA Wholesale Buy Price:</span>

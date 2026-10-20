@@ -20,7 +20,8 @@ import {
   Printer,
   Sparkles,
   PackageCheck,
-  Rotate3d
+  Rotate3d,
+  Zap
 } from 'lucide-react';
 
 interface ProductDetailModalProps {
@@ -131,6 +132,12 @@ export default function ProductDetailModal({
                 <Tag className="w-3 h-3" />
                 {product.sku}
               </div>
+              {product.isFreshArrival && (
+                <div className="absolute top-12 left-3.5 bg-gradient-to-r from-cyan-600 via-blue-600 to-indigo-600 text-white font-extrabold px-3 py-1 rounded-full text-xs shadow-[0_0_15px_rgba(6,182,212,0.5)] flex items-center gap-1.5 z-10 border border-cyan-300/40">
+                  <Sparkles className="w-3.5 h-3.5 text-cyan-200 animate-pulse" />
+                  <span>Fresh Arrival & Trending</span>
+                </div>
+              )}
               <div className="absolute top-3.5 right-3.5 bg-brand-orange text-obsidian-950 text-xs font-black px-3 py-1 rounded-full shadow-glow-orange">
                 Save {savingsPercent}%
               </div>
@@ -247,10 +254,17 @@ export default function ProductDetailModal({
                 <div className="flex justify-between text-brand-orange font-semibold">
                   <span className="flex items-center gap-1">
                     <TrendingUp className="w-3.5 h-3.5" />
-                    1AA Margin (20% Flat):
+                    {product.baseCost < 100 ? "1AA Margin (Flat ₹10):" : "1AA Margin (20% Flat):"}
                   </span>
-                  <span>+₹{product.margin1AAAmount || Math.round((product.baseCost || 0) * 0.20)}</span>
+                  <span className="font-mono font-bold">+₹{product.margin1AAAmount ?? (product.baseCost < 100 ? 10 : Math.round((product.baseCost || 0) * 0.20))}</span>
                 </div>
+
+                {product.baseCost < 100 && (
+                  <div className="p-2 rounded-xl bg-cyan-500/10 border border-cyan-500/25 text-cyan-700 dark:text-cyan-300 flex items-center gap-2 text-xs font-semibold">
+                    <Zap className="w-3.5 h-3.5 text-cyan-500 shrink-0" />
+                    <span>Sub-₹100 Rule: Automatic Flat ₹10 wholesale margin added to base factory cost.</span>
+                  </div>
+                )}
 
                 <div className="border-t border-slate-200 dark:border-white/[0.08] pt-2 flex justify-between items-baseline">
                   <span className="text-xs font-bold text-slate-900 dark:text-white font-sans">1AA Wholesale Buy Price:</span>
