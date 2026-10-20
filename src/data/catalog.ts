@@ -22009,30 +22009,47 @@ const RAW_CATALOG_PRODUCTS: Product[] = [
   },
 ];
 
+import deodapJustArrivedData from './deodapJustArrivedCatalog.json';
 import freshArrivalsData from './freshArrivals.json';
 import allDepartmentCatalogsData from './allDepartmentCatalogs.json';
 import sellersChoiceData from './sellersChoiceCatalog.json';
 
+// Live DeoDap Just-Arrived capture is prioritized FIRST so exact website titles, CDN images, and live cart prices take precedence
 const COMBINED_RAW: Product[] = [
+  ...(deodapJustArrivedData as unknown as Product[]),
   ...RAW_CATALOG_PRODUCTS,
   ...(freshArrivalsData as unknown as Product[]),
   ...(allDepartmentCatalogsData as unknown as Product[]),
   ...(sellersChoiceData as unknown as Product[])
 ];
 
-// Clean deduplication strictly by SKU and normalized name to eliminate any duplicates
+function normalizeSkuForDedup(sku: string): string {
+  if (!sku) return '';
+  const clean = sku.toLowerCase().trim();
+  const match = clean.match(/^(?:1aa[-_]|deodap[-_])?(\d{4,6})/);
+  if (match) return match[1];
+  return clean.replace(/^(?:1aa[-_]|deodap[-_])/, '');
+}
+
+function normalizeNameForDedup(name: string): string {
+  if (!name) return '';
+  return name.toLowerCase().replace(/[^a-z0-9]/g, ' ').replace(/\s+/g, ' ').trim();
+}
+
+// Clean deduplication strictly by normalized SKU and normalized title to eliminate any duplicates
 const seenSkus = new Set<string>();
 const seenNames = new Set<string>();
 const DEDUPED_RAW_PRODUCTS: Product[] = [];
 
 for (const p of COMBINED_RAW) {
   if (!p || !p.sku) continue;
-  const normName = (p.name || "").trim().toLowerCase();
-  if (seenSkus.has(p.sku) || (normName && seenNames.has(normName))) {
+  const nSku = normalizeSkuForDedup(p.sku);
+  const nName = normalizeNameForDedup(p.name);
+  if ((nSku && seenSkus.has(nSku)) || (nName && seenNames.has(nName))) {
     continue;
   }
-  seenSkus.add(p.sku);
-  if (normName) seenNames.add(normName);
+  if (nSku) seenSkus.add(nSku);
+  if (nName) seenNames.add(nName);
   DEDUPED_RAW_PRODUCTS.push(p);
 }
 

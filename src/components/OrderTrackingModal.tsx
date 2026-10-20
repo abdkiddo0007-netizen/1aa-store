@@ -260,7 +260,7 @@ export default function OrderTrackingModal({
               </button>
             ))}
 
-            {/* Demos */}
+            {/* Sample Consignments */}
             <button
               onClick={() => handleSearch("1AA-EXP-MUM-8921")}
               className={`px-2.5 py-1 rounded-full border text-[10px] font-mono flex items-center gap-1.5 transition-all shrink-0 cursor-pointer ${
@@ -270,7 +270,7 @@ export default function OrderTrackingModal({
               }`}
             >
               <Plane className="w-2.5 h-2.5 text-brand-blue-light" />
-              <span>Demo 1: Express Air (Mumbai)</span>
+              <span>Express Air (Mumbai)</span>
             </button>
 
             <button
@@ -282,7 +282,7 @@ export default function OrderTrackingModal({
               }`}
             >
               <Truck className="w-2.5 h-2.5 text-emerald-300" />
-              <span>Demo 2: Surface Cargo (Delhi NCR)</span>
+              <span>Surface Cargo (Delhi NCR)</span>
             </button>
 
             <button
@@ -294,7 +294,7 @@ export default function OrderTrackingModal({
               }`}
             >
               <ShieldCheck className="w-2.5 h-2.5 text-amber-300" />
-              <span>Demo 3: Bench QA (Mysore)</span>
+              <span>QA & Testing (Mysore Hub)</span>
             </button>
           </div>
         </div>

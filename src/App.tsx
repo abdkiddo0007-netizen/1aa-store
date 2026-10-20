@@ -1023,50 +1023,6 @@ export default function OneAAStore() {
                 </button>
               </div>
 
-              {/* 3D AR Tryout Studio Trigger */}
-              <button
-                onClick={() => {
-                  haptics.selection();
-                  setArProduct(CATALOG_PRODUCTS[0]);
-                  setShowArModal(true);
-                }}
-                className="flex text-xs px-3 py-2 rounded-full border border-indigo-500/40 bg-indigo-500/10 text-indigo-600 dark:text-indigo-300 hover:bg-indigo-500 hover:text-white font-semibold transition-all items-center gap-1.5 shadow-glow-purple cursor-pointer"
-                title="Open 3D AR Studio (Try Before You Buy in Camera AR)"
-              >
-                <Rotate3d className="w-3.5 h-3.5 text-indigo-500 dark:text-indigo-400" />
-                <span className="hidden sm:inline">3D AR</span>
-              </button>
-
-              {/* ChatGPT Style AI Copilot Trigger */}
-              <button
-                onClick={() => {
-                  haptics.light();
-                  setShowAiAgentModal(true);
-                }}
-                className="flex text-xs px-3 py-2 rounded-full border border-purple-500/40 bg-purple-500/10 text-purple-600 dark:text-purple-300 hover:bg-purple-600 hover:text-white font-semibold transition-all items-center gap-1.5 shadow-glow-purple cursor-pointer"
-                title="Launch 1AA ChatGPT-Style Embedded Sourcing Copilot"
-              >
-                <Bot className="w-3.5 h-3.5 text-purple-500 dark:text-purple-300" />
-                <span className="hidden md:inline">AI Copilot</span>
-              </button>
-
-              {/* Real-time Cross-Platform Price Radar Trigger */}
-              <button
-                onClick={() => {
-                  haptics.light();
-                  setPriceCompareProduct(CATALOG_PRODUCTS[0]);
-                  setShowPriceCompareModal(true);
-                }}
-                className="flex text-xs px-3.5 py-2 rounded-full border border-brand-orange/40 bg-brand-orange/10 text-brand-orange hover:bg-brand-orange hover:text-obsidian-950 font-semibold transition-all items-center gap-1.5 shadow-sm cursor-pointer"
-                title="Compare 1AA Direct Pricing Real-Time vs Amazon & Flipkart"
-              >
-                <TrendingUp className="w-3.5 h-3.5 text-brand-orange" />
-                <span className="hidden sm:inline">Price Radar</span>
-                <span className="text-[9px] px-1.5 py-0.2 rounded-full bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 font-mono font-bold hidden md:inline">
-                  Arbitrage
-                </span>
-              </button>
-
               {/* Real-time Order & Package Tracking Trigger */}
               <button
                 onClick={() => handleOpenTracking()}
@@ -1076,16 +1032,6 @@ export default function OneAAStore() {
                 <Navigation className="w-3.5 h-3.5 text-emerald-500 dark:text-emerald-400" />
                 <span className="hidden sm:inline">Track Package</span>
                 <span className="sm:hidden">Track</span>
-              </button>
-
-              {/* Order Finite State Machine (FSM) Trigger */}
-              <button
-                onClick={() => handleOpenFsmTracker()}
-                className="flex text-xs px-3 py-2 rounded-full border border-indigo-500/40 bg-indigo-500/10 text-indigo-600 dark:text-indigo-300 hover:bg-indigo-600 hover:text-white font-semibold transition-all items-center gap-1.5 shadow-sm cursor-pointer"
-                title="Order Finite State Machine: 12-Stage Deterministic Lifecycle"
-              >
-                <Layers className="w-3.5 h-3.5 text-indigo-500 dark:text-indigo-400" />
-                <span className="hidden lg:inline">Order FSM</span>
               </button>
 
               {/* Structured Address & Delivery Hub Trigger */}
@@ -2976,39 +2922,22 @@ export default function OneAAStore() {
       />
 
       {/* --- UNIFIED LUXURY FLOATING INTELLIGENCE DOCK --- */}
+      {/* --- QUICK WHATSAPP WHOLESALE SUPPORT & VOICE FLOATING DOCK --- */}
       <div className={`fixed ${metrics.units > 0 ? "bottom-24" : "bottom-6"} right-4 sm:right-6 z-30 pointer-events-auto transition-all duration-300`}>
         <div className="flex items-center gap-2 p-1.5 rounded-full bg-obsidian-950/90 backdrop-blur-2xl border border-white/20 shadow-2xl">
           
-          {/* Ask AI Voice Agent */}
-          <button
-            onClick={() => {
-              haptics.light();
-              setShowAiAgentModal(true);
-            }}
-            className="flex items-center gap-2 px-3.5 py-2 rounded-full bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-bold text-xs hover:scale-105 active:scale-95 transition-all shadow-md cursor-pointer"
-            title="Ask 1AA Sourcing AI Assistant"
+          {/* WhatsApp Wholesale Live Support (Direct DeoDap / Mysore Hub dispatch) */}
+          <a
+            href="https://wa.me/917406231167?text=Hi%201AA%2C%20I%20am%20browsing%20the%20wholesale%20catalog%20and%20need%20quick%20assistance"
+            target="_blank"
+            rel="noreferrer"
+            className="flex items-center gap-2 px-3.5 py-2 rounded-full bg-emerald-500 hover:bg-emerald-600 text-obsidian-950 font-bold text-xs transition-all shadow-md cursor-pointer hover:scale-105 active:scale-95"
+            title="Chat with Mysore Wholesale Dispatch Team on WhatsApp"
           >
-            <div className="relative">
-              <Bot className="w-3.5 h-3.5 text-white" />
-              <span className="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-            </div>
-            <span className="hidden sm:inline">Ask AI Copilot</span>
-            <span className="sm:hidden">AI</span>
-          </button>
-
-          {/* 3D AR Studio Trigger */}
-          <button
-            onClick={() => {
-              haptics.selection();
-              setArProduct(CATALOG_PRODUCTS[0]);
-              setShowArModal(true);
-            }}
-            className="flex items-center gap-1.5 px-3 py-2 rounded-full bg-indigo-500/20 hover:bg-indigo-500/30 text-indigo-300 font-bold text-xs transition-all cursor-pointer border border-indigo-500/40 shadow-glow-purple"
-            title="Launch 3D AR Camera Studio"
-          >
-            <Rotate3d className="w-3.5 h-3.5 text-indigo-400" />
-            <span className="hidden sm:inline">3D AR</span>
-          </button>
+            <MessageSquare className="w-3.5 h-3.5 text-obsidian-950" />
+            <span className="hidden sm:inline">WhatsApp Support</span>
+            <span className="sm:hidden">Help</span>
+          </a>
 
           {/* Voice Search Floating Trigger */}
           <button
@@ -3017,10 +2946,10 @@ export default function OneAAStore() {
               setShowVoiceModal2026(true);
             }}
             className="flex items-center gap-1.5 px-3 py-2 rounded-full bg-white/[0.08] hover:bg-white/[0.15] text-brand-orange font-bold text-xs transition-all cursor-pointer border border-white/10"
-            title="Launch 2026 Voice Search"
+            title="Search Products by Voice"
           >
             <Mic className="w-3.5 h-3.5 text-brand-orange" />
-            <span className="hidden sm:inline">Voice</span>
+            <span className="hidden sm:inline">Voice Search</span>
           </button>
 
           {/* Wholesale Ops Hub Quick Trigger */}
@@ -3029,7 +2958,7 @@ export default function OneAAStore() {
               haptics.light();
               setShowOpsHubModal(true);
             }}
-            className="flex items-center gap-1.5 px-3.5 py-2 rounded-full bg-white/[0.08] hover:bg-white/[0.15] text-brand-blue-light font-bold text-xs transition-all cursor-pointer border border-white/10"
+            className="flex items-center gap-1.5 px-3 py-2 rounded-full bg-white/[0.08] hover:bg-white/[0.15] text-brand-blue-light font-bold text-xs transition-all cursor-pointer border border-white/10"
             title="Open Wholesale Operations Hub (B2B Labels, Freight, Invoice, Barcodes)"
           >
             <Boxes className="w-3.5 h-3.5 text-brand-blue-light" />
