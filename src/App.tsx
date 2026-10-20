@@ -87,26 +87,26 @@ import {
 
 export const CATEGORY_ICONS: Record<string, string> = {
   "All": "🌐",
-  "Navratri & Festive Special": "🪔",
-  "Kitchenware & Dining": "🍽️",
-  "Drinkware, Bottles & Flasks": "🍶",
-  "Jewellery & Accessories": "💍",
-  "Health, Beauty & Personal Care": "✨",
-  "Tools & Home Improvement": "🛠️",
-  "Home Storage & Organization": "📦",
-  "Stationery & Desk Supplies": "📚",
-  "Baby & Kids Care": "👶",
-  "Sports, Fitness & Outdoor": "🏃",
+  "Fresh Arrivals": "✨",
+  "Sub-₹100": "⚡",
+  "Under ₹50": "🔥",
+  "Kitchen & Dining": "🍳",
+  "Jewellery & Accessories": "💎",
+  "Beauty, Health & Personal Care": "🧴",
+  "Home Improvement & Tools": "🔧",
+  "Curated Diaries & Stationery": "📓",
   "Electronics & Smart Tech": "⚡",
-  "Home Appliances & Living": "🏠",
-  "Cleaning & Household Utility": "🧹",
+  "Home Storage & Organization": "📦",
+  "Toys, Kids & Baby Care": "🧸",
   "Pooja & Festive Decor": "🪔",
+  "Sports, Fitness & Outdoor": "🏋️",
   "Gifting & Party Supplies": "🎁",
-  "Luggage & Travel Bags": "🧳",
+  "Home Decor & Wall Accents": "🏠",
+  "Home Appliances & Comfort": "🔌",
+  "Watches & Timepieces": "⌚",
+  "Travel, Luggage & Bags": "🧳",
   "Pet Supplies & Care": "🐾",
   "Gourmet, Tea & Coffee": "☕",
-  "Toys & STEM Games": "🧩",
-  "Home, Kitchen & Utility": "🏡",
 };
 
 export default function OneAAStore() {
@@ -165,7 +165,6 @@ export default function OneAAStore() {
   const [search, setSearch] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string>("All");
   const [sortBy, setSortBy] = useState<"recommended" | "savings" | "price-asc" | "price-desc" | "carton">("recommended");
-  const [quickFilter, setQuickFilter] = useState<"all" | "fresh-arrivals" | "navratri-special" | "under-50" | "high-margin" | "under-150" | "top-rated" | "sub-100">("all");
   const [visibleCount, setVisibleCount] = useState<number>(64);
   const [deliverySpeed, setDeliverySpeed] = useState<"standard" | "express">("standard");
   
@@ -506,19 +505,29 @@ export default function OneAAStore() {
     return () => clearInterval(timer);
   }, []);
 
-  const categories = useMemo(() => {
-    const set = new Set(CATALOG_PRODUCTS.map((p) => p.category));
-    const rest = Array.from(set).filter((c) => c !== "Navratri & Festive Special");
-    return ["All", "Navratri & Festive Special", ...rest];
-  }, []);
-
   const categoryCounts = useMemo(() => {
-    const counts: { [cat: string]: number } = { All: CATALOG_PRODUCTS.length };
+    const counts: { [cat: string]: number } = {
+      All: CATALOG_PRODUCTS.length,
+      "Fresh Arrivals": CATALOG_PRODUCTS.filter((p) => p.isFreshArrival || p.isTrending).length,
+      "Sub-₹100": CATALOG_PRODUCTS.filter((p) => p.baseCost < 100).length,
+      "Under ₹50": CATALOG_PRODUCTS.filter((p) => p.fairPrice <= 50).length,
+    };
     CATALOG_PRODUCTS.forEach((p) => {
       counts[p.category] = (counts[p.category] || 0) + 1;
     });
     return counts;
   }, []);
+
+  const categories = useMemo(() => {
+    const specialTabs = ["All", "Fresh Arrivals", "Sub-₹100", "Under ₹50"];
+    const set = new Set(CATALOG_PRODUCTS.map((p) => p.category));
+    const sorted = Array.from(set).sort((a, b) => {
+      const countA = categoryCounts[a] || 0;
+      const countB = categoryCounts[b] || 0;
+      return countB - countA;
+    });
+    return [...specialTabs, ...sorted];
+  }, [categoryCounts]);
 
   const updateQty = (sku: string, delta: number) => {
     setQuantities((prev) => {
@@ -636,16 +645,11 @@ export default function OneAAStore() {
   // Filter & Sort Products
   const filteredAndSorted = useMemo(() => {
     const filtered = liveCatalog.filter((p) => {
-      const matchesCategory = selectedCategory === "All" || p.category === selectedCategory;
-      const matchesSearch =
-        p.name.toLowerCase().includes(search.toLowerCase()) ||
-        p.sku.toLowerCase().includes(search.toLowerCase()) ||
-        p.category.toLowerCase().includes(search.toLowerCase()) ||
-        p.highlight.toLowerCase().includes(search.toLowerCase());
-
-      let matchesQuick = true;
-      if (quickFilter === "fresh-arrivals") {
-        matchesQuick = Boolean(
+      let matchesCategory = false;
+      if (selectedCategory === "All") {
+        matchesCategory = true;
+      } else if (selectedCategory === "Fresh Arrivals") {
+        matchesCategory = Boolean(
           p.isFreshArrival ||
           p.isTrending ||
           p.tags?.includes("Fresh Arrival") ||
@@ -653,28 +657,22 @@ export default function OneAAStore() {
           p.highlight?.toLowerCase().includes("fresh arrival") ||
           p.highlight?.toLowerCase().includes("trending")
         );
-      } else if (quickFilter === "navratri-special") {
-        matchesQuick = Boolean(
-          p.isNavratriSpecial ||
-          p.category === "Navratri & Festive Special" ||
-          p.name.toLowerCase().includes("navratri") ||
-          p.name.toLowerCase().includes("festive") ||
-          p.name.toLowerCase().includes("jhumka") ||
-          p.name.toLowerCase().includes("bajot")
-        );
-      } else if (quickFilter === "under-50") {
-        matchesQuick = p.fairPrice <= 50;
-      } else if (quickFilter === "high-margin") {
-        matchesQuick = ((p.marketPrice - p.fairPrice) / p.marketPrice) >= 0.55;
-      } else if (quickFilter === "under-150") {
-        matchesQuick = p.fairPrice <= 150;
-      } else if (quickFilter === "top-rated") {
-        matchesQuick = (p.rating || 4.8) >= 4.85;
-      } else if (quickFilter === "sub-100") {
-        matchesQuick = p.baseCost < 100;
+      } else if (selectedCategory === "Sub-₹100") {
+        matchesCategory = p.baseCost < 100;
+      } else if (selectedCategory === "Under ₹50") {
+        matchesCategory = p.fairPrice <= 50;
+      } else {
+        matchesCategory = p.category === selectedCategory;
       }
 
-      return matchesCategory && matchesSearch && matchesQuick;
+      const matchesSearch =
+        search.trim() === "" ||
+        p.name.toLowerCase().includes(search.toLowerCase()) ||
+        p.sku.toLowerCase().includes(search.toLowerCase()) ||
+        p.category.toLowerCase().includes(search.toLowerCase()) ||
+        p.highlight.toLowerCase().includes(search.toLowerCase());
+
+      return matchesCategory && matchesSearch;
     });
 
     return filtered.sort((a, b) => {
@@ -692,12 +690,12 @@ export default function OneAAStore() {
       }
       return 0; // recommended order
     });
-  }, [search, selectedCategory, sortBy, quickFilter, liveCatalog]);
+  }, [search, selectedCategory, sortBy, liveCatalog]);
 
   // Reset pagination on filter or category changes
   useEffect(() => {
     setVisibleCount(64);
-  }, [search, selectedCategory, sortBy, quickFilter]);
+  }, [search, selectedCategory, sortBy]);
 
   // Pre-filled WhatsApp message formatted as an Official Commercial Tax Invoice Receipt
   const getWhatsAppLink = (number: string = "7406231167") => {
@@ -1357,71 +1355,26 @@ export default function OneAAStore() {
                   </div>
                 </div>
 
-                {/* Trending Search Chips */}
+                {/* Search Suggestions (DeoDap / Amazon / Flipkart style keyword search) */}
                 <div className="flex items-center gap-1.5 overflow-x-auto pb-0.5 scrollbar-none text-[11px]">
-                  <span className="text-slate-400 text-[10px] font-medium uppercase tracking-wider whitespace-nowrap hidden sm:inline">Trending:</span>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      haptics.selection();
-                      setQuickFilter("fresh-arrivals");
-                      setSelectedCategory("All");
-                      setSearch("");
-                    }}
-                    className="px-2.5 py-0.5 rounded-full bg-cyan-500/15 hover:bg-cyan-500/25 text-cyan-600 dark:text-cyan-400 border border-cyan-500/30 whitespace-nowrap font-bold flex items-center gap-1 cursor-pointer transition-all shadow-sm"
-                  >
-                    <Sparkles className="w-3 h-3 text-cyan-400 animate-pulse" />
-                    <span>✨ Fresh Arrivals ({CATALOG_PRODUCTS.filter((p) => p.isFreshArrival).length})</span>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      haptics.selection();
-                      setQuickFilter("navratri-special");
-                      setSelectedCategory("All");
-                      setSearch("");
-                    }}
-                    className="px-2.5 py-0.5 rounded-full bg-amber-500/15 hover:bg-amber-500/25 text-amber-600 dark:text-amber-400 border border-amber-500/30 whitespace-nowrap font-bold flex items-center gap-1 cursor-pointer transition-all shadow-sm"
-                  >
-                    <span>🪔</span>
-                    <span>Navratri Special</span>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      haptics.selection();
-                      setQuickFilter("under-50");
-                      setSelectedCategory("All");
-                      setSearch("");
-                    }}
-                    className="px-2.5 py-0.5 rounded-full bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 whitespace-nowrap font-bold flex items-center gap-1 cursor-pointer transition-all shadow-sm"
-                  >
-                    <span>Under ₹50 Wholesale</span>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      haptics.selection();
-                      setSearch("Bajot");
-                    }}
-                    className="px-2 py-0.5 rounded-full bg-slate-200 dark:bg-white/[0.05] hover:bg-slate-300 dark:hover:bg-white/10 text-slate-700 dark:text-slate-300 border border-slate-300 dark:border-white/10 whitespace-nowrap cursor-pointer transition-all"
-                  >
-                    Pooja Bajot
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      haptics.selection();
-                      setSearch("Jhumka");
-                    }}
-                    className="px-2 py-0.5 rounded-full bg-slate-200 dark:bg-white/[0.05] hover:bg-slate-300 dark:hover:bg-white/10 text-slate-700 dark:text-slate-300 border border-slate-300 dark:border-white/10 whitespace-nowrap cursor-pointer transition-all"
-                  >
-                    Peacock Jhumka
-                  </button>
+                  <span className="text-slate-400 text-[10px] font-medium uppercase tracking-wider whitespace-nowrap hidden sm:inline">Try searching:</span>
+                  {["Curated Diaries", "Peacock Jhumka", "Pooja Bajot", "Analog Watch", "Chopping Board", "Diffuser", "LED Lamp"].map((term) => (
+                    <button
+                      key={term}
+                      type="button"
+                      onClick={() => {
+                        haptics.selection();
+                        setSearch(term);
+                      }}
+                      className="px-2 py-0.5 rounded-full bg-slate-100 dark:bg-white/[0.05] hover:bg-slate-200 dark:hover:bg-white/10 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-white/10 whitespace-nowrap cursor-pointer transition-all"
+                    >
+                      {term}
+                    </button>
+                  ))}
                 </div>
               </div>
 
-              {/* Mode Toggle & Sort Dropdown */}
+              {/* Mode Toggle, City Transit SLA, View Density & Sort Dropdown */}
               <div className="flex items-center gap-2 flex-wrap justify-between lg:justify-end">
                 {/* Retail Sample vs B2B Master Carton Toggle */}
                 <div className="flex items-center p-1 rounded-full bg-slate-100 dark:bg-white/[0.04] border border-slate-300 dark:border-white/10 text-xs">
@@ -1453,6 +1406,33 @@ export default function OneAAStore() {
                   </button>
                 </div>
 
+                {/* City Transit SLA Quick Lookup */}
+                <button
+                  onClick={() => {
+                    haptics.light();
+                    setShowTransitModal(true);
+                  }}
+                  className="px-3 py-1.5 rounded-full text-xs font-semibold flex items-center gap-1.5 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 transition-all cursor-pointer"
+                  title="Check transit days for your city"
+                >
+                  <Truck className="w-3.5 h-3.5 text-emerald-500 dark:text-emerald-400" />
+                  <span>Transit SLA</span>
+                </button>
+
+                {/* View Density Quick Toggle */}
+                <button
+                  onClick={() => {
+                    haptics.light();
+                    setShowDisplayModal(true);
+                  }}
+                  className="px-3 py-1.5 rounded-full text-xs font-semibold flex items-center gap-1.5 bg-slate-100 dark:bg-white/[0.04] hover:bg-slate-200 dark:hover:bg-white/[0.08] text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-white/10 transition-all cursor-pointer"
+                  title="Switch between Compact, Standard, and Retina Ultra HD views"
+                >
+                  <Sliders className="w-3.5 h-3.5 text-brand-orange" />
+                  <span>View: <strong className="capitalize text-slate-900 dark:text-white">{displayConfig.density}</strong></span>
+                </button>
+
+                {/* Sort Dropdown */}
                 <div className="flex items-center gap-2 bg-slate-100 dark:bg-white/[0.04] border border-slate-300 dark:border-white/10 px-3.5 py-1.5 rounded-full text-xs backdrop-blur-md">
                   <ArrowUpDown className="w-3.5 h-3.5 text-brand-orange" />
                   <span className="text-slate-500 dark:text-slate-400 text-[11px] hidden sm:inline">Sort:</span>
@@ -1472,10 +1452,11 @@ export default function OneAAStore() {
 
             </div>
 
-            {/* Category Pills with Dynamic Counts */}
+            {/* Single Master Department & Segment Tab Bar (DeoDap / Amazon / Flipkart Unified UX) */}
             <div id="catalog-categories-bar" className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none text-xs">
               {categories.map((cat) => {
-                const isNavratri = cat === "Navratri & Festive Special";
+                const isSelected = selectedCategory === cat;
+                const isSpecial = cat === "Fresh Arrivals" || cat === "Sub-₹100" || cat === "Under ₹50";
                 return (
                   <button
                     key={cat}
@@ -1483,181 +1464,31 @@ export default function OneAAStore() {
                       haptics.selection();
                       setSelectedCategory(cat);
                       setVisibleCount(64);
-                      if (isNavratri) {
-                        setQuickFilter("all");
-                      }
                     }}
-                    className={`px-3.5 py-1.5 rounded-full whitespace-nowrap transition-all duration-300 text-xs font-medium flex items-center gap-1.5 cursor-pointer ${
-                      selectedCategory === cat
-                        ? isNavratri
-                          ? "bg-gradient-to-r from-amber-500 via-rose-500 to-amber-600 text-white font-extrabold shadow-glow-orange scale-[1.04] border border-amber-300 ring-2 ring-amber-400/40"
+                    className={`px-3.5 py-1.5 rounded-full whitespace-nowrap transition-all duration-200 text-xs font-medium flex items-center gap-1.5 cursor-pointer ${
+                      isSelected
+                        ? isSpecial
+                          ? "bg-gradient-to-r from-brand-orange via-amber-500 to-brand-orange-light text-obsidian-950 font-extrabold shadow-glow-orange scale-[1.03] ring-1 ring-amber-300"
                           : "bg-brand-orange text-obsidian-950 font-bold shadow-glow-orange scale-[1.02]"
-                        : isNavratri
-                          ? "bg-gradient-to-r from-amber-500/15 to-rose-500/15 text-amber-600 dark:text-amber-300 border border-amber-500/30 hover:border-amber-500/60 font-semibold"
+                        : isSpecial
+                          ? "bg-amber-500/10 dark:bg-amber-500/15 text-amber-700 dark:text-amber-300 border border-amber-500/30 hover:border-amber-500/60 font-semibold"
                           : "bg-slate-100 dark:bg-white/[0.04] text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white border border-slate-200 dark:border-white/[0.08] hover:border-slate-300 dark:hover:border-white/20"
                     }`}
                   >
-                    {isNavratri ? (
-                      <span className="text-sm animate-pulse">🪔</span>
-                    ) : (
-                      <span className="text-xs">{CATEGORY_ICONS[cat] || "🏷️"}</span>
-                    )}
-                    <span>{cat}</span>
+                    <span className="text-xs">{CATEGORY_ICONS[cat] || "🏷️"}</span>
+                    <span>{cat === "Sub-₹100" ? "Sub-₹100 (+₹10 Margin)" : cat}</span>
                     <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-mono ${
-                      selectedCategory === cat
-                        ? isNavratri ? "bg-black/30 text-white font-black" : "bg-black/25 text-obsidian-950 font-black"
-                        : isNavratri ? "bg-amber-500/20 text-amber-700 dark:text-amber-300 font-bold" : "bg-slate-200 dark:bg-white/10 text-slate-600 dark:text-slate-400"
+                      isSelected
+                        ? "bg-black/25 text-obsidian-950 font-black"
+                        : isSpecial
+                          ? "bg-amber-500/20 text-amber-800 dark:text-amber-300 font-bold"
+                          : "bg-slate-200 dark:bg-white/10 text-slate-600 dark:text-slate-400"
                     }`}>
                       {categoryCounts[cat] || 0}
                     </span>
                   </button>
                 );
               })}
-            </div>
-
-            {/* Quick Filters */}
-            <div className="flex flex-wrap items-center gap-2 pt-0.5 text-xs">
-              <span className="text-[11px] text-slate-500 dark:text-slate-400 font-medium">Quick Filters:</span>
-              <button
-                onClick={() => {
-                  haptics.selection();
-                  setQuickFilter("all");
-                }}
-                className={`px-3 py-1 rounded-full text-[11px] font-semibold transition-all cursor-pointer ${
-                  quickFilter === "all"
-                    ? "bg-slate-900 dark:bg-white/15 text-white border border-slate-800 dark:border-white/30"
-                    : "bg-slate-100 dark:bg-white/[0.03] text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white border border-slate-200 dark:border-white/[0.06]"
-                }`}
-              >
-                All ({CATALOG_PRODUCTS.length})
-              </button>
-              <button
-                onClick={() => {
-                  haptics.selection();
-                  setQuickFilter(quickFilter === "fresh-arrivals" ? "all" : "fresh-arrivals");
-                  if (quickFilter !== "fresh-arrivals") setSelectedCategory("All");
-                }}
-                className={`px-3 py-1 rounded-full text-[11px] font-bold flex items-center gap-1.5 transition-all cursor-pointer ${
-                  quickFilter === "fresh-arrivals"
-                    ? "bg-gradient-to-r from-cyan-500 via-blue-500 to-indigo-500 text-white border border-cyan-300 shadow-[0_0_15px_rgba(6,182,212,0.4)] scale-105"
-                    : "bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 hover:text-cyan-500 border border-cyan-500/30"
-                }`}
-              >
-                <Sparkles className="w-3 h-3 text-cyan-400 animate-pulse" />
-                <span>✨ Fresh Arrivals & Trending ({CATALOG_PRODUCTS.filter((p) => p.isFreshArrival).length})</span>
-              </button>
-              <button
-                onClick={() => {
-                  haptics.selection();
-                  setQuickFilter(quickFilter === "navratri-special" ? "all" : "navratri-special");
-                  if (quickFilter !== "navratri-special") setSelectedCategory("All");
-                }}
-                className={`px-3 py-1 rounded-full text-[11px] font-bold flex items-center gap-1.5 transition-all cursor-pointer ${
-                  quickFilter === "navratri-special"
-                    ? "bg-gradient-to-r from-amber-500 to-rose-500 text-white border border-amber-300 shadow-glow-orange scale-105"
-                    : "bg-amber-500/10 text-amber-600 dark:text-amber-400 hover:text-amber-500 border border-amber-500/30"
-                }`}
-              >
-                <Sparkles className="w-3 h-3 text-amber-400 animate-spin" />
-                <span>🪔 Navratri Special ({CATALOG_PRODUCTS.filter((p) => p.isNavratriSpecial || p.category === "Navratri & Festive Special").length})</span>
-              </button>
-              <button
-                onClick={() => {
-                  haptics.selection();
-                  setQuickFilter(quickFilter === "sub-100" ? "all" : "sub-100");
-                  if (quickFilter !== "sub-100") setSelectedCategory("All");
-                }}
-                className={`px-3 py-1 rounded-full text-[11px] font-bold flex items-center gap-1.5 transition-all cursor-pointer ${
-                  quickFilter === "sub-100"
-                    ? "bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-500 text-white border border-emerald-300 shadow-glow-emerald scale-105"
-                    : "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 hover:text-emerald-500 border border-emerald-500/30"
-                }`}
-              >
-                <Zap className="w-3 h-3 text-emerald-400 animate-pulse" />
-                <span>⚡ Sub-₹100 Flat ₹10 Margin ({CATALOG_PRODUCTS.filter((p) => p.baseCost < 100).length})</span>
-              </button>
-              <button
-                onClick={() => {
-                  haptics.selection();
-                  setQuickFilter(quickFilter === "under-50" ? "all" : "under-50");
-                }}
-                className={`px-3 py-1 rounded-full text-[11px] font-semibold flex items-center gap-1.5 transition-all cursor-pointer ${
-                  quickFilter === "under-50"
-                    ? "bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 border border-emerald-500/40 shadow-sm"
-                    : "bg-slate-100 dark:bg-white/[0.03] text-slate-600 dark:text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 border border-slate-200 dark:border-white/[0.06]"
-                }`}
-              >
-                <Layers className="w-3 h-3 text-emerald-500" />
-                <span>Under ₹50 ({CATALOG_PRODUCTS.filter((p) => p.fairPrice <= 50).length})</span>
-              </button>
-              <button
-                onClick={() => {
-                  haptics.selection();
-                  setQuickFilter("high-margin");
-                }}
-                className={`px-3 py-1 rounded-full text-[11px] font-semibold flex items-center gap-1.5 transition-all cursor-pointer ${
-                  quickFilter === "high-margin"
-                    ? "bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 border border-emerald-500/40 shadow-sm"
-                    : "bg-slate-100 dark:bg-white/[0.03] text-slate-600 dark:text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 border border-slate-200 dark:border-white/[0.06]"
-                }`}
-              >
-                <TrendingUp className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
-                High Margin (&gt;55% ROI)
-              </button>
-              <button
-                onClick={() => {
-                  haptics.selection();
-                  setQuickFilter("under-150");
-                }}
-                className={`px-3 py-1 rounded-full text-[11px] font-semibold flex items-center gap-1.5 transition-all cursor-pointer ${
-                  quickFilter === "under-150"
-                    ? "bg-brand-orange/20 text-brand-orange border border-brand-orange/40 shadow-sm"
-                    : "bg-slate-100 dark:bg-white/[0.03] text-slate-600 dark:text-slate-400 hover:text-brand-orange border border-slate-200 dark:border-white/[0.06]"
-                }`}
-              >
-                <Zap className="w-3 h-3 text-brand-orange" />
-                Under ₹150 Fast Movers
-              </button>
-              <button
-                onClick={() => {
-                  haptics.selection();
-                  setQuickFilter("top-rated");
-                }}
-                className={`px-3 py-1 rounded-full text-[11px] font-semibold flex items-center gap-1.5 transition-all cursor-pointer ${
-                  quickFilter === "top-rated"
-                    ? "bg-amber-500/20 text-amber-700 dark:text-amber-400 border border-amber-500/40 shadow-sm"
-                    : "bg-slate-100 dark:bg-white/[0.03] text-slate-600 dark:text-slate-400 hover:text-amber-600 dark:hover:text-amber-400 border border-slate-200 dark:border-white/[0.06]"
-                }`}
-              >
-                <Star className="w-3 h-3 text-amber-500 dark:text-amber-400 fill-amber-500 dark:fill-amber-400" />
-                Top Rated (4.8★+)
-              </button>
-
-              {/* City Transit SLA Quick Lookup */}
-              <button
-                onClick={() => {
-                  haptics.light();
-                  setShowTransitModal(true);
-                }}
-                className="px-3 py-1 rounded-full text-[11px] font-semibold flex items-center gap-1.5 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 transition-all cursor-pointer"
-                title="Check transit days for your city"
-              >
-                <Truck className="w-3 h-3 text-emerald-400" />
-                <span>City Transit SLA</span>
-              </button>
-
-              {/* View Density Quick Toggle */}
-              <button
-                onClick={() => {
-                  haptics.light();
-                  setShowDisplayModal(true);
-                }}
-                className="px-3 py-1 rounded-full text-[11px] font-semibold flex items-center gap-1.5 bg-white/[0.04] hover:bg-white/[0.08] text-slate-300 border border-white/10 transition-all cursor-pointer"
-                title="Switch between Compact, Standard, and Retina Ultra HD views"
-              >
-                <Sliders className="w-3 h-3 text-brand-orange" />
-                <span>View: <strong className="capitalize text-white">{displayConfig.density}</strong></span>
-              </button>
             </div>
 
           </div>
@@ -2356,7 +2187,6 @@ export default function OneAAStore() {
         onGoHome={() => {
           setSelectedCategory("All");
           setSearch("");
-          setQuickFilter("all");
           window.scrollTo({ top: 0, behavior: "smooth" });
         }}
         onOpenCategories={() => {
@@ -3118,10 +2948,9 @@ export default function OneAAStore() {
       <VoiceSearchModal2026
         isOpen={showVoiceModal2026}
         onClose={() => setShowVoiceModal2026(false)}
-        onApplySearch={(query, category, filter) => {
+        onApplySearch={(query, category) => {
           if (query) setSearch(query);
           if (category) setSelectedCategory(category);
-          if (filter) setQuickFilter(filter);
           setShowVoiceModal2026(false);
           const el = document.getElementById("catalog-products-section");
           if (el) {

@@ -1,5 +1,6 @@
 import { Product } from '../types';
 import { calculate1AAPricing } from '../utils/pricingEngine';
+import { getProductImageUrl } from '../utils/imageFallback';
 
 const RAW_CATALOG_PRODUCTS: Product[] = [
   // --- NAVRATRI & FESTIVE DECOR SPECIAL (DEODAP VERIFIED) ---
@@ -22010,11 +22011,13 @@ const RAW_CATALOG_PRODUCTS: Product[] = [
 
 import freshArrivalsData from './freshArrivals.json';
 import allDepartmentCatalogsData from './allDepartmentCatalogs.json';
+import sellersChoiceData from './sellersChoiceCatalog.json';
 
 const COMBINED_RAW: Product[] = [
   ...RAW_CATALOG_PRODUCTS,
   ...(freshArrivalsData as unknown as Product[]),
-  ...(allDepartmentCatalogsData as unknown as Product[])
+  ...(allDepartmentCatalogsData as unknown as Product[]),
+  ...(sellersChoiceData as unknown as Product[])
 ];
 
 // Clean deduplication strictly by SKU and normalized name to eliminate any duplicates
@@ -22033,22 +22036,77 @@ for (const p of COMBINED_RAW) {
   DEDUPED_RAW_PRODUCTS.push(p);
 }
 
+export function normalizeCategory(cat?: string): string {
+  if (!cat) return "Kitchen & Dining";
+  const c = cat.trim();
+  if (
+    c === "Kitchenware & Dining" ||
+    c === "Kitchen & Dining Essentials" ||
+    c === "Home, Kitchen & Utility" ||
+    c === "Cleaning & Household Utility" ||
+    c === "Drinkware, Bottles & Flasks" ||
+    c === "Kitchen & Travel"
+  ) {
+    return "Kitchen & Dining";
+  }
+  if (c === "Stationery & Desk Supplies" || c === "Diaries & Stationery") {
+    return "Curated Diaries & Stationery";
+  }
+  if (c === "Health, Beauty & Personal Care" || c === "Personal Care & Grooming") {
+    return "Beauty, Health & Personal Care";
+  }
+  if (
+    c === "Tools & Home Improvement" ||
+    c === "Home Improvement" ||
+    c === "Automotive & Tools" ||
+    c === "Institutional & Wholesale"
+  ) {
+    return "Home Improvement & Tools";
+  }
+  if (c === "Smart Tech & Hardware" || c === "Electronics & Smart Tech") {
+    return "Electronics & Smart Tech";
+  }
+  if (c === "Watches & Clocks") {
+    return "Watches & Timepieces";
+  }
+  if (c === "Pooja & Festive Decor" || c === "Navratri & Festive Special") {
+    return "Pooja & Festive Decor";
+  }
+  if (c === "Toys & STEM Games" || c === "Baby & Kids Care") {
+    return "Toys, Kids & Baby Care";
+  }
+  if (c === "Home Appliances & Living" || c === "Appliances & Comfort") {
+    return "Home Appliances & Comfort";
+  }
+  if (c === "Luggage & Travel Bags" || c === "Monsoon & Travel") {
+    return "Travel, Luggage & Bags";
+  }
+  if (c === "Hydration & Gifting") {
+    return "Gifting & Party Supplies";
+  }
+  if (c === "Outdoor & Decor") {
+    return "Home Decor & Wall Accents";
+  }
+  return c;
+}
+
 export const CATALOG_PRODUCTS: Product[] = DEDUPED_RAW_PRODUCTS.map((p) => {
+  const normalizedCategory = normalizeCategory(p.category);
   const rawCost = (p as any).rawCost !== undefined ? (p as any).rawCost : p.baseCost;
-  const pricing = calculate1AAPricing(rawCost, p.marketPrice, p.category, p.weight);
+  const pricing = calculate1AAPricing(rawCost, p.marketPrice, normalizedCategory, p.weight);
   
-  // Enforce consistent baseCost and fairPrice:
-  // Base Cost = DeoDap cost with 18% GST tax
+  // Enforce consistent baseCost and fairPrice across 100% of SKUs:
   // If baseCost < ₹100: automatic flat ₹10 margin added
   // If baseCost >= ₹100: flat 20% margin added
-  const baseCost = p.baseCost && p.baseCost > 0 ? p.baseCost : pricing.baseCost;
+  const baseCost = p.baseCost && p.baseCost > 0 ? Math.round(p.baseCost) : Math.round(pricing.baseCost);
   const isBelow100 = baseCost < 100;
   const margin1AAAmount = isBelow100 ? 10 : Math.round(baseCost * 0.20);
-  const fairPrice = p.fairPrice && p.fairPrice > 0 ? p.fairPrice : (baseCost + margin1AAAmount);
-  const margin1AAPercent = isBelow100 ? Math.round((10 / Math.max(1, baseCost)) * 100) : 20;
+  const fairPrice = Math.round(baseCost + margin1AAAmount);
+  const margin1AAPercent = Math.round((margin1AAAmount / Math.max(1, baseCost)) * 100);
 
   return {
     ...p,
+    category: normalizedCategory,
     baseCost,
     courierCost: 0,
     landedCost: baseCost,
@@ -22059,6 +22117,7 @@ export const CATALOG_PRODUCTS: Product[] = DEDUPED_RAW_PRODUCTS.map((p) => {
     flipkartPrice: pricing.flipkartPrice,
     chickpetPrice: pricing.chickpetPrice,
     wholesaleMarketPrice: pricing.wholesaleMarketPrice,
+    image: getProductImageUrl(p.image),
   };
 });
 
