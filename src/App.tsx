@@ -35,7 +35,7 @@ import MobileBottomNav from "./components/MobileBottomNav";
 import { OrderAddressPackage } from "./types/address";
 import { OrderFsmState } from "./types/orderFsm";
 import { CurrencyCode } from "./utils/currency";
-import { handleImgError } from "./utils/imageFallback";
+import { handleImgError, getProductImageUrl } from "./utils/imageFallback";
 import { haptics } from "./utils/haptics";
 import { 
   ShieldCheck, 
@@ -1687,7 +1687,7 @@ export default function OneAAStore() {
                         }}
                       >
                         <img
-                          src={product.image}
+                          src={getProductImageUrl(product.image)}
                           alt={product.name}
                           loading="lazy"
                           onError={(e) => handleImgError(e, product)}

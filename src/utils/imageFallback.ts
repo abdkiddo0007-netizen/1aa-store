@@ -1,5 +1,34 @@
 import React from 'react';
 import { Product } from '../types';
+import { Capacitor } from '@capacitor/core';
+
+/**
+ * Resolves product image URLs across web, Capacitor native mobile (Android/iOS),
+ * and local environments, ensuring high-speed CDN delivery without bundling 5.8GB in the APK.
+ */
+export function getProductImageUrl(imagePath?: string): string {
+  if (!imagePath) return '';
+  if (imagePath.startsWith('http://') || imagePath.startsWith('https://') || imagePath.startsWith('data:')) {
+    return imagePath;
+  }
+  
+  const cleanPath = imagePath.replace(/^(\.\/|\/)/, '');
+
+  // Detect Capacitor native platform or Android/iOS WebView / standalone
+  const isNative = typeof window !== 'undefined' && (
+    Capacitor.isNativePlatform() ||
+    Capacitor.getPlatform() === 'android' ||
+    Capacitor.getPlatform() === 'ios' ||
+    window.location.protocol === 'capacitor:'
+  );
+
+  // In native Android APK or standalone native webview, stream from Vercel Edge CDN
+  if (isNative) {
+    return `https://1aa-store.vercel.app/${cleanPath}`;
+  }
+
+  return imagePath;
+}
 
 /**
  * Generates an elegant, high-contrast SVG data URI fallback for a product
@@ -76,13 +105,27 @@ export function getProductSvgFallback(name: string, sku: string, category: strin
 }
 
 /**
- * React onError handler for product <img> tags
+ * React onError handler for product <img> tags with intelligent CDN retry
  */
 export function handleImgError(
   e: React.SyntheticEvent<HTMLImageElement>,
   product: Product
 ) {
   const target = e.currentTarget;
+  const currentSrc = target.src || '';
+
+  // Clean product image path
+  const rawPath = product.image || '';
+  const cleanPath = rawPath.replace(/^(\.\/|\/)/, '');
+  const cdnUrl = `https://1aa-store.vercel.app/${cleanPath}`;
+
+  // If failed on relative path or local origin, retry via Vercel Edge CDN before SVG fallback
+  if (cleanPath && !currentSrc.includes('1aa-store.vercel.app') && currentSrc !== cdnUrl) {
+    target.src = cdnUrl;
+    return;
+  }
+
+  // If CDN also unavailable (e.g. offline), use the high-contrast category SVG fallback
   const fallback = getProductSvgFallback(product.name, product.sku, product.category);
   if (target.src !== fallback) {
     target.src = fallback;
