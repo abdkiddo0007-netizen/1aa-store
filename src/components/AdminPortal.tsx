@@ -1,6 +1,6 @@
 import { useState, useMemo, useEffect } from "react";
 import { CATALOG_PRODUCTS } from "../data/catalog";
-import { SavedOrder } from "../types";
+import { Product, SavedOrder } from "../types";
 import { OrderFsmState } from "../types/orderFsm";
 import { FSM_STATE_METADATA } from "../utils/orderFSM";
 import { generateWebhookSignature } from "../utils/idempotencyAndWebhooks";
@@ -30,24 +30,61 @@ import {
   Cpu,
   Send,
   Terminal,
-  Sparkles
+  Sparkles,
+  RefreshCw
 } from "lucide-react";
 import { OWNER_PHONE, OWNER_NAME } from "../utils/notificationMatrix";
+import DeoDapRealtimeSyncPanel from "./DeoDapRealtimeSyncPanel";
 
 interface AdminPortalProps {
   onLogout: () => void;
   onSwitchToStore: () => void;
-  initialTab?: "pnl" | "orders" | "inventory" | "forecasting" | "webhooks" | "agentic-ai";
+  initialTab?: "pnl" | "orders" | "inventory" | "deodap-sync" | "forecasting" | "webhooks" | "agentic-ai";
+  onOpenOpsHub?: () => void;
 }
 
 export default function AdminPortal({ 
   onLogout, 
   onSwitchToStore, 
-  initialTab = "agentic-ai" 
+  initialTab = "agentic-ai",
+  onOpenOpsHub
 }: AdminPortalProps) {
-  const [activeTab, setActiveTab] = useState<"pnl" | "orders" | "inventory" | "forecasting" | "webhooks" | "agentic-ai">(initialTab);
+  const [activeTab, setActiveTab] = useState<"pnl" | "orders" | "inventory" | "deodap-sync" | "forecasting" | "webhooks" | "agentic-ai">(initialTab);
   const [timeframe, setTimeframe] = useState<"today" | "week" | "month" | "all">("today");
   
+  // Real-time catalog overrides synced directly from https://deodap.in
+  const [realtimeOverrides, setRealtimeOverrides] = useState<Product[]>(() => {
+    if (typeof window !== "undefined") {
+      try {
+        const stored = localStorage.getItem("1aa_realtime_deodap_overrides");
+        if (stored) return JSON.parse(stored);
+      } catch {}
+    }
+    return [];
+  });
+
+  useEffect(() => {
+    const handleCatalogUpdated = () => {
+      try {
+        const stored = localStorage.getItem("1aa_realtime_deodap_overrides");
+        if (stored) setRealtimeOverrides(JSON.parse(stored));
+      } catch {}
+    };
+    window.addEventListener("1aa:catalog_updated", handleCatalogUpdated);
+    return () => window.removeEventListener("1aa:catalog_updated", handleCatalogUpdated);
+  }, []);
+
+  const liveAdminCatalog = useMemo(() => {
+    const combined = [...realtimeOverrides, ...CATALOG_PRODUCTS];
+    const seen = new Set<string>();
+    return combined.filter(p => {
+      const key = p.sku.toUpperCase();
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+  }, [realtimeOverrides]);
+
   // Real-time stock overrides state (persisted in localStorage)
   const [stockOverrides, setStockOverrides] = useState<{ [sku: string]: number }>(() => {
     if (typeof window !== "undefined") {
@@ -218,7 +255,7 @@ export default function AdminPortal({
 
   // Inventory items with active stock & refill status
   const inventoryItems = useMemo(() => {
-    return CATALOG_PRODUCTS.map(prod => {
+    return liveAdminCatalog.map(prod => {
       const activeStock = stockOverrides[prod.sku] ?? prod.inStock;
       const isCriticalLow = activeStock < 15;
       const isModerate = activeStock >= 15 && activeStock <= 50;
@@ -234,7 +271,7 @@ export default function AdminPortal({
         marginPct
       };
     });
-  }, [stockOverrides]);
+  }, [stockOverrides, liveAdminCatalog]);
 
   // Low stock refill alerts count
   const lowStockCount = useMemo(() => {
@@ -516,6 +553,20 @@ export default function AdminPortal({
 
         {/* Header Action Buttons */}
         <div className="flex items-center gap-2.5">
+          {onOpenOpsHub && (
+            <button
+              onClick={() => {
+                haptics.light();
+                onOpenOpsHub();
+              }}
+              className="px-3 py-1.5 rounded-xl bg-brand-blue-light/15 hover:bg-brand-blue-light/25 border border-brand-blue-light/30 text-brand-blue-light text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer active:scale-95"
+              title="Launch Wholesale Operations Hub (B2B Labels, Freight, Invoice, Barcodes)"
+            >
+              <Boxes className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">Wholesale Ops Hub</span>
+            </button>
+          )}
+
           <button
             onClick={() => {
               haptics.light();
@@ -590,6 +641,21 @@ export default function AdminPortal({
               {lowStockCount}
             </span>
           )}
+        </button>
+
+        <button
+          onClick={() => { haptics.selection(); setActiveTab("deodap-sync"); }}
+          className={`px-3.5 py-1.5 rounded-xl text-xs font-bold tracking-wide transition-all flex items-center gap-2 cursor-pointer shrink-0 ${
+            activeTab === "deodap-sync"
+              ? "bg-gradient-to-r from-emerald-400 to-teal-500 text-obsidian-950 shadow-glow-emerald font-black"
+              : "text-slate-400 hover:text-emerald-300 hover:bg-white/[0.05]"
+          }`}
+        >
+          <RefreshCw className="w-3.5 h-3.5 text-emerald-400" />
+          <span>DeoDap Live SKU Ingestion</span>
+          <span className="px-1.5 py-0.2 rounded-full bg-emerald-500/20 text-emerald-300 text-[9px] font-mono border border-emerald-500/30">
+            1-Click Live
+          </span>
         </button>
 
         <button
@@ -945,6 +1011,9 @@ export default function AdminPortal({
         {activeTab === "inventory" && (
           <div className="space-y-6 animate-fade-in">
             
+            {/* Real-Time DeoDap SKU Ingestion Engine */}
+            <DeoDapRealtimeSyncPanel catalog={liveAdminCatalog} />
+
             {/* Header and Search */}
             <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-3">
               <div>
@@ -1083,6 +1152,15 @@ export default function AdminPortal({
               </div>
             </div>
 
+          </div>
+        )}
+
+        {/* ================================================================ */}
+        {/* TAB 3B: REAL-TIME DEODAP SKU INGESTION HUB                       */}
+        {/* ================================================================ */}
+        {activeTab === "deodap-sync" && (
+          <div className="space-y-6 animate-fade-in">
+            <DeoDapRealtimeSyncPanel catalog={liveAdminCatalog} />
           </div>
         )}
 

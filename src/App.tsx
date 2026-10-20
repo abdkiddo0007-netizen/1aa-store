@@ -72,6 +72,8 @@ import {
   Play,
   Bot,
   Crown,
+  Lock,
+  Building2,
   MapPin,
   Volume2,
   VolumeX,
@@ -302,14 +304,33 @@ export default function OneAAStore() {
     }
     return false;
   });
-  const [adminInitialTab, setAdminInitialTab] = useState<"pnl" | "orders" | "inventory" | "forecasting" | "webhooks" | "agentic-ai">("agentic-ai");
+  const [adminInitialTab, setAdminInitialTab] = useState<"pnl" | "orders" | "inventory" | "deodap-sync" | "forecasting" | "webhooks" | "agentic-ai">("agentic-ai");
 
-  const handleAdminLoginSuccess = (tab: "agentic-ai" | "pnl" | "orders" | "inventory" | "forecasting" | "webhooks" = "agentic-ai") => {
+  const handleAdminLoginSuccess = (tab: "agentic-ai" | "pnl" | "orders" | "inventory" | "deodap-sync" | "forecasting" | "webhooks" = "agentic-ai") => {
     setIsAdminLoggedIn(true);
     setAdminInitialTab(tab);
     setAdminPortalActive(true);
     setShowOnboardingModal(false);
     haptics.success();
+  };
+
+  const [logoClicks, setLogoClicks] = useState<number[]>([]);
+  const handleLogoTap = () => {
+    const now = Date.now();
+    const recent = [...logoClicks.filter((t) => now - t < 1200), now];
+    setLogoClicks(recent);
+    if (recent.length >= 3) {
+      setLogoClicks([]);
+      haptics.success();
+      if (isAdminLoggedIn) {
+        setAdminPortalActive(true);
+      } else {
+        setShowOnboardingModal(true);
+      }
+    } else {
+      haptics.light();
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
   };
 
   useEffect(() => {
@@ -362,14 +383,49 @@ export default function OneAAStore() {
     return () => window.removeEventListener("storage", handleStorage);
   }, []);
 
+  // Real-time dynamic DeoDap overrides state
+  const [realtimeOverrides, setRealtimeOverrides] = useState<Product[]>(() => {
+    if (typeof window !== "undefined") {
+      try {
+        const stored = localStorage.getItem("1aa_realtime_deodap_overrides");
+        if (stored) return JSON.parse(stored);
+      } catch {}
+    }
+    return [];
+  });
+
+  useEffect(() => {
+    const handleCatalogUpdate = () => {
+      try {
+        const stored = localStorage.getItem("1aa_realtime_deodap_overrides");
+        if (stored) setRealtimeOverrides(JSON.parse(stored));
+      } catch {}
+    };
+    window.addEventListener("1aa:catalog_updated", handleCatalogUpdate);
+    window.addEventListener("storage", handleCatalogUpdate);
+    return () => {
+      window.removeEventListener("1aa:catalog_updated", handleCatalogUpdate);
+      window.removeEventListener("storage", handleCatalogUpdate);
+    };
+  }, []);
+
   const liveCatalog = useMemo(() => {
-    return CATALOG_PRODUCTS.map((p) => {
-      if (stockOverrides[p.sku] !== undefined) {
-        return { ...p, inStock: stockOverrides[p.sku] };
+    const combined = [...realtimeOverrides, ...CATALOG_PRODUCTS];
+    const seen = new Set<string>();
+    const deduplicated: Product[] = [];
+    for (const p of combined) {
+      const key = p.sku.trim().toUpperCase();
+      if (!seen.has(key)) {
+        seen.add(key);
+        if (stockOverrides[p.sku] !== undefined) {
+          deduplicated.push({ ...p, inStock: stockOverrides[p.sku] });
+        } else {
+          deduplicated.push(p);
+        }
       }
-      return p;
-    });
-  }, [stockOverrides]);
+    }
+    return deduplicated;
+  }, [stockOverrides, realtimeOverrides]);
 
   const [selectedCurrency, setSelectedCurrency] = useState<CurrencyCode>("INR");
   const [isDesktopViewport, setIsDesktopViewport] = useState(() => {
@@ -508,27 +564,27 @@ export default function OneAAStore() {
 
   const categoryCounts = useMemo(() => {
     const counts: { [cat: string]: number } = {
-      All: CATALOG_PRODUCTS.length,
-      "Fresh Arrivals": CATALOG_PRODUCTS.filter((p) => p.isFreshArrival || p.isTrending).length,
-      "Sub-₹100": CATALOG_PRODUCTS.filter((p) => p.baseCost < 100).length,
-      "Under ₹50": CATALOG_PRODUCTS.filter((p) => p.fairPrice <= 50).length,
+      All: liveCatalog.length,
+      "Fresh Arrivals": liveCatalog.filter((p) => p.isFreshArrival || p.isTrending).length,
+      "Sub-₹100": liveCatalog.filter((p) => p.baseCost < 100).length,
+      "Under ₹50": liveCatalog.filter((p) => p.fairPrice <= 50).length,
     };
-    CATALOG_PRODUCTS.forEach((p) => {
+    liveCatalog.forEach((p) => {
       counts[p.category] = (counts[p.category] || 0) + 1;
     });
     return counts;
-  }, []);
+  }, [liveCatalog]);
 
   const categories = useMemo(() => {
     const specialTabs = ["All", "Fresh Arrivals", "Sub-₹100", "Under ₹50"];
-    const set = new Set(CATALOG_PRODUCTS.map((p) => p.category));
+    const set = new Set(liveCatalog.map((p) => p.category));
     const sorted = Array.from(set).sort((a, b) => {
       const countA = categoryCounts[a] || 0;
       const countB = categoryCounts[b] || 0;
       return countB - countA;
     });
     return [...specialTabs, ...sorted];
-  }, [categoryCounts]);
+  }, [categoryCounts, liveCatalog]);
 
   const updateQty = (sku: string, delta: number) => {
     setQuantities((prev) => {
@@ -778,6 +834,7 @@ export default function OneAAStore() {
           initialTab={adminInitialTab}
           onLogout={handleAdminLogout}
           onSwitchToStore={handleSwitchToStore}
+          onOpenOpsHub={() => setShowOpsHubModal(true)}
         />
         {showFsmModal && (
           <OrderFsmTrackerModal
@@ -785,6 +842,43 @@ export default function OneAAStore() {
             onClose={() => setShowFsmModal(false)}
             orderRef={fsmOrderRef}
             initialState={fsmInitialState}
+          />
+        )}
+        {showOpsHubModal && (
+          <WholesaleOpsHubModal
+            isOpen={showOpsHubModal}
+            onClose={() => setShowOpsHubModal(false)}
+            onOpenBarcodeModal={() => {
+              setBarcodeProduct(filteredAndSorted[0] || liveCatalog[0]);
+              setShowBarcodeModal(true);
+            }}
+            onOpenFreightModal={() => {
+              setFreightProduct(filteredAndSorted[0] || liveCatalog[0]);
+              setShowFreightModal(true);
+            }}
+            onOpenCartonLabelModal={() => {
+              setCartonLabelProduct(filteredAndSorted[0] || liveCatalog[0]);
+              setShowCartonLabelModal(true);
+            }}
+            onOpenTransitModal={() => setShowTransitModal(true)}
+            onOpenInvoiceModal={() => setShowInvoiceModal(true)}
+            onOpenSavedOrdersModal={() => setShowSavedOrdersModal(true)}
+            onOpenVipModal={() => setShowVipModal(true)}
+            onOpenBroadcastModal={() => setShowBroadcastModal(true)}
+            onOpenDisplayModal={() => setShowDisplayModal(true)}
+            onOpenPriceRadarModal={() => {
+              setPriceCompareProduct(filteredAndSorted[0] || liveCatalog[0]);
+              setShowPriceCompareModal(true);
+            }}
+            onOpenUpiModal={() => setShowUpiModal(true)}
+            onOpenRestockBundles={() => setShowRestockBundlesModal(true)}
+            onOpenArModal={() => {
+              setArProduct(filteredAndSorted[0] || liveCatalog[0]);
+              setShowArModal(true);
+            }}
+            onOpenWhatsAppParser={() => setShowWhatsAppParserModal(true)}
+            onOpenTransitGuarantee={() => setShowTransitGuaranteeModal(true)}
+            hasItemsInCart={metrics.units > 0}
           />
         )}
       </div>
@@ -980,11 +1074,9 @@ export default function OneAAStore() {
             {/* 1AA Brand Logo & Quick Video Reveal */}
             <div className="flex items-center gap-2.5">
               <div 
-                onClick={() => {
-                  haptics.light();
-                  window.scrollTo({ top: 0, behavior: 'smooth' });
-                }} 
-                className="cursor-pointer transition-transform hover:opacity-95"
+                onClick={handleLogoTap} 
+                className="cursor-pointer transition-transform hover:opacity-95 select-none"
+                title="1AA Available Always — Factory Direct Wholesale (Triple-click for Staff Access)"
               >
                 <OneAALogo size="md" variant="adaptive" />
               </div>
@@ -1069,20 +1161,34 @@ export default function OneAAStore() {
                 <span className="lg:hidden">PIN</span>
               </button>
 
-              {/* Wholesale Operations Hub Consolidated Trigger */}
-              <button
-                onClick={() => {
-                  haptics.light();
-                  setShowOpsHubModal(true);
-                }}
-                className="flex text-xs px-3.5 py-2 rounded-full border border-slate-300 dark:border-white/15 bg-slate-100 dark:bg-white/[0.06] hover:bg-slate-200 dark:hover:bg-white/[0.12] text-slate-700 dark:text-slate-200 hover:text-slate-900 dark:hover:text-white font-semibold transition-all items-center gap-1.5 cursor-pointer"
-                title="Open Wholesale Operations Hub (Outer Box Labels, Shelf Barcodes, CBM Freight, Invoice, VIP Club)"
-              >
-                <Boxes className="w-3.5 h-3.5 text-brand-blue-light" />
-                <span className="hidden sm:inline">Ops Hub</span>
-                <span className="sm:hidden">Ops</span>
-                {metrics.units > 0 && <span className="w-2 h-2 rounded-full bg-brand-orange animate-pulse" />}
-              </button>
+              {/* Executive Admin HQ Trigger (Only visible when Admin is logged in!) */}
+              {isAdminLoggedIn ? (
+                <button
+                  onClick={() => {
+                    haptics.selection();
+                    setAdminPortalActive(true);
+                  }}
+                  className="flex text-xs px-3.5 py-2 rounded-full border border-brand-orange/40 bg-brand-orange/15 hover:bg-brand-orange text-brand-orange hover:text-obsidian-950 font-bold transition-all items-center gap-1.5 cursor-pointer shadow-glow-orange"
+                  title="Return to Executive Admin HQ Portal"
+                >
+                  <Building2 className="w-3.5 h-3.5" />
+                  <span className="hidden sm:inline">Admin HQ</span>
+                  <span className="sm:hidden">HQ</span>
+                </button>
+              ) : (
+                <button
+                  onClick={() => {
+                    haptics.light();
+                    setShowTrackingModal(true);
+                  }}
+                  className="flex text-xs px-3.5 py-2 rounded-full border border-slate-300 dark:border-white/15 bg-slate-100 dark:bg-white/[0.06] hover:bg-slate-200 dark:hover:bg-white/[0.12] text-slate-700 dark:text-slate-200 hover:text-slate-900 dark:hover:text-white font-semibold transition-all items-center gap-1.5 cursor-pointer"
+                  title="Track Your Order Consignment Radar"
+                >
+                  <Truck className="w-3.5 h-3.5 text-brand-orange" />
+                  <span className="hidden sm:inline">Track Order</span>
+                  <span className="sm:hidden">Track</span>
+                </button>
+              )}
 
               {/* Dark / Light Mode Toggle Button in Desktop Header */}
               <button
@@ -1139,7 +1245,7 @@ export default function OneAAStore() {
             </div>
             <span className="text-slate-400 dark:text-slate-500 hidden sm:inline">•</span>
             <span className="text-slate-700 dark:text-slate-300 hidden md:inline">
-              <span className="text-emerald-600 dark:text-emerald-400 font-semibold">{CATALOG_PRODUCTS.length}+ Factory Lines</span> in Active Stock
+              <span className="text-emerald-600 dark:text-emerald-400 font-semibold">{liveCatalog.length}+ Factory Lines</span> in Active Stock
             </span>
             <span className="text-slate-400 dark:text-slate-500 hidden sm:inline">•</span>
             <div className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full bg-gradient-to-r from-amber-500/15 via-cyan-500/15 to-emerald-500/15 border border-amber-500/30 text-amber-700 dark:text-amber-300 text-[11px] font-semibold">
@@ -1280,7 +1386,7 @@ export default function OneAAStore() {
                   <Search className="w-4 h-4 text-slate-400 absolute left-4 top-3.5" />
                   <input
                     type="text"
-                    placeholder={`Search ${CATALOG_PRODUCTS.length}+ factory products, SKUs, or voice search (e.g. 'Pig Stand', 'Bajot', 'Diya', 'Brush')...`}
+                    placeholder={`Search ${liveCatalog.length}+ factory products, SKUs, or voice search (e.g. 'Pig Stand', 'Bajot', 'Diya', 'Brush')...`}
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}
                     className="w-full bg-slate-100 dark:bg-white/[0.06] border border-slate-300 dark:border-white/15 rounded-full pl-11 pr-28 py-3 text-xs sm:text-sm text-slate-900 dark:text-white placeholder-slate-500 dark:placeholder-slate-400 focus:outline-none focus:border-brand-orange focus:ring-1 focus:ring-brand-orange transition-all backdrop-blur-md shadow-inner"
@@ -2837,42 +2943,44 @@ export default function OneAAStore() {
         currency={selectedCurrency}
       />
 
-      {/* --- WHOLESALE B2B OPERATIONS HUB MODAL --- */}
-      <WholesaleOpsHubModal
-        isOpen={showOpsHubModal}
-        onClose={() => setShowOpsHubModal(false)}
-        onOpenBarcodeModal={() => {
-          setBarcodeProduct(filteredAndSorted[0] || CATALOG_PRODUCTS[0]);
-          setShowBarcodeModal(true);
-        }}
-        onOpenFreightModal={() => {
-          setFreightProduct(filteredAndSorted[0] || CATALOG_PRODUCTS[0]);
-          setShowFreightModal(true);
-        }}
-        onOpenCartonLabelModal={() => {
-          setCartonLabelProduct(filteredAndSorted[0] || CATALOG_PRODUCTS[0]);
-          setShowCartonLabelModal(true);
-        }}
-        onOpenTransitModal={() => setShowTransitModal(true)}
-        onOpenInvoiceModal={() => setShowInvoiceModal(true)}
-        onOpenSavedOrdersModal={() => setShowSavedOrdersModal(true)}
-        onOpenVipModal={() => setShowVipModal(true)}
-        onOpenBroadcastModal={() => setShowBroadcastModal(true)}
-        onOpenDisplayModal={() => setShowDisplayModal(true)}
-        onOpenPriceRadarModal={() => {
-          setPriceCompareProduct(filteredAndSorted[0] || CATALOG_PRODUCTS[0]);
-          setShowPriceCompareModal(true);
-        }}
-        onOpenUpiModal={() => setShowUpiModal(true)}
-        onOpenRestockBundles={() => setShowRestockBundlesModal(true)}
-        onOpenArModal={() => {
-          setArProduct(filteredAndSorted[0] || CATALOG_PRODUCTS[0]);
-          setShowArModal(true);
-        }}
-        onOpenWhatsAppParser={() => setShowWhatsAppParserModal(true)}
-        onOpenTransitGuarantee={() => setShowTransitGuaranteeModal(true)}
-        hasItemsInCart={metrics.units > 0}
-      />
+      {/* --- WHOLESALE B2B OPERATIONS HUB MODAL (ADMIN ONLY) --- */}
+      {isAdminLoggedIn && (
+        <WholesaleOpsHubModal
+          isOpen={showOpsHubModal}
+          onClose={() => setShowOpsHubModal(false)}
+          onOpenBarcodeModal={() => {
+            setBarcodeProduct(filteredAndSorted[0] || liveCatalog[0]);
+            setShowBarcodeModal(true);
+          }}
+          onOpenFreightModal={() => {
+            setFreightProduct(filteredAndSorted[0] || liveCatalog[0]);
+            setShowFreightModal(true);
+          }}
+          onOpenCartonLabelModal={() => {
+            setCartonLabelProduct(filteredAndSorted[0] || liveCatalog[0]);
+            setShowCartonLabelModal(true);
+          }}
+          onOpenTransitModal={() => setShowTransitModal(true)}
+          onOpenInvoiceModal={() => setShowInvoiceModal(true)}
+          onOpenSavedOrdersModal={() => setShowSavedOrdersModal(true)}
+          onOpenVipModal={() => setShowVipModal(true)}
+          onOpenBroadcastModal={() => setShowBroadcastModal(true)}
+          onOpenDisplayModal={() => setShowDisplayModal(true)}
+          onOpenPriceRadarModal={() => {
+            setPriceCompareProduct(filteredAndSorted[0] || liveCatalog[0]);
+            setShowPriceCompareModal(true);
+          }}
+          onOpenUpiModal={() => setShowUpiModal(true)}
+          onOpenRestockBundles={() => setShowRestockBundlesModal(true)}
+          onOpenArModal={() => {
+            setArProduct(filteredAndSorted[0] || liveCatalog[0]);
+            setShowArModal(true);
+          }}
+          onOpenWhatsAppParser={() => setShowWhatsAppParserModal(true)}
+          onOpenTransitGuarantee={() => setShowTransitGuaranteeModal(true)}
+          hasItemsInCart={metrics.units > 0}
+        />
+      )}
 
       {/* --- B2B WHATSAPP MESSY ORDER PARSER & INSTANT GST QUOTATION GENERATOR --- */}
       <WhatsAppOrderParserModal
@@ -2981,18 +3089,32 @@ export default function OneAAStore() {
             <span className="hidden sm:inline">Voice Search</span>
           </button>
 
-          {/* Wholesale Ops Hub Quick Trigger */}
-          <button
-            onClick={() => {
-              haptics.light();
-              setShowOpsHubModal(true);
-            }}
-            className="flex items-center gap-1.5 px-3 py-2 rounded-full bg-white/[0.08] hover:bg-white/[0.15] text-brand-blue-light font-bold text-xs transition-all cursor-pointer border border-white/10"
-            title="Open Wholesale Operations Hub (B2B Labels, Freight, Invoice, Barcodes)"
-          >
-            <Boxes className="w-3.5 h-3.5 text-brand-blue-light" />
-            <span className="hidden sm:inline">Ops Hub</span>
-          </button>
+          {/* Role-Specific Executive Action: Admin HQ (if logged in) or VIP Pass (for customers) */}
+          {isAdminLoggedIn ? (
+            <button
+              onClick={() => {
+                haptics.selection();
+                setAdminPortalActive(true);
+              }}
+              className="flex items-center gap-1.5 px-3 py-2 rounded-full bg-brand-orange/20 hover:bg-brand-orange text-brand-orange hover:text-obsidian-950 font-bold text-xs transition-all cursor-pointer border border-brand-orange/40 shadow-glow-orange"
+              title="Open Executive Admin HQ Portal"
+            >
+              <Building2 className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">Admin HQ</span>
+            </button>
+          ) : (
+            <button
+              onClick={() => {
+                haptics.light();
+                setShowVipModal(true);
+              }}
+              className="flex items-center gap-1.5 px-3 py-2 rounded-full bg-white/[0.08] hover:bg-white/[0.15] text-amber-400 font-bold text-xs transition-all cursor-pointer border border-white/10"
+              title="1AA Royalty & VIP Wholesale Pass"
+            >
+              <Crown className="w-3.5 h-3.5 text-amber-400" />
+              <span className="hidden sm:inline">VIP Pass</span>
+            </button>
+          )}
         </div>
       </div>
 
@@ -3097,7 +3219,34 @@ export default function OneAAStore() {
         </div>
 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 pt-10 mt-10 border-t border-slate-200 dark:border-white/[0.06] flex flex-col sm:flex-row justify-between items-center gap-3 text-[11px] text-slate-500">
-          <div>© {new Date().getFullYear()} 1AA (Available Always) — 1st Available Always. All rights reserved.</div>
+          <div className="flex items-center gap-4 flex-wrap">
+            <span>© {new Date().getFullYear()} 1AA (Available Always) — 1st Available Always. All rights reserved.</span>
+            {isAdminLoggedIn ? (
+              <button
+                onClick={() => {
+                  haptics.selection();
+                  setAdminPortalActive(true);
+                }}
+                className="text-brand-orange hover:underline font-bold flex items-center gap-1 cursor-pointer"
+                title="Return to Executive Admin HQ Portal"
+              >
+                <Building2 className="w-3 h-3" />
+                <span>Admin HQ (Active)</span>
+              </button>
+            ) : (
+              <button
+                onClick={() => {
+                  haptics.light();
+                  setShowOnboardingModal(true);
+                }}
+                className="hover:text-slate-700 dark:hover:text-slate-300 transition-colors flex items-center gap-1 cursor-pointer opacity-70 hover:opacity-100"
+                title="Authorized Mysore Hub Staff & Administrator Login"
+              >
+                <Lock className="w-3 h-3" />
+                <span>Staff & Admin HQ Access</span>
+              </button>
+            )}
+          </div>
           <div className="font-mono">Direct Factory Sourcing • Flat 20% Margin • Universal Real-Time MRP • 👑 Customer is King Guarantee</div>
         </div>
       </footer>

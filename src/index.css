@@ -235,3 +235,87 @@ html, body {
     border-bottom: 1px solid #e2e8f0 !important;
   }
 }
+
+/* =========================================================================
+   4K ULTRA-HD & MULTI-DEVICE RESPONSIVE AUTO-FIT ENGINE
+   Ensures seamless fit and ultra-crisp visual quality across all screen sizes:
+   iPhone/Android (320px-480px), iPad/Tablet (768px-1024px),
+   Laptops (1280px-1440px), 1080p Desktop (1920px), and 4K Displays (3840px)
+   ========================================================================= */
+
+/* Prevent horizontal overflow on mobile screens */
+html, body {
+  max-width: 100vw;
+  overflow-x: hidden;
+  -webkit-text-size-adjust: 100%;
+}
+
+/* Safe area padding for notch and home indicator on modern mobile devices */
+.pb-safe {
+  padding-bottom: env(safe-area-inset-bottom, 1rem);
+}
+
+/* 4K and Ultra-Wide Monitor Grid Expansion */
+@media (min-width: 1536px) {
+  .max-w-7xl {
+    max-width: 1480px !important;
+  }
+  .catalog-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+    gap: 1.5rem !important;
+  }
+}
+
+@media (min-width: 1800px) {
+  .max-w-7xl {
+    max-width: 1740px !important;
+  }
+  .catalog-grid {
+    grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
+    gap: 1.75rem !important;
+  }
+}
+
+@media (min-width: 2300px) {
+  .max-w-7xl {
+    max-width: 2240px !important;
+  }
+  .catalog-grid {
+    grid-template-columns: repeat(6, minmax(0, 1fr)) !important;
+    gap: 2rem !important;
+  }
+}
+
+@media (min-width: 3200px) {
+  .max-w-7xl {
+    max-width: 3100px !important;
+  }
+  .catalog-grid {
+    grid-template-columns: repeat(7, minmax(0, 1fr)) !important;
+    gap: 2.25rem !important;
+  }
+}
+
+/* High DPI / 4K Crisp Visual Fidelity */
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+  body {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+  img {
+    image-rendering: -webkit-optimize-contrast;
+    image-rendering: high-quality;
+  }
+}
+
+/* Fluid Responsive Mobile Auto-Fit (320px - 480px) */
+@media (max-width: 480px) {
+  .catalog-grid {
+    grid-template-columns: repeat(1, minmax(0, 1fr)) !important;
+    gap: 1rem !important;
+  }
+  .apple-glass {
+    border-radius: 1.25rem !important;
+  }
+}
