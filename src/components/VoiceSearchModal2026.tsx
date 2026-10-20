@@ -302,47 +302,31 @@ export default function VoiceSearchModal2026({
       filter = "top-rated";
     }
 
-    // Category detection (English + Regional terms)
-    if (
-      lower.includes("toy") || lower.includes("stem") || lower.includes("game") || lower.includes("kids") || 
-      lower.includes("khilona") || lower.includes("gun") || lower.includes("bubble") ||
-      lower.includes("ಆಟಿಕೆ") || lower.includes("ಬಬಲ್") || lower.includes("खिलौना") || lower.includes("பொம்மை") || lower.includes("బొమ్మ")
-    ) {
-      category = "Toys & STEM Games";
-    } else if (
-      lower.includes("kitchen") || lower.includes("cook") || lower.includes("cup") || lower.includes("bottle") || 
-      lower.includes("kettle") || lower.includes("chai") || lower.includes("ಕೆಟಲ್") || lower.includes("ಅಡುಗೆ") ||
-      lower.includes("केतली") || lower.includes("रसोई") || lower.includes("கெட்டில்") || lower.includes("சமையல்") ||
-      lower.includes("కెటిల్") || lower.includes("వంట")
-    ) {
-      category = "Kitchen & Home Essentials";
-    } else if (
-      lower.includes("light") || lower.includes("lamp") || lower.includes("decor") || lower.includes("speaker") || 
-      lower.includes("ambient") || lower.includes("ದೀಪ") || lower.includes("लाइट") || lower.includes("விளக்கு") || lower.includes("లైట్")
-    ) {
-      category = "Lifestyle & Ambient Tech";
-    } else if (
-      lower.includes("gadget") || lower.includes("electronic") || lower.includes("vacuum") || lower.includes("smart") || 
-      lower.includes("cleaning") || lower.includes("ವ್ಯಾಕ್ಯೂಮ್") || lower.includes("वैक्यूम") || lower.includes("வாக்யூம்") || lower.includes("వాక్యూమ్")
-    ) {
-      category = "Smart Household Gadgets";
-    } else if (
-      lower.includes("car") || lower.includes("auto") || lower.includes("tool") || lower.includes("drift") || 
-      lower.includes("ಕಾರು") || lower.includes("गाड़ी") || lower.includes("கார்") || lower.includes("కారు")
-    ) {
-      category = "Automotive & Tool Kits";
+    // Explicit Category commands (only if user explicitly mentions 'category' or 'department' or 'section')
+    const isExplicitCategory = lower.includes("category") || lower.includes("section") || lower.includes("department") || lower.includes("collection");
+    if (isExplicitCategory) {
+      if (lower.includes("toy") || lower.includes("stem") || lower.includes("kids")) {
+        category = "Toys & Games";
+      } else if (lower.includes("kitchen") || lower.includes("cook")) {
+        category = "Home & Kitchen";
+      } else if (lower.includes("beauty") || lower.includes("care")) {
+        category = "Beauty & Personal Care";
+      } else if (lower.includes("car") || lower.includes("auto")) {
+        category = "Automotive & Tool Kits";
+      }
     }
 
-    // Clean search text
+    // Clean conversational prefix and suffix while retaining core search keywords
     const cleanQuery = rawText
-      .replace(/find|show|search|me|looking for|products|items|under 150|under 100|high margin|chahiye|dikhao|batao|karo|ತೋರಿಸಿ|ಕೊಡಿ|காட்டு|చూపించు/gi, "")
+      .replace(/^(?:please|can you|could you|i want|i need|show me|find me|search for|search|find|show|looking for|where is|give me|tori|kodi|dikhao|batao)\s+/gi, "")
+      .replace(/\s+(?:products|items|chahiye|dikhao|batao|karo|do|beku|undu|kaatu|chupinchu)$/gi, "")
       .trim();
 
     return {
       query: cleanQuery || rawText,
       category,
       filter,
-      message: `Found matching products for "${rawText}"`,
+      message: `Found matching wholesale items for "${cleanQuery || rawText}"`,
     };
   };
 

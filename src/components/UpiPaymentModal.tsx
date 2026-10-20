@@ -42,6 +42,7 @@ interface UpiPaymentModalProps {
   items: ActiveOrderItem[];
   selectedHotline?: string;
   onTrackOrder?: (orderRef: string) => void;
+  onOpenInvoice?: (orderRef?: string) => void;
   currentUser?: UserProfile | null;
 }
 
@@ -52,6 +53,7 @@ export default function UpiPaymentModal({
   items,
   selectedHotline: _selectedHotline,
   onTrackOrder,
+  onOpenInvoice,
   currentUser,
 }: UpiPaymentModalProps) {
   // Official Authentic Bank & UPI Credentials
@@ -74,6 +76,7 @@ export default function UpiPaymentModal({
   const [paymentStatus, setPaymentStatus] = useState<"idle" | "processing" | "success">("idle");
   const [confirmedFsmState, setConfirmedFsmState] = useState<OrderFsmState>("PENDING_PAYMENT");
   const [idempotencyInfo, setIdempotencyInfo] = useState<string | null>(null);
+  const [invoiceSentStatus, setInvoiceSentStatus] = useState<string | null>(null);
 
   // Stable Order Reference for this checkout session
   const orderRef = useMemo(() => {
@@ -85,6 +88,7 @@ export default function UpiPaymentModal({
     if (isOpen) {
       setPaymentStatus("idle");
       setConfirmedFsmState("PENDING_PAYMENT");
+      setInvoiceSentStatus(null);
 
       const savedEmail = currentUser?.email || localStorage.getItem("1aa_buyer_email") || "";
       const savedPhone = currentUser?.mobile || "";
@@ -457,7 +461,82 @@ export default function UpiPaymentModal({
             </div>
 
             {/* Action Buttons */}
-            <div className="space-y-2 pt-2">
+            <div className="space-y-2.5 pt-2">
+              {/* Real-Time Dispatch Status Toast */}
+              {invoiceSentStatus && (
+                <div className="p-3 rounded-xl bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 text-xs text-center font-medium animate-in fade-in flex items-center justify-center gap-2">
+                  <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-400" />
+                  <span>{invoiceSentStatus}</span>
+                </div>
+              )}
+
+              {/* 1. Official GST Tax Invoice Generator Modal Button */}
+              {onOpenInvoice && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    haptics.selection();
+                    onClose();
+                    onOpenInvoice(orderRef);
+                  }}
+                  className="w-full py-3 px-4 rounded-2xl bg-emerald-500 hover:bg-emerald-400 text-obsidian-950 font-black text-xs uppercase tracking-wider shadow-glow-emerald flex items-center justify-center gap-2 hover:brightness-110 active:scale-98 transition-all cursor-pointer"
+                >
+                  <FileText className="w-4 h-4 text-obsidian-950" />
+                  <span>View / Print Official GST Tax Invoice</span>
+                </button>
+              )}
+
+              {/* 2. Direct WhatsApp Tax Invoice Dispatch */}
+              <button
+                type="button"
+                onClick={() => {
+                  haptics.selection();
+                  const waSummary = `🧾 *OFFICIAL GST TAX INVOICE & DISPATCH RECORD*\n*1AA Wholesale Distributors (Abdul Darvesh)*\n--------------------------------\n*Invoice Ref:* #${orderRef}\n*Axis Bank UTR:* ${utrNumber || 'Verified'}\n*Billed To:* ${customerName} (+91 ${customerPhone || '9876543210'})\n*Total Amount Paid:* ₹${finalAmount.toLocaleString('en-IN')}\n*Items Ordered:* ${items.length} SKUs (${totalUnits} units)\n*Delivery:* Mysore Central Hub Corridor (Express Dispatched)\n--------------------------------\n*Commercial Breakdown:*\n${items.slice(0, 5).map(it => `• ${it.product.name.slice(0, 30)}... x${it.quantity} @ ₹${it.product.fairPrice} = ₹${it.total}`).join('\n')}${items.length > 5 ? `\n• +${items.length - 5} more items...` : ''}\n--------------------------------\n*Authorized Signatory:* Abdul Darvesh\n*Direct Support:* +91 74062 31167`;
+                  const targetPhone = customerPhone.replace(/\D/g, '') || '917406231167';
+                  const waUrl = `https://wa.me/${targetPhone.startsWith('91') ? targetPhone : '91' + targetPhone}?text=${encodeURIComponent(waSummary)}`;
+                  window.open(waUrl, '_blank');
+                  setInvoiceSentStatus("Tax Invoice dispatched to Customer WhatsApp!");
+                }}
+                className="w-full py-2.5 px-4 rounded-xl bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-500/30 text-emerald-300 font-bold text-xs flex items-center justify-center gap-2 transition-all cursor-pointer"
+              >
+                <Phone className="w-4 h-4 text-emerald-400" />
+                <span>Send Official Invoice to Customer WhatsApp</span>
+              </button>
+
+              {/* 3. Re-Send Email Tax Invoice */}
+              <button
+                type="button"
+                onClick={() => {
+                  haptics.selection();
+                  const emailTarget = customerEmail || currentUser?.email || "customer@1aa.store";
+                  const taxableValue = Math.round(finalAmount / 1.18);
+                  const gstValue = finalAmount - taxableValue;
+                  dispatchTransactionalEmail({
+                    type: "INVOICE_COPY",
+                    recipient: emailTarget,
+                    recipientName: customerName,
+                    subject: `GST Tax Invoice INV-${orderRef.replace("1AA-", "")} - 1AA Store`,
+                    htmlContent: generateInvoiceCopyEmailHtml({
+                      orderRef,
+                      invoiceNumber: `INV-${orderRef.replace("1AA-", "")}`,
+                      totalAmount: finalAmount,
+                      taxableAmount: taxableValue,
+                      gstAmount: gstValue,
+                      customerName,
+                      customerGstin: currentUser?.gstin || "URP-CONSUMER",
+                      shippingAddress: `${currentUser?.city || "Mysore"}, PIN: ${currentUser?.pincode || "570001"}`,
+                    }),
+                    orderRef,
+                  });
+                  setInvoiceSentStatus(`Official GST Tax Invoice re-sent to ${emailTarget}!`);
+                }}
+                className="w-full py-2.5 px-4 rounded-xl bg-white/[0.06] hover:bg-white/[0.12] border border-white/15 text-slate-200 font-semibold text-xs flex items-center justify-center gap-2 transition-all cursor-pointer"
+              >
+                <Mail className="w-4 h-4 text-cyan-400" />
+                <span>Email Official GST Tax Invoice Copy</span>
+              </button>
+
+              {/* 4. Live Delivery Radar Tracking */}
               {onTrackOrder && (
                 <button
                   type="button"
@@ -466,23 +545,24 @@ export default function UpiPaymentModal({
                     onClose();
                     onTrackOrder(orderRef);
                   }}
-                  className="w-full py-3 px-4 rounded-2xl bg-gradient-to-r from-brand-orange to-amber-400 text-obsidian-950 font-black text-xs uppercase tracking-wider shadow-glow-orange flex items-center justify-center gap-2 hover:brightness-110 active:scale-98 transition-all cursor-pointer"
+                  className="w-full py-2.5 px-4 rounded-xl bg-gradient-to-r from-brand-orange to-amber-400 text-obsidian-950 font-black text-xs uppercase tracking-wider shadow-glow-orange flex items-center justify-center gap-2 hover:brightness-110 active:scale-98 transition-all cursor-pointer"
                 >
                   <Navigation className="w-4 h-4 text-obsidian-950" />
                   <span>Open Live FSM Delivery Radar / Tracking</span>
                 </button>
               )}
 
+              {/* 5. Print Confirmation Receipt */}
               <button
                 type="button"
                 onClick={() => {
                   haptics.selection();
                   window.print();
                 }}
-                className="w-full py-2.5 px-4 rounded-xl bg-white/[0.06] hover:bg-white/[0.12] border border-white/15 text-slate-200 font-semibold text-xs flex items-center justify-center gap-2 transition-all cursor-pointer"
+                className="w-full py-2 px-4 rounded-xl bg-white/[0.04] hover:bg-white/[0.08] border border-white/10 text-slate-300 font-medium text-xs flex items-center justify-center gap-2 transition-all cursor-pointer"
               >
                 <Printer className="w-4 h-4 text-slate-400" />
-                <span>Print / Save Order Confirmation Receipt</span>
+                <span>Print / Save Confirmation Receipt</span>
               </button>
 
               <button

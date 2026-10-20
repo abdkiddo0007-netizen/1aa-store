@@ -10,7 +10,7 @@ export default defineConfig({
     VitePWA({
       registerType: 'autoUpdate',
       workbox: {
-        maximumFileSizeToCacheInBytes: 15 * 1024 * 1024, // 15 MiB for full offline catalog support
+        maximumFileSizeToCacheInBytes: 35 * 1024 * 1024, // 35 MiB for full offline catalog support
       },
       includeAssets: ['pwa-192x192.png', 'pwa-512x512.png'],
       manifest: {
@@ -34,6 +34,9 @@ export default defineConfig({
       }
     })
   ],
+  build: {
+    chunkSizeWarningLimit: 35000,
+  },
   server: {
     port: 5173,
     host: true,

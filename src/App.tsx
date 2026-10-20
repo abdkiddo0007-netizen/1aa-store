@@ -37,6 +37,7 @@ import { OrderFsmState } from "./types/orderFsm";
 import { CurrencyCode } from "./utils/currency";
 import { handleImgError, getProductImageUrl } from "./utils/imageFallback";
 import { haptics } from "./utils/haptics";
+import { matchWith50PercentAccuracy } from "./utils/fuzzySearch";
 import { 
   ShieldCheck, 
   Phone, 
@@ -642,54 +643,68 @@ export default function OneAAStore() {
     });
   };
 
-  // Filter & Sort Products
+  // Filter & Sort Products with 50% Accuracy Voice & Text Fuzzy Search Engine
   const filteredAndSorted = useMemo(() => {
-    const filtered = liveCatalog.filter((p) => {
-      let matchesCategory = false;
-      if (selectedCategory === "All") {
-        matchesCategory = true;
-      } else if (selectedCategory === "Fresh Arrivals") {
-        matchesCategory = Boolean(
-          p.isFreshArrival ||
-          p.isTrending ||
-          p.tags?.includes("Fresh Arrival") ||
-          p.tags?.includes("New Trending") ||
-          p.highlight?.toLowerCase().includes("fresh arrival") ||
-          p.highlight?.toLowerCase().includes("trending")
-        );
-      } else if (selectedCategory === "Sub-₹100") {
-        matchesCategory = p.baseCost < 100;
-      } else if (selectedCategory === "Under ₹50") {
-        matchesCategory = p.fairPrice <= 50;
-      } else {
-        matchesCategory = p.category === selectedCategory;
-      }
+    const isSearching = search.trim().length > 0;
 
-      const matchesSearch =
-        search.trim() === "" ||
-        p.name.toLowerCase().includes(search.toLowerCase()) ||
-        p.sku.toLowerCase().includes(search.toLowerCase()) ||
-        p.category.toLowerCase().includes(search.toLowerCase()) ||
-        p.highlight.toLowerCase().includes(search.toLowerCase());
+    const scored = liveCatalog
+      .map((p) => {
+        let matchesCategory = false;
+        if (selectedCategory === "All") {
+          matchesCategory = true;
+        } else if (selectedCategory === "Fresh Arrivals") {
+          matchesCategory = Boolean(
+            p.isFreshArrival ||
+            p.isTrending ||
+            p.tags?.includes("Fresh Arrival") ||
+            p.tags?.includes("New Trending") ||
+            p.highlight?.toLowerCase().includes("fresh arrival") ||
+            p.highlight?.toLowerCase().includes("trending")
+          );
+        } else if (selectedCategory === "Sub-₹100") {
+          matchesCategory = p.baseCost < 100;
+        } else if (selectedCategory === "Under ₹50") {
+          matchesCategory = p.fairPrice <= 50;
+        } else {
+          matchesCategory = p.category === selectedCategory;
+        }
 
-      return matchesCategory && matchesSearch;
-    });
+        if (!matchesCategory) return null;
 
-    return filtered.sort((a, b) => {
-      if (sortBy === "savings") {
-        return (b.marketPrice - b.fairPrice) - (a.marketPrice - a.fairPrice);
-      }
-      if (sortBy === "price-asc") {
-        return a.fairPrice - b.fairPrice;
-      }
-      if (sortBy === "price-desc") {
-        return b.fairPrice - a.fairPrice;
-      }
-      if (sortBy === "carton") {
-        return b.cartonSize - a.cartonSize;
-      }
-      return 0; // recommended order
-    });
+        if (!isSearching) {
+          return { product: p, score: 0 };
+        }
+
+        const matchResult = matchWith50PercentAccuracy(search, p);
+        if (matchResult.matched) {
+          return { product: p, score: matchResult.score };
+        }
+        return null;
+      })
+      .filter((item): item is { product: Product; score: number } => item !== null);
+
+    return scored
+      .sort((a, b) => {
+        if (isSearching && sortBy === "recommended") {
+          if (b.score !== a.score) {
+            return b.score - a.score;
+          }
+        }
+        if (sortBy === "savings") {
+          return (b.product.marketPrice - b.product.fairPrice) - (a.product.marketPrice - a.product.fairPrice);
+        }
+        if (sortBy === "price-asc") {
+          return a.product.fairPrice - b.product.fairPrice;
+        }
+        if (sortBy === "price-desc") {
+          return b.product.fairPrice - a.product.fairPrice;
+        }
+        if (sortBy === "carton") {
+          return b.product.cartonSize - a.product.cartonSize;
+        }
+        return 0; // recommended order
+      })
+      .map((item) => item.product);
   }, [search, selectedCategory, sortBy, liveCatalog]);
 
   // Reset pagination on filter or category changes
@@ -2654,6 +2669,10 @@ export default function OneAAStore() {
         items={activeItems}
         selectedHotline={selectedHotline}
         onTrackOrder={handleOpenTracking}
+        onOpenInvoice={() => {
+          setShowUpiModal(false);
+          setShowInvoiceModal(true);
+        }}
         currentUser={currentUser}
       />
 
@@ -2894,9 +2913,19 @@ export default function OneAAStore() {
       <VoiceSearchModal2026
         isOpen={showVoiceModal2026}
         onClose={() => setShowVoiceModal2026(false)}
-        onApplySearch={(query, category) => {
-          if (query) setSearch(query);
-          if (category) setSelectedCategory(category);
+        onApplySearch={(query, category, filter) => {
+          if (query) {
+            setSearch(query);
+            // Default to "All" so the entire 17,880+ catalog is searched freely
+            setSelectedCategory(category || "All");
+          } else if (category) {
+            setSelectedCategory(category);
+          }
+          if (filter === "under-150") {
+            setSelectedCategory("Sub-₹100");
+          } else if (filter === "high-margin") {
+            setSortBy("savings");
+          }
           setShowVoiceModal2026(false);
           const el = document.getElementById("catalog-products-section");
           if (el) {
