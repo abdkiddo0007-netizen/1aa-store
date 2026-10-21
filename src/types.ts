@@ -64,6 +64,9 @@ export interface SavedOrder {
   courierPartner?: string;
   destinationCity?: string;
   currentStage?: number;
+  customerName?: string;
+  customerMobile?: string;
+  customerEmail?: string;
 }
 
 export type TrackingStageStatus = 'completed' | 'in_progress' | 'pending';

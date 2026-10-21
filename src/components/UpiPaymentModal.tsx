@@ -190,6 +190,9 @@ export default function UpiPaymentModal({
         totalUnits,
         deliverySpeed: "standard",
         utrNumber: cleanUtr,
+        customerName: currentUser?.username || "Verified Buyer",
+        customerMobile: currentUser?.mobile || "",
+        customerEmail: currentUser?.email || "",
       };
       const filtered = existing.filter(o => o.orderRef !== orderRef);
       localStorage.setItem("1aa_saved_orders", JSON.stringify([newOrder, ...filtered].slice(0, 25)));

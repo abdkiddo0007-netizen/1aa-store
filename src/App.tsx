@@ -25,6 +25,9 @@ import WholesaleOpsHubModal from "./components/WholesaleOpsHubModal";
 import RestockBundlesModal from "./components/RestockBundlesModal";
 import UserOnboardingModal, { UserProfile } from "./components/UserOnboardingModal";
 import AdminPortal from "./components/AdminPortal";
+import AdminLoginModal from "./components/AdminLoginModal";
+import LanguageSelectorModal from "./components/LanguageSelectorModal";
+import { LanguageCode, SUPPORTED_LANGUAGES, getTranslation } from "./utils/translations";
 import VoiceSearchModal2026 from "./components/VoiceSearchModal2026";
 import ArProductPreviewModal from "./components/ArProductPreviewModal";
 import WhatsAppOrderParserModal from "./components/WhatsAppOrderParserModal";
@@ -46,7 +49,6 @@ import {
   ShoppingBag, 
   CheckCircle2, 
   Sliders, 
-  Layers, 
   Percent, 
   ExternalLink, 
   X,
@@ -78,14 +80,15 @@ import {
   Volume2,
   VolumeX,
   Navigation,
-  Boxes,
   Globe,
   Mic,
   User,
   Rotate3d,
   LogOut,
   Sun,
-  Moon
+  Moon,
+  Trash2,
+  ChevronDown
 } from "lucide-react";
 
 export const CATEGORY_ICONS: Record<string, string> = {
@@ -304,13 +307,37 @@ export default function OneAAStore() {
     }
     return false;
   });
-  const [adminInitialTab, setAdminInitialTab] = useState<"pnl" | "orders" | "inventory" | "deodap-sync" | "forecasting" | "webhooks" | "agentic-ai">("agentic-ai");
+  // Indian Multi-Language Selection Engine (Default locked to English)
+  const [currentLanguage, setCurrentLanguage] = useState<LanguageCode>(() => {
+    if (typeof window !== "undefined") {
+      const saved = localStorage.getItem("1aa_language") as LanguageCode;
+      if (saved && ["en", "hi", "kn", "ta", "te", "ml", "mr", "gu", "bn", "pa", "or"].includes(saved)) {
+        return saved;
+      }
+    }
+    return "en"; // English is locked primary default
+  });
+  const [showLanguageModal, setShowLanguageModal] = useState(false);
+  const [showAdminLoginModal, setShowAdminLoginModal] = useState(false);
 
-  const handleAdminLoginSuccess = (tab: "agentic-ai" | "pnl" | "orders" | "inventory" | "deodap-sync" | "forecasting" | "webhooks" = "agentic-ai") => {
+  const handleSelectLanguage = (lang: LanguageCode) => {
+    setCurrentLanguage(lang);
+    if (typeof window !== "undefined") {
+      localStorage.setItem("1aa_language", lang);
+    }
+    haptics.success();
+  };
+
+  const t = (key: string) => getTranslation(key, currentLanguage);
+
+  const [adminInitialTab, setAdminInitialTab] = useState<"pnl" | "orders" | "comms" | "inventory" | "deodap-sync" | "forecasting" | "webhooks" | "agentic-ai">("agentic-ai");
+
+  const handleAdminLoginSuccess = (tab: "agentic-ai" | "pnl" | "orders" | "comms" | "inventory" | "deodap-sync" | "forecasting" | "webhooks" = "agentic-ai") => {
     setIsAdminLoggedIn(true);
     setAdminInitialTab(tab);
     setAdminPortalActive(true);
     setShowOnboardingModal(false);
+    setShowAdminLoginModal(false);
     haptics.success();
   };
 
@@ -325,7 +352,7 @@ export default function OneAAStore() {
       if (isAdminLoggedIn) {
         setAdminPortalActive(true);
       } else {
-        setShowOnboardingModal(true);
+        setShowAdminLoginModal(true);
       }
     } else {
       haptics.light();
@@ -337,7 +364,7 @@ export default function OneAAStore() {
     const handleAdminKey = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.shiftKey && e.key.toLowerCase() === "a") {
         e.preventDefault();
-        setShowOnboardingModal(true);
+        setShowAdminLoginModal(true);
       }
     };
     window.addEventListener("keydown", handleAdminKey);
@@ -613,8 +640,20 @@ export default function OneAAStore() {
     }));
   };
 
+  const handleClearCart = () => {
+    const hasItems = Object.values(quantities).some(q => q && q > 0);
+    if (!hasItems) return;
+    if (window.confirm("Are you sure you want to clear your cart? All items will be deselected in one go.")) {
+      setQuantities({});
+      if (typeof window !== "undefined") {
+        localStorage.removeItem("1aa_active_manifest");
+      }
+      haptics.success();
+    }
+  };
+
   const clearCart = () => {
-    setQuantities({});
+    handleClearCart();
   };
 
   // Order Metrics Calculation
@@ -623,7 +662,7 @@ export default function OneAAStore() {
     let subtotal = 0;
     let marketValue = 0;
 
-    CATALOG_PRODUCTS.forEach((p) => {
+    liveCatalog.forEach((p) => {
       const q = quantities[p.sku] || 0;
       if (q > 0) {
         units += q;
@@ -677,27 +716,6 @@ export default function OneAAStore() {
     }));
   }, [quantities, liveCatalog]);
 
-  const looseItems = useMemo(() => {
-    return activeItems.filter((i) => i.quantity > 0 && (i.quantity % (i.product.cartonSize || 24)) !== 0);
-  }, [activeItems]);
-
-  const totalCartons = useMemo(() => {
-    return activeItems.reduce((acc, i) => acc + Math.ceil(i.quantity / (i.product.cartonSize || 24)), 0);
-  }, [activeItems]);
-
-  const handleRoundAllToCartons = () => {
-    haptics.success();
-    setQuantities((prev) => {
-      const next = { ...prev };
-      activeItems.forEach((item) => {
-        const carton = item.product.cartonSize || 24;
-        if (item.quantity > 0 && item.quantity % carton !== 0) {
-          next[item.product.sku] = Math.ceil(item.quantity / carton) * carton;
-        }
-      });
-      return next;
-    });
-  };
 
   // Filter & Sort Products with 50% Accuracy Voice & Text Fuzzy Search Engine
   const filteredAndSorted = useMemo(() => {
@@ -1130,6 +1148,25 @@ export default function OneAAStore() {
                 </button>
               </div>
 
+              {/* Multi-Language Indian Selector Pill (Primary locked in English) */}
+              <button
+                onClick={() => {
+                  haptics.selection();
+                  setShowLanguageModal(true);
+                }}
+                className="flex text-xs px-3 py-1.5 rounded-full border border-slate-300 dark:border-white/15 bg-slate-100 dark:bg-white/[0.06] hover:bg-slate-200 dark:hover:bg-white/[0.12] text-slate-700 dark:text-slate-200 font-semibold transition-all items-center gap-1.5 cursor-pointer shadow-sm"
+                title="Select Indian Language (Default Locked to English)"
+              >
+                <Globe className="w-3.5 h-3.5 text-brand-orange" />
+                <span className="hidden md:inline">
+                  {SUPPORTED_LANGUAGES.find((l) => l.code === currentLanguage)?.nativeName || "English"}
+                </span>
+                <span className="md:hidden font-mono text-[11px] font-bold">
+                  {currentLanguage.toUpperCase()}
+                </span>
+                <ChevronDown className="w-3 h-3 text-slate-400" />
+              </button>
+
               {/* Real-time Order & Package Tracking Trigger */}
               <button
                 onClick={() => handleOpenTracking()}
@@ -1386,7 +1423,7 @@ export default function OneAAStore() {
                   <Search className="w-4 h-4 text-slate-400 absolute left-4 top-3.5" />
                   <input
                     type="text"
-                    placeholder={`Search ${liveCatalog.length}+ factory products, SKUs, or voice search (e.g. 'Pig Stand', 'Bajot', 'Diya', 'Brush')...`}
+                    placeholder={t("searchPlaceholder")}
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}
                     className="w-full bg-slate-100 dark:bg-white/[0.06] border border-slate-300 dark:border-white/15 rounded-full pl-11 pr-28 py-3 text-xs sm:text-sm text-slate-900 dark:text-white placeholder-slate-500 dark:placeholder-slate-400 focus:outline-none focus:border-brand-orange focus:ring-1 focus:ring-brand-orange transition-all backdrop-blur-md shadow-inner"
@@ -1417,7 +1454,7 @@ export default function OneAAStore() {
                       aria-label="Real-time voice search"
                     >
                       <Mic className="w-3.5 h-3.5 text-obsidian-950 animate-pulse" />
-                      <span className="font-mono">Voice</span>
+                      <span className="font-mono">{t("voiceSearch")}</span>
                     </button>
                   </div>
                 </div>
@@ -1441,36 +1478,14 @@ export default function OneAAStore() {
                 </div>
               </div>
 
-              {/* Mode Toggle, City Transit SLA, View Density & Sort Dropdown */}
+              {/* Quality Guarantee Badge, City Transit SLA, View Density & Sort Dropdown */}
               <div className="flex items-center gap-2 flex-wrap justify-between lg:justify-end">
-                {/* Retail Sample vs B2B Master Carton Toggle */}
-                <div className="flex items-center p-1 rounded-full bg-slate-100 dark:bg-white/[0.04] border border-slate-300 dark:border-white/10 text-xs">
-                  <button
-                    onClick={() => {
-                      haptics.selection();
-                      setMode("retail");
-                    }}
-                    className={`px-3 py-1 rounded-full text-xs font-bold transition-all cursor-pointer ${
-                      mode === "retail"
-                        ? "bg-brand-orange text-obsidian-950 shadow-glow-orange"
-                        : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
-                    }`}
-                  >
-                    Individual Pcs
-                  </button>
-                  <button
-                    onClick={() => {
-                      haptics.selection();
-                      setMode("b2b");
-                    }}
-                    className={`px-3 py-1 rounded-full text-xs font-bold transition-all cursor-pointer ${
-                      mode === "b2b"
-                        ? "bg-brand-orange text-obsidian-950 shadow-glow-orange"
-                        : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
-                    }`}
-                  >
-                    Master Cartons (B2B)
-                  </button>
+                {/* 1AA Transparent Wholesale Guarantee Badge */}
+                <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-slate-100 dark:bg-white/[0.04] border border-slate-300 dark:border-white/10 text-xs shadow-sm">
+                  <ShieldCheck className="w-3.5 h-3.5 text-brand-orange" />
+                  <span className="font-semibold text-slate-700 dark:text-slate-300">
+                    Flat 20% Margin • 100% Tested
+                  </span>
                 </div>
 
                 {/* City Transit SLA Quick Lookup */}
@@ -1795,90 +1810,56 @@ export default function OneAAStore() {
                     </div>
 
                     {/* Purchasing Controls */}
-                    <div className="p-5 pt-0 space-y-2.5">
-                      {mode === "retail" ? (
-                        <div className="flex items-center gap-2">
-                          <button
-                            onClick={() => {
-                              haptics.medium();
-                              updateQty(product.sku, -1);
-                            }}
-                            disabled={qty === 0}
-                            className="w-9 h-9 rounded-full bg-slate-100 dark:bg-white/[0.06] hover:bg-slate-200 dark:hover:bg-white/[0.12] text-slate-800 dark:text-white font-bold text-sm transition-colors flex items-center justify-center disabled:opacity-30 cursor-pointer"
-                            title="Decrease quantity"
-                          >
-                            -
-                          </button>
-                          
-                          <input
-                            type="number"
-                            min="0"
-                            value={qty === 0 ? "" : qty}
-                            placeholder="0"
-                            onChange={(e) => setDirectQty(product.sku, parseInt(e.target.value) || 0)}
-                            className="flex-1 bg-slate-100 dark:bg-obsidian-950 border border-slate-300 dark:border-white/10 rounded-full h-9 text-center text-xs font-mono text-slate-900 dark:text-white focus:outline-none focus:border-brand-orange"
-                          />
+                    {/* Universal Intuitive Purchasing Controls */}
+                    <div className="p-5 pt-0 space-y-2">
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => {
+                            haptics.medium();
+                            updateQty(product.sku, -1);
+                          }}
+                          disabled={qty === 0}
+                          className="w-9 h-9 rounded-full bg-slate-100 dark:bg-white/[0.06] hover:bg-slate-200 dark:hover:bg-white/[0.12] text-slate-800 dark:text-white font-bold text-sm transition-colors flex items-center justify-center disabled:opacity-30 cursor-pointer shrink-0"
+                          title="Decrease quantity (-1)"
+                        >
+                          -
+                        </button>
+                        
+                        <input
+                          type="number"
+                          min="0"
+                          max="99999"
+                          value={qty === 0 ? "" : qty}
+                          placeholder="0"
+                          onChange={(e) => {
+                            const val = parseInt(e.target.value, 10);
+                            setDirectQty(product.sku, isNaN(val) ? 0 : Math.max(0, val));
+                          }}
+                          className="flex-1 bg-slate-100 dark:bg-obsidian-950 border border-slate-300 dark:border-white/10 rounded-full h-9 text-center text-xs font-mono text-slate-900 dark:text-white focus:outline-none focus:border-brand-orange"
+                          title="Enter exact quantity directly"
+                          aria-label="Quantity"
+                        />
 
-                          <button
-                            onClick={() => {
-                              haptics.medium();
-                              updateQty(product.sku, 1);
-                            }}
-                            className="w-9 h-9 rounded-full bg-brand-orange hover:bg-brand-orange-dark text-obsidian-950 font-black text-sm transition-colors flex items-center justify-center shadow-glow-orange cursor-pointer"
-                            title="Add 1 piece"
-                          >
-                            +
-                          </button>
-                        </div>
-                      ) : (
-                        <div className="space-y-1.5">
-                          {qty === 0 ? (
-                            <button
-                              onClick={() => {
-                                haptics.success();
-                                updateQty(product.sku, product.cartonSize);
-                              }}
-                              className="w-full py-2.5 bg-slate-100 dark:bg-white/[0.06] hover:bg-brand-orange hover:text-obsidian-950 text-xs font-semibold text-slate-800 dark:text-slate-200 rounded-full border border-slate-300 dark:border-white/10 hover:border-brand-orange transition-all flex items-center justify-center gap-2 cursor-pointer"
-                            >
-                              <Layers className="w-3.5 h-3.5 text-brand-orange" />
-                              +1 Master Carton ({product.cartonSize} pcs)
-                            </button>
-                          ) : (
-                            <div className="flex items-center gap-2">
-                              <button
-                                onClick={() => {
-                                  haptics.medium();
-                                  updateQty(product.sku, -product.cartonSize);
-                                }}
-                                className="w-9 h-9 rounded-full bg-slate-100 dark:bg-white/[0.06] hover:bg-slate-200 dark:hover:bg-white/[0.12] text-slate-800 dark:text-white font-bold text-xs transition-colors flex items-center justify-center cursor-pointer"
-                                title={`Remove 1 Carton (-${product.cartonSize} pcs)`}
-                              >
-                                -1b
-                              </button>
-                              <div className="flex-1 bg-slate-100 dark:bg-obsidian-950 border border-brand-orange/40 rounded-full h-9 flex items-center justify-center text-xs font-mono text-brand-orange font-bold">
-                                {Math.round((qty / product.cartonSize) * 10) / 10} Boxes ({qty} pcs)
-                              </div>
-                              <button
-                                onClick={() => {
-                                  haptics.medium();
-                                  updateQty(product.sku, product.cartonSize);
-                                }}
-                                className="w-9 h-9 rounded-full bg-brand-orange hover:bg-brand-orange-dark text-obsidian-950 font-black text-xs transition-colors flex items-center justify-center shadow-glow-orange cursor-pointer"
-                                title={`Add 1 Carton (+${product.cartonSize} pcs)`}
-                              >
-                                +1b
-                              </button>
-                            </div>
-                          )}
-                          <div className="text-[10px] text-center text-slate-500 dark:text-slate-400 font-mono">
-                            Carton Cost: ₹{(product.cartonSize * product.fairPrice).toLocaleString("en-IN")} ({product.cartonSize} pcs/box)
-                          </div>
-                        </div>
-                      )}
+                        <button
+                          onClick={() => {
+                            haptics.medium();
+                            updateQty(product.sku, 1);
+                          }}
+                          className="w-9 h-9 rounded-full bg-brand-orange hover:bg-brand-orange-dark text-obsidian-950 font-black text-sm transition-colors flex items-center justify-center shadow-glow-orange cursor-pointer shrink-0"
+                          title="Increase quantity (+1)"
+                        >
+                          +
+                        </button>
+                      </div>
 
                       {qty > 0 && (
-                        <div className="text-[10px] text-right font-mono text-emerald-600 dark:text-emerald-400 pt-0.5">
-                          Selected: {qty} pcs = ₹{(qty * product.fairPrice).toLocaleString("en-IN")}
+                        <div className="flex items-center justify-between text-[10px] font-mono pt-0.5">
+                          <span className="text-slate-400">
+                            {product.cartonSize ? `~${(qty / product.cartonSize).toFixed(1)} boxes` : "Direct Units"}
+                          </span>
+                          <span className="text-emerald-600 dark:text-emerald-400 font-bold">
+                            Total: ₹{(qty * product.fairPrice).toLocaleString("en-IN")}
+                          </span>
                         </div>
                       )}
                     </div>
@@ -2288,144 +2269,145 @@ export default function OneAAStore() {
         >
           <div className="w-full max-w-md bg-obsidian-900/98 border-l border-white/10 h-full flex flex-col shadow-2xl backdrop-blur-2xl overflow-hidden">
             
-            {/* Sticky Header with Unmissable 44x44 Tactile Close Button */}
+            {/* Sticky Header with Tactile Clear Cart & Close Buttons */}
             <div className="p-4 sm:p-5 border-b border-white/[0.08] flex items-center justify-between shrink-0 bg-obsidian-950/90 backdrop-blur-md">
               <div className="flex items-center gap-2.5">
                 <ShoppingBag className="w-5 h-5 text-brand-orange" />
                 <div>
-                  <h3 className="font-bold text-white text-base leading-tight">Procurement Manifest</h3>
+                  <h3 className="font-bold text-white text-base leading-tight">{t("cartManifest")}</h3>
                   <p className="text-[10px] text-slate-400 font-mono">
-                    {activeItems.length} SKUs • {metrics.units} Units • ~{totalCartons} Cartons
+                    {activeItems.length} {t("items")} • {metrics.units} {t("units")}
                   </p>
                 </div>
               </div>
-              <button
-                type="button"
-                onClick={() => {
-                  haptics.light();
-                  setShowOrderDrawer(false);
-                }}
-                className="w-10 h-10 min-w-[40px] min-h-[40px] rounded-full bg-white/[0.08] hover:bg-white/20 active:scale-95 text-slate-300 hover:text-white flex items-center justify-center border border-white/10 transition-all cursor-pointer shrink-0"
-                title="Close Manifest (Esc)"
-                aria-label="Close Manifest"
-              >
-                <X className="w-5 h-5" />
-              </button>
+
+              <div className="flex items-center gap-2">
+                {activeItems.length > 0 && (
+                  <button
+                    type="button"
+                    onClick={handleClearCart}
+                    className="px-3 py-1.5 rounded-full text-xs font-semibold text-rose-400 hover:text-rose-300 bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/30 flex items-center gap-1.5 transition-all cursor-pointer active:scale-95 shadow-sm"
+                    title="Clear all items in cart in one go"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                    <span>{t("clearCart")}</span>
+                  </button>
+                )}
+                <button
+                  type="button"
+                  onClick={() => {
+                    haptics.light();
+                    setShowOrderDrawer(false);
+                  }}
+                  className="w-10 h-10 min-w-[40px] min-h-[40px] rounded-full bg-white/[0.08] hover:bg-white/20 active:scale-95 text-slate-300 hover:text-white flex items-center justify-center border border-white/10 transition-all cursor-pointer shrink-0"
+                  title="Close Manifest (Esc)"
+                  aria-label="Close Manifest"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
             </div>
 
             {/* Scrollable Middle Body */}
             <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4">
               
-              {/* Master Carton Optimizer Automation Banner */}
-              {looseItems.length > 0 && (
-                <div className="p-3.5 rounded-2xl bg-gradient-to-r from-brand-orange/15 via-amber-500/10 to-brand-orange/15 border border-brand-orange/30 space-y-2 animate-in fade-in duration-300">
-                  <div className="flex items-start justify-between gap-2">
-                    <div className="flex items-center gap-2">
-                      <div className="w-7 h-7 rounded-lg bg-brand-orange/20 border border-brand-orange/40 flex items-center justify-center text-brand-orange shrink-0">
-                        <Boxes className="w-4 h-4" />
-                      </div>
-                      <div>
-                        <div className="text-xs font-bold text-white flex items-center gap-1.5">
-                          <span>Master Carton Assistant</span>
-                          <span className="px-1.5 py-0.2 bg-brand-orange text-obsidian-950 rounded text-[9px] font-black uppercase">
-                            {looseItems.length} Loose
-                          </span>
-                        </div>
-                        <div className="text-[10px] text-slate-300 leading-tight mt-0.5">
-                          Round to factory master cartons to prevent courier transit breakage & guarantee intact box seal.
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  <button
-                    type="button"
-                    onClick={handleRoundAllToCartons}
-                    className="w-full py-2 px-3 rounded-xl bg-gradient-to-r from-brand-orange to-amber-400 hover:brightness-110 active:scale-98 text-obsidian-950 font-black text-xs uppercase tracking-wider flex items-center justify-center gap-1.5 cursor-pointer shadow-glow-orange transition-all"
-                  >
-                    <Zap className="w-3.5 h-3.5 fill-obsidian-950" />
-                    <span>⚡ 1-Click Round All to Full Cartons</span>
-                  </button>
-                </div>
-              )}
-
               {/* Manifest Items Stepper */}
               <div className="space-y-3">
                 {activeItems.length === 0 ? (
                   <div className="py-16 text-center text-slate-400 space-y-3">
                     <ShoppingBag className="w-10 h-10 text-slate-600 mx-auto" />
-                    <p className="text-xs">Your procurement manifest is currently empty.</p>
-                    <p className="text-[10px] text-slate-500">Add products from the catalog to build your order.</p>
+                    <p className="text-xs font-semibold text-white">{t("cartEmpty")}</p>
+                    <p className="text-[10px] text-slate-500">{t("cartEmptySubtitle")}</p>
                   </div>
                 ) : (
-                  activeItems.map((item) => (
-                    <div
-                      key={item.product.id}
-                      className="p-3.5 bg-white/[0.03] rounded-2xl border border-white/[0.06] flex items-center justify-between gap-3 text-xs"
-                    >
-                      <div className="flex-1 min-w-0">
-                        <div className="font-medium text-white truncate">{item.product.name}</div>
-                        <div className="text-[10px] text-brand-orange font-mono pt-0.5">
-                          {item.quantity} x ₹{item.product.fairPrice}
+                  <>
+                    {activeItems.map((item) => (
+                      <div
+                        key={item.product.id}
+                        className="p-3.5 bg-white/[0.03] rounded-2xl border border-white/[0.06] flex items-center justify-between gap-3 text-xs"
+                      >
+                        <div className="flex-1 min-w-0">
+                          <div className="font-semibold text-white truncate">{item.product.name}</div>
+                          <div className="text-[11px] text-brand-orange font-mono pt-0.5">
+                            ₹{item.product.fairPrice} / pc
+                          </div>
                         </div>
-                        {/* Carton alignment tag */}
-                        <div className="pt-1">
-                          {item.quantity % (item.product.cartonSize || 24) === 0 ? (
-                            <span className="inline-flex items-center gap-1 px-1.5 py-0.2 rounded bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 text-[9px] font-mono font-bold">
-                              <CheckCircle2 className="w-2.5 h-2.5" />
-                              {item.quantity / (item.product.cartonSize || 24)} Full Box ({item.product.cartonSize || 24} pcs/box)
-                            </span>
-                          ) : (
+
+                        <div className="flex items-center gap-2">
+                          {/* Normal addition and subtraction + Direct numeric quantity entry */}
+                          <div className="flex items-center gap-1 bg-obsidian-950 rounded-xl border border-white/10 p-1">
                             <button
                               type="button"
                               onClick={() => {
                                 haptics.medium();
-                                const carton = item.product.cartonSize || 24;
-                                const target = Math.ceil(item.quantity / carton) * carton;
-                                setDirectQty(item.product.sku, target);
+                                updateQty(item.product.sku, -1);
                               }}
-                              className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/30 text-amber-300 text-[9px] font-mono font-bold cursor-pointer transition-all active:scale-95"
-                              title={`Round up to full carton (${Math.ceil(item.quantity / (item.product.cartonSize || 24)) * (item.product.cartonSize || 24)} pcs)`}
+                              className="w-6 h-6 rounded-lg text-slate-300 hover:bg-white/[0.1] hover:text-white flex items-center justify-center font-bold text-sm cursor-pointer"
+                              title="Decrease by 1"
                             >
-                              <Boxes className="w-2.5 h-2.5 text-amber-400" />
-                              <span>+{((item.product.cartonSize || 24) - (item.quantity % (item.product.cartonSize || 24)))} pcs for Full Carton</span>
+                              -
                             </button>
-                          )}
-                        </div>
-                      </div>
+                            <input
+                              type="number"
+                              min="1"
+                              max="99999"
+                              value={item.quantity}
+                              onChange={(e) => {
+                                const v = parseInt(e.target.value, 10);
+                                setDirectQty(item.product.sku, isNaN(v) ? 1 : Math.max(1, v));
+                              }}
+                              className="w-12 h-6 text-center font-mono font-bold text-white text-xs bg-transparent border-0 focus:outline-none focus:ring-1 focus:ring-brand-orange rounded"
+                              aria-label="Enter quantity"
+                              title="Type any quantity directly"
+                            />
+                            <button
+                              type="button"
+                              onClick={() => {
+                                haptics.medium();
+                                updateQty(item.product.sku, 1);
+                              }}
+                              className="w-6 h-6 rounded-lg text-slate-300 hover:bg-white/[0.1] hover:text-white flex items-center justify-center font-bold text-sm cursor-pointer"
+                              title="Increase by 1"
+                            >
+                              +
+                            </button>
+                          </div>
 
-                      <div className="flex items-center gap-2.5">
-                        <div className="flex items-center gap-1 bg-obsidian-950 rounded-full border border-white/10 p-0.5">
+                          <div className="text-right font-mono font-bold text-brand-orange min-w-[65px]">
+                            ₹{item.total.toLocaleString("en-IN")}
+                          </div>
+
+                          {/* 1-Click Item Removal */}
                           <button
                             type="button"
                             onClick={() => {
-                              haptics.medium();
-                              updateQty(item.product.sku, -1);
+                              haptics.light();
+                              setDirectQty(item.product.sku, 0);
                             }}
-                            className="w-6 h-6 rounded-full text-slate-300 hover:bg-white/[0.1] flex items-center justify-center font-bold cursor-pointer"
+                            className="w-7 h-7 rounded-full text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 flex items-center justify-center transition-colors cursor-pointer shrink-0"
+                            title="Remove item from cart"
                           >
-                            -
+                            <Trash2 className="w-3.5 h-3.5" />
                           </button>
-                          <span className="w-6 text-center font-mono text-white text-[11px]">
-                            {item.quantity}
-                          </span>
-                          <button
-                            type="button"
-                            onClick={() => {
-                              haptics.medium();
-                              updateQty(item.product.sku, 1);
-                            }}
-                            className="w-6 h-6 rounded-full text-slate-300 hover:bg-white/[0.1] flex items-center justify-center font-bold cursor-pointer"
-                          >
-                            +
-                          </button>
-                        </div>
-                        <div className="text-right font-mono font-bold text-brand-orange min-w-[65px]">
-                          ₹{item.total.toLocaleString("en-IN")}
                         </div>
                       </div>
+                    ))}
+
+                    {/* Secondary 1-Click Clear Cart Row */}
+                    <div className="pt-2 flex justify-between items-center text-xs px-1">
+                      <button
+                        type="button"
+                        onClick={handleClearCart}
+                        className="text-rose-400 hover:text-rose-300 flex items-center gap-1.5 transition-colors cursor-pointer text-[11px] font-semibold"
+                      >
+                        <Trash2 className="w-3 h-3" />
+                        <span>{t("clearCart")}</span>
+                      </button>
+                      <span className="text-[10px] text-slate-400 font-mono">
+                        {activeItems.length} {t("items")} • {metrics.units} {t("units")}
+                      </span>
                     </div>
-                  ))
+                  </>
                 )}
               </div>
 
@@ -3017,6 +2999,21 @@ export default function OneAAStore() {
         onAdminLoginSuccess={handleAdminLoginSuccess}
       />
 
+      {/* --- ALL 11 INDIAN REGIONAL LANGUAGES SELECTOR MODAL --- */}
+      <LanguageSelectorModal
+        isOpen={showLanguageModal}
+        onClose={() => setShowLanguageModal(false)}
+        currentLanguage={currentLanguage}
+        onSelectLanguage={handleSelectLanguage}
+      />
+
+      {/* --- EXECUTIVE ADMIN HQ LOGIN MODAL (1AAadmin / 1AApassword) --- */}
+      <AdminLoginModal
+        isOpen={showAdminLoginModal}
+        onClose={() => setShowAdminLoginModal(false)}
+        onLoginSuccess={() => handleAdminLoginSuccess("agentic-ai")}
+      />
+
       {/* --- 2026 TREND SONIC RADIAL VOICE SEARCH MODAL --- */}
       <VoiceSearchModal2026
         isOpen={showVoiceModal2026}
@@ -3237,7 +3234,7 @@ export default function OneAAStore() {
               <button
                 onClick={() => {
                   haptics.light();
-                  setShowOnboardingModal(true);
+                  setShowAdminLoginModal(true);
                 }}
                 className="hover:text-slate-700 dark:hover:text-slate-300 transition-colors flex items-center gap-1 cursor-pointer opacity-70 hover:opacity-100"
                 title="Authorized Mysore Hub Staff & Administrator Login"

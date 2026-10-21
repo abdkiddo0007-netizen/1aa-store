@@ -31,15 +31,17 @@ import {
   Send,
   Terminal,
   Sparkles,
-  RefreshCw
+  RefreshCw,
+  MessageSquare
 } from "lucide-react";
 import { OWNER_PHONE, OWNER_NAME } from "../utils/notificationMatrix";
 import DeoDapRealtimeSyncPanel from "./DeoDapRealtimeSyncPanel";
+import CustomerCommsDesk from "./CustomerCommsDesk";
 
 interface AdminPortalProps {
   onLogout: () => void;
   onSwitchToStore: () => void;
-  initialTab?: "pnl" | "orders" | "inventory" | "deodap-sync" | "forecasting" | "webhooks" | "agentic-ai";
+  initialTab?: "pnl" | "orders" | "comms" | "inventory" | "deodap-sync" | "forecasting" | "webhooks" | "agentic-ai";
   onOpenOpsHub?: () => void;
 }
 
@@ -49,7 +51,7 @@ export default function AdminPortal({
   initialTab = "agentic-ai",
   onOpenOpsHub
 }: AdminPortalProps) {
-  const [activeTab, setActiveTab] = useState<"pnl" | "orders" | "inventory" | "deodap-sync" | "forecasting" | "webhooks" | "agentic-ai">(initialTab);
+  const [activeTab, setActiveTab] = useState<"pnl" | "orders" | "comms" | "inventory" | "deodap-sync" | "forecasting" | "webhooks" | "agentic-ai">(initialTab);
   const [timeframe, setTimeframe] = useState<"today" | "week" | "month" | "all">("today");
   
   // Real-time catalog overrides synced directly from https://deodap.in
@@ -627,6 +629,21 @@ export default function AdminPortal({
         </button>
 
         <button
+          onClick={() => { haptics.selection(); setActiveTab("comms"); }}
+          className={`px-3.5 py-1.5 rounded-xl text-xs font-bold tracking-wide transition-all flex items-center gap-2 cursor-pointer shrink-0 ${
+            activeTab === "comms"
+              ? "bg-gradient-to-r from-emerald-500 to-green-600 text-obsidian-950 shadow-glow-emerald font-black"
+              : "text-slate-400 hover:text-emerald-300 hover:bg-white/[0.05]"
+          }`}
+        >
+          <MessageSquare className="w-3.5 h-3.5" />
+          <span>Customer Comms & Invoicing Desk</span>
+          <span className="px-1.5 py-0.2 rounded-full bg-emerald-500/20 text-emerald-300 text-[9px] font-mono border border-emerald-500/30">
+            WhatsApp / Email
+          </span>
+        </button>
+
+        <button
           onClick={() => { haptics.selection(); setActiveTab("inventory"); }}
           className={`px-3.5 py-1.5 rounded-xl text-xs font-bold tracking-wide transition-all flex items-center gap-2 cursor-pointer shrink-0 ${
             activeTab === "inventory"
@@ -980,19 +997,32 @@ export default function AdminPortal({
                             </span>
                           </td>
                           <td className="px-5 py-4 text-right whitespace-nowrap">
-                            {stageIdx < 11 ? (
+                            <div className="flex items-center justify-end gap-2">
                               <button
-                                onClick={() => handleAdvanceOrder(ord.orderRef)}
-                                className="px-3 py-1.5 rounded-xl bg-brand-orange/20 hover:bg-brand-orange/30 border border-brand-orange/40 text-brand-orange text-[11px] font-bold flex items-center gap-1.5 ml-auto transition-all cursor-pointer active:scale-95 shadow-sm"
+                                onClick={() => {
+                                  haptics.selection();
+                                  setActiveTab("comms");
+                                }}
+                                className="px-2.5 py-1.5 rounded-xl bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-500/30 text-emerald-300 text-[11px] font-bold flex items-center gap-1 transition-all cursor-pointer"
+                                title="Open WhatsApp Invoice & Communications Desk"
                               >
-                                <span>Advance FSM</span>
-                                <ArrowRight className="w-3.5 h-3.5" />
+                                <MessageSquare className="w-3 h-3 text-emerald-400" />
+                                <span>Invoice / Chat</span>
                               </button>
-                            ) : (
-                              <span className="text-[10px] text-emerald-400 font-mono font-bold">
-                                Completed ✓
-                              </span>
-                            )}
+                              {stageIdx < 11 ? (
+                                <button
+                                  onClick={() => handleAdvanceOrder(ord.orderRef)}
+                                  className="px-3 py-1.5 rounded-xl bg-brand-orange/20 hover:bg-brand-orange/30 border border-brand-orange/40 text-brand-orange text-[11px] font-bold flex items-center gap-1.5 transition-all cursor-pointer active:scale-95 shadow-sm"
+                                >
+                                  <span>Advance FSM</span>
+                                  <ArrowRight className="w-3.5 h-3.5" />
+                                </button>
+                              ) : (
+                                <span className="text-[10px] text-emerald-400 font-mono font-bold">
+                                  Completed ✓
+                                </span>
+                              )}
+                            </div>
                           </td>
                         </tr>
                       );
@@ -1003,6 +1033,13 @@ export default function AdminPortal({
             </div>
 
           </div>
+        )}
+
+        {/* ================================================================ */}
+        {/* TAB: CUSTOMER COMMUNICATIONS & INVOICING DESK                    */}
+        {/* ================================================================ */}
+        {activeTab === "comms" && (
+          <CustomerCommsDesk orders={orders} />
         )}
 
         {/* ================================================================ */}
