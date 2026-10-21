@@ -33,6 +33,7 @@ import {
   OWNER_PHONE,
   OWNER_NAME
 } from "../utils/notificationMatrix";
+import { dcpClient } from "../services/dcpClient";
 import { OrderFsmState } from "../types/orderFsm";
 
 interface UpiPaymentModalProps {
@@ -211,11 +212,30 @@ export default function UpiPaymentModal({
 
       // Broadcast real-time order update event to Admin Portal
       window.dispatchEvent(new Event("1aa:orders_updated"));
+
+      // Asynchronously backup order and invoice to Darvesh Cloud Platform (DCP)
+      const updatedList = [newOrder, ...filtered].slice(0, 50);
+      dcpClient.syncOrders(updatedList).catch(() => {});
+      dcpClient.uploadObject(`orders/${orderRef}.json`, newOrder).catch(() => {});
     } catch {}
 
     // 4. Backend Dispatches: 1AA sends official invoice and receipt to customer
     const taxableValue = Math.round(finalAmount / 1.18);
     const gstValue = finalAmount - taxableValue;
+
+    // Archive formal invoice to DCP Cloud Storage
+    dcpClient.archiveInvoice(orderRef, {
+      orderRef,
+      customerName,
+      customerPhone: currentUser?.mobile,
+      customerEmail: emailToUse,
+      finalAmount,
+      taxableValue,
+      gstValue,
+      items: items.map(i => ({ sku: i.product.sku, name: i.product.name, qty: i.quantity, price: i.product.fairPrice, total: i.total })),
+      utr: cleanUtr,
+      timestamp: new Date().toISOString()
+    }).catch(() => {});
 
     // Dispatches Order Receipt Email
     dispatchTransactionalEmail({

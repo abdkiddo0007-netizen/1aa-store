@@ -240,9 +240,36 @@ export default function UserOnboardingModal({
         }
       }
 
-      // Username not found in registered accounts
-      setError("Account not found. Click 'Create Account' below to choose your password and register.");
-      haptics.error();
+      // Username not found in local cache -> Cross-device check against DCP Cloud Registry!
+      dcpClient.fetchCloudUsers().then(cloudUsers => {
+        if (cloudUsers) {
+          const cloudEntry = cloudUsers[cleanUsername.toLowerCase()];
+          if (cloudEntry) {
+            if (cloudEntry.password === cleanPassword) {
+              setIsSubmitting(true);
+              haptics.success();
+              localStorage.setItem("1aa_user_profile", JSON.stringify(cloudEntry.profile));
+              const localMap = { ...regMap, [cleanUsername.toLowerCase()]: cloudEntry };
+              localStorage.setItem("1aa_registered_users", JSON.stringify(localMap));
+              setTimeout(() => {
+                setIsSubmitting(false);
+                onProfileSaved(cloudEntry.profile);
+                onClose();
+              }, 300);
+              return;
+            } else {
+              setError("Incorrect password. Please verify your credentials or click 'Forgot Password' below.");
+              haptics.error();
+              return;
+            }
+          }
+        }
+        setError("Account not found. Click 'Create Account' below to choose your password and register.");
+        haptics.error();
+      }).catch(() => {
+        setError("Account not found. Click 'Create Account' below to choose your password and register.");
+        haptics.error();
+      });
     } catch {
       setError("Failed to authenticate. Please create a new account.");
     }

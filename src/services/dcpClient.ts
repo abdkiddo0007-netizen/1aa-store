@@ -293,6 +293,61 @@ class DcpClient {
       };
     }
   }
+
+  /**
+   * Fetch all orders from DCP Cloud Ledger
+   */
+  public async fetchCloudOrders(): Promise<any[] | null> {
+    try {
+      const data = await this.getObject<any>("orders/all_orders.json");
+      if (data && Array.isArray(data.orders)) {
+        return data.orders;
+      }
+      return null;
+    } catch {
+      return null;
+    }
+  }
+
+  /**
+   * Fetch all registered users from DCP Cloud
+   */
+  public async fetchCloudUsers(): Promise<Record<string, any> | null> {
+    try {
+      const data = await this.getObject<any>("users_registry.json");
+      if (data && data.users) {
+        return data.users;
+      }
+      return null;
+    } catch {
+      return null;
+    }
+  }
+
+  /**
+   * Fetch single user from DCP Cloud
+   */
+  public async fetchSingleUser(username: string): Promise<any | null> {
+    try {
+      const safeName = username.toLowerCase().replace(/[^a-z0-9_-]/g, "_");
+      return await this.getObject<any>(`users/${safeName}.json`);
+    } catch {
+      return null;
+    }
+  }
+
+  /**
+   * Archive generated GST tax invoice to DCP Cloud Storage
+   */
+  public async archiveInvoice(orderRef: string, invoiceData: any): Promise<boolean> {
+    if (!orderRef) return false;
+    return await this.uploadObject(`invoices/${orderRef}_tax_invoice.json`, {
+      orderRef,
+      archivedAt: new Date().toISOString(),
+      hub: "Mysore Central Hub (570007)",
+      invoice: invoiceData
+    });
+  }
 }
 
 export const dcpClient = new DcpClient();
