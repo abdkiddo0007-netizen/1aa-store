@@ -19,7 +19,8 @@ export interface DcpHealthStatus {
   error?: string;
 }
 
-export const DCP_DEFAULT_URL = "https://birthday-controlling-valve-segment.trycloudflare.com";
+export const DCP_DEFAULT_URL = "https://evanescence-arabia-pro-itself.trycloudflare.com";
+export const DCP_FALLBACK_URL = "https://birthday-controlling-valve-segment.trycloudflare.com";
 export const DCP_LOCAL_URL = "http://localhost:8088";
 export const DCP_STORAGE_BUCKET = "1aa-store";
 
@@ -131,6 +132,7 @@ class DcpClient {
     try {
       const candidates = [
         DCP_DEFAULT_URL,
+        DCP_FALLBACK_URL,
         DCP_LOCAL_URL,
         "http://127.0.0.1:8088",
         "http://darvesh.cloud:8088"
