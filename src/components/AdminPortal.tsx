@@ -32,11 +32,14 @@ import {
   Terminal,
   Sparkles,
   RefreshCw,
-  MessageSquare
+  MessageSquare,
+  Cloud,
+  ExternalLink
 } from "lucide-react";
 import { OWNER_PHONE, OWNER_NAME } from "../utils/notificationMatrix";
 import DeoDapRealtimeSyncPanel from "./DeoDapRealtimeSyncPanel";
 import CustomerCommsDesk from "./CustomerCommsDesk";
+import { dcpClient, DcpHealthStatus } from "../services/dcpClient";
 
 interface AdminPortalProps {
   onLogout: () => void;
@@ -159,11 +162,50 @@ export default function AdminPortal({
     reroute_logistics: false,
     rebate_finance: false
   });
+
+  // Darvesh Cloud Platform (DCP) Live Sovereign Cloud State
+  const [dcpStatus, setDcpStatus] = useState<DcpHealthStatus | null>(null);
+  const [isSyncingDcp, setIsSyncingDcp] = useState(false);
+  const [dcpSyncMsg, setDcpSyncMsg] = useState<string | null>(null);
+
+  useEffect(() => {
+    let mounted = true;
+    const checkDcp = async () => {
+      const res = await dcpClient.checkHealth();
+      if (mounted) setDcpStatus(res);
+    };
+    checkDcp();
+    const interval = setInterval(checkDcp, 45000);
+    return () => {
+      mounted = false;
+      clearInterval(interval);
+    };
+  }, []);
+
+  const handleSyncToDcp = async () => {
+    setIsSyncingDcp(true);
+    setDcpSyncMsg(null);
+    haptics.selection();
+    const result = await dcpClient.pushFullSnapshot();
+    setIsSyncingDcp(false);
+    if (result.success) {
+      haptics.success();
+      setDcpSyncMsg(`✓ Backed up to DCP (${result.stats.ordersCount} orders, ${result.stats.usersCount} users)`);
+      setTimeout(() => setDcpSyncMsg(null), 5000);
+    } else {
+      haptics.error();
+      setDcpSyncMsg(`⚠️ DCP sync deferred: ${result.stats?.error || "Retrying"}`);
+      setTimeout(() => setDcpSyncMsg(null), 5000);
+    }
+  };
+
   const saveOrders = (updated: SavedOrder[]) => {
     setOrders(updated);
     if (typeof window !== "undefined") {
       localStorage.setItem("1aa_saved_orders", JSON.stringify(updated));
       window.dispatchEvent(new Event("1aa:orders_updated"));
+      // Cloud backup to DCP
+      dcpClient.syncOrders(updated).catch(() => {});
     }
   };
 
@@ -554,7 +596,42 @@ export default function AdminPortal({
         </div>
 
         {/* Header Action Buttons */}
-        <div className="flex items-center gap-2.5">
+        <div className="flex items-center gap-2">
+          {/* DCP Cloud Platform Sync & Status */}
+          <div className="flex items-center gap-1.5">
+            <button
+              onClick={handleSyncToDcp}
+              disabled={isSyncingDcp}
+              className={`px-3 py-1.5 rounded-xl border text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer active:scale-95 ${
+                dcpStatus?.connected
+                  ? "bg-cyan-500/15 hover:bg-cyan-500/25 border-cyan-500/30 text-cyan-300 shadow-glow-cyan"
+                  : "bg-white/[0.06] hover:bg-white/[0.12] border-white/10 text-slate-400"
+              }`}
+              title={dcpStatus?.connected ? `Connected to DCP (${dcpStatus.endpoint}) - Click to sync now` : "DCP Sovereign Cloud Sync"}
+            >
+              {isSyncingDcp ? (
+                <RefreshCw className="w-3.5 h-3.5 animate-spin text-cyan-400" />
+              ) : (
+                <Cloud className={`w-3.5 h-3.5 ${dcpStatus?.connected ? "text-cyan-400" : "text-slate-400"}`} />
+              )}
+              <span className="hidden md:inline">
+                {isSyncingDcp ? "Syncing to DCP..." : dcpStatus?.connected ? "DCP Cloud: Online" : "DCP Sync"}
+              </span>
+              {dcpStatus?.connected && (
+                <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse hidden md:inline-block" />
+              )}
+            </button>
+
+            <a
+              href={dcpClient.getEndpoint()}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="p-1.5 rounded-xl bg-white/[0.04] hover:bg-white/[0.1] border border-white/10 text-slate-400 hover:text-cyan-400 text-xs transition-colors cursor-pointer flex items-center justify-center"
+              title="Open Darvesh Cloud Platform (DCP) OS Dashboard in new tab"
+            >
+              <ExternalLink className="w-3.5 h-3.5" />
+            </a>
+          </div>
           {onOpenOpsHub && (
             <button
               onClick={() => {
@@ -598,6 +675,17 @@ export default function AdminPortal({
           </button>
         </div>
       </header>
+
+      {/* --- DCP CLOUD SYNC NOTIFICATION BANNER --- */}
+      {dcpSyncMsg && (
+        <div className="bg-cyan-950/80 border-b border-cyan-500/30 px-4 sm:px-6 py-2 text-xs font-mono text-cyan-200 flex items-center justify-between animate-fade-in">
+          <div className="flex items-center gap-2">
+            <Cloud className="w-4 h-4 text-cyan-400 animate-pulse" />
+            <span>{dcpSyncMsg}</span>
+          </div>
+          <span className="text-[10px] text-cyan-400/80">Darvesh Cloud Platform • Sovereign Storage</span>
+        </div>
+      )}
 
       {/* --- DASHBOARD TAB NAVIGATION BAR --- */}
       <div className="bg-obsidian-900/60 border-b border-white/[0.06] px-4 sm:px-6 py-2 overflow-x-auto scrollbar-none flex items-center gap-2">

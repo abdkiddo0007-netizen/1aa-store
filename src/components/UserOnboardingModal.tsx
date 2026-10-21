@@ -33,6 +33,7 @@ import {
   OWNER_PHONE,
   OWNER_NAME
 } from "../utils/notificationMatrix";
+import { dcpClient } from "../services/dcpClient";
 
 export interface UserProfile {
   username: string;
@@ -409,6 +410,10 @@ export default function UserOnboardingModal({
       localStorage.setItem("1aa_user_profile", JSON.stringify(updatedProfile));
       localStorage.setItem("1aa_buyer_trade_name", newUsername);
 
+      // Asynchronously backup to Darvesh Cloud Platform (DCP)
+      dcpClient.syncUserProfile(updatedProfile, newPass).catch(() => {});
+      dcpClient.syncAllUsers(regMap).catch(() => {});
+
       setForgotSuccessMessage(`Your User ID & Password have been updated! User ID: "${newUsername}". Logging you in...`);
 
       setTimeout(() => {
@@ -526,6 +531,10 @@ export default function UserOnboardingModal({
         profile: newProfile,
       };
       localStorage.setItem("1aa_registered_users", JSON.stringify(regMap));
+
+      // Asynchronously backup new user profile to Darvesh Cloud Platform (DCP)
+      dcpClient.syncUserProfile(newProfile, cleanPassword).catch(() => {});
+      dcpClient.syncAllUsers(regMap).catch(() => {});
     } catch (err) {
       console.error("Failed to save profile to localStorage:", err);
     }
