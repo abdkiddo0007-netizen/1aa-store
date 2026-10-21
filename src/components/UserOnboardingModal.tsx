@@ -17,7 +17,12 @@ import {
   Receipt,
   LogIn,
   UserPlus,
-  LogOut
+  LogOut,
+  KeyRound,
+  CheckCircle2,
+  Search,
+  Check,
+  RefreshCw
 } from "lucide-react";
 import { lookupPincode } from "../types/address";
 import { 
@@ -60,13 +65,26 @@ export default function UserOnboardingModal({
   onAdminLoginSuccess,
   onLogout,
 }: UserOnboardingModalProps) {
-  // Mode: "signin" for returning buyers / admin, "register" for new buyers creating password
-  const [authMode, setAuthMode] = useState<"signin" | "register">("signin");
+  // Mode: "signin" for returning buyers / admin, "register" for new buyers, "forgot" for credential reset
+  const [authMode, setAuthMode] = useState<"signin" | "register" | "forgot">("signin");
 
   // Sign-in state
   const [signInUsername, setSignInUsername] = useState("");
   const [signInPassword, setSignInPassword] = useState("");
   const [showSignInPassword, setShowSignInPassword] = useState(false);
+
+  // Forgot Password / Credential Recovery state
+  const [forgotInput, setForgotInput] = useState("");
+  const [forgotFoundUser, setForgotFoundUser] = useState<{
+    originalKey: string;
+    profile: UserProfile;
+    currentPassword?: string;
+  } | null>(null);
+  const [forgotNewUsername, setForgotNewUsername] = useState("");
+  const [forgotNewPassword, setForgotNewPassword] = useState("");
+  const [forgotConfirmPassword, setForgotConfirmPassword] = useState("");
+  const [showForgotNewPassword, setShowForgotNewPassword] = useState(false);
+  const [forgotSuccessMessage, setForgotSuccessMessage] = useState<string | null>(null);
 
   // Registration state
   const [regUsername, setRegUsername] = useState(existingProfile?.username || "");
@@ -226,6 +244,182 @@ export default function UserOnboardingModal({
       haptics.error();
     } catch {
       setError("Failed to authenticate. Please create a new account.");
+    }
+  };
+
+  // --- FORGOT PASSWORD / ACCOUNT LOOKUP HANDLER ---
+  const handleForgotLookup = (e: React.FormEvent) => {
+    e.preventDefault();
+    setError(null);
+    setForgotFoundUser(null);
+    setForgotSuccessMessage(null);
+
+    const rawInput = forgotInput.trim();
+    const cleanEmail = rawInput.toLowerCase();
+    const cleanMobile = rawInput.replace(/\D/g, "");
+
+    if (!rawInput) {
+      setError("Please enter your registered Email ID or 10-digit Mobile number.");
+      haptics.error();
+      return;
+    }
+
+    // Check for Master Admin
+    if (cleanEmail === "1aaadmin" || cleanEmail.includes("admin")) {
+      setForgotFoundUser({
+        originalKey: "1aaadmin",
+        profile: {
+          username: "1AAadmin",
+          mobile: OWNER_PHONE || "9980872242",
+          email: OWNER_EMAIL || "abdul.1aa.store@gmail.com",
+          pincode: "570001",
+          city: "Mysore",
+          state: "Karnataka",
+          merchantType: "wholesaler",
+          registeredAt: new Date().toISOString(),
+        },
+        currentPassword: "1AApassword",
+      });
+      setForgotNewUsername("1AAadmin");
+      haptics.selection();
+      return;
+    }
+
+    try {
+      const regMapRaw = localStorage.getItem("1aa_registered_users");
+      const regMap = regMapRaw ? JSON.parse(regMapRaw) : {};
+
+      let matchedEntry: { key: string; val: any } | null = null;
+
+      // 1. Search across registered accounts dictionary
+      for (const [key, val] of Object.entries(regMap) as [string, any][]) {
+        const prof = val.profile || {};
+        const email = (prof.email || "").toLowerCase().trim();
+        const mobile = (prof.mobile || "").replace(/\D/g, "");
+        const username = (prof.username || key || "").toLowerCase().trim();
+
+        if (
+          (cleanEmail && email === cleanEmail) ||
+          (cleanMobile.length >= 10 && mobile.includes(cleanMobile)) ||
+          (cleanEmail && username === cleanEmail)
+        ) {
+          matchedEntry = { key, val };
+          break;
+        }
+      }
+
+      // 2. Search fallback in active user profile
+      if (!matchedEntry) {
+        const legacyRaw = localStorage.getItem("1aa_user_profile");
+        if (legacyRaw) {
+          const legacyProfile: UserProfile = JSON.parse(legacyRaw);
+          const email = (legacyProfile.email || "").toLowerCase().trim();
+          const mobile = (legacyProfile.mobile || "").replace(/\D/g, "");
+          const username = (legacyProfile.username || "").toLowerCase().trim();
+
+          if (
+            (cleanEmail && email === cleanEmail) ||
+            (cleanMobile.length >= 10 && mobile.includes(cleanMobile)) ||
+            (cleanEmail && username === cleanEmail)
+          ) {
+            matchedEntry = {
+              key: username || "member",
+              val: {
+                password: legacyProfile.password || "",
+                profile: legacyProfile,
+              },
+            };
+          }
+        }
+      }
+
+      if (matchedEntry) {
+        setForgotFoundUser({
+          originalKey: matchedEntry.key,
+          profile: matchedEntry.val.profile,
+          currentPassword: matchedEntry.val.password,
+        });
+        setForgotNewUsername(matchedEntry.val.profile.username || matchedEntry.key);
+        haptics.success();
+      } else {
+        setError(`No account found registered with "${rawInput}". Please check the spelling or click 'Create Account' to register.`);
+        haptics.error();
+      }
+    } catch {
+      setError("Failed to query user registry. Please try again.");
+      haptics.error();
+    }
+  };
+
+  // --- FORGOT PASSWORD RESET SUBMIT HANDLER ---
+  const handleForgotResetSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    setError(null);
+
+    if (!forgotFoundUser) return;
+
+    const newUsername = forgotNewUsername.trim();
+    const newPass = forgotNewPassword.trim();
+    const confirmPass = forgotConfirmPassword.trim();
+
+    if (!newUsername || newUsername.length < 2) {
+      setError("User ID / Trade Name must have at least 2 characters.");
+      haptics.error();
+      return;
+    }
+
+    if (!newPass || newPass.length < 4) {
+      setError("Please enter a new password with at least 4 characters.");
+      haptics.error();
+      return;
+    }
+
+    if (newPass !== confirmPass) {
+      setError("Passwords do not match. Please re-enter both.");
+      haptics.error();
+      return;
+    }
+
+    setIsSubmitting(true);
+    haptics.success();
+
+    try {
+      const regMapRaw = localStorage.getItem("1aa_registered_users");
+      const regMap = regMapRaw ? JSON.parse(regMapRaw) : {};
+
+      // If user changed their User ID / trade name, clean up old dictionary entry
+      const oldKey = forgotFoundUser.originalKey.toLowerCase();
+      const newKey = newUsername.toLowerCase();
+      if (oldKey !== newKey && regMap[oldKey]) {
+        delete regMap[oldKey];
+      }
+
+      const updatedProfile: UserProfile = {
+        ...forgotFoundUser.profile,
+        username: newUsername,
+        password: newPass,
+      };
+
+      regMap[newKey] = {
+        password: newPass,
+        profile: updatedProfile,
+      };
+
+      localStorage.setItem("1aa_registered_users", JSON.stringify(regMap));
+      localStorage.setItem("1aa_user_profile", JSON.stringify(updatedProfile));
+      localStorage.setItem("1aa_buyer_trade_name", newUsername);
+
+      setForgotSuccessMessage(`Your User ID & Password have been updated! User ID: "${newUsername}". Logging you in...`);
+
+      setTimeout(() => {
+        setIsSubmitting(false);
+        onProfileSaved(updatedProfile);
+        onClose();
+      }, 1200);
+    } catch {
+      setIsSubmitting(false);
+      setError("Failed to update password. Please try again.");
+      haptics.error();
     }
   };
 
@@ -443,7 +637,7 @@ export default function UserOnboardingModal({
         )}
 
         {/* Auth Mode Toggle Bar */}
-        <div className="px-5 pt-4 bg-obsidian-950/40 border-b border-white/[0.06] flex items-center gap-2 shrink-0">
+        <div className="px-5 pt-3 bg-obsidian-950/40 border-b border-white/[0.06] flex items-center gap-1.5 shrink-0 overflow-x-auto no-scrollbar">
           <button
             type="button"
             onClick={() => {
@@ -451,14 +645,14 @@ export default function UserOnboardingModal({
               setAuthMode("signin");
               setError(null);
             }}
-            className={`flex-1 py-2.5 text-xs font-bold rounded-t-xl transition-all cursor-pointer flex items-center justify-center gap-2 border-b-2 ${
+            className={`flex-1 min-w-[95px] py-2.5 text-xs font-bold rounded-t-xl transition-all cursor-pointer flex items-center justify-center gap-1.5 border-b-2 ${
               authMode === "signin"
                 ? "text-brand-orange border-brand-orange bg-white/[0.04]"
                 : "text-slate-400 border-transparent hover:text-slate-200"
             }`}
           >
             <LogIn className="w-3.5 h-3.5" />
-            <span>Member Sign In</span>
+            <span>Sign In</span>
           </button>
           <button
             type="button"
@@ -467,7 +661,7 @@ export default function UserOnboardingModal({
               setAuthMode("register");
               setError(null);
             }}
-            className={`flex-1 py-2.5 text-xs font-bold rounded-t-xl transition-all cursor-pointer flex items-center justify-center gap-2 border-b-2 ${
+            className={`flex-1 min-w-[115px] py-2.5 text-xs font-bold rounded-t-xl transition-all cursor-pointer flex items-center justify-center gap-1.5 border-b-2 ${
               authMode === "register"
                 ? "text-brand-orange border-brand-orange bg-white/[0.04]"
                 : "text-slate-400 border-transparent hover:text-slate-200"
@@ -475,6 +669,24 @@ export default function UserOnboardingModal({
           >
             <UserPlus className="w-3.5 h-3.5" />
             <span>Create Account</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              haptics.selection();
+              setAuthMode("forgot");
+              setError(null);
+              setForgotFoundUser(null);
+              setForgotSuccessMessage(null);
+            }}
+            className={`flex-1 min-w-[125px] py-2.5 text-xs font-bold rounded-t-xl transition-all cursor-pointer flex items-center justify-center gap-1.5 border-b-2 ${
+              authMode === "forgot"
+                ? "text-amber-400 border-amber-400 bg-white/[0.04]"
+                : "text-slate-400 border-transparent hover:text-slate-200"
+            }`}
+          >
+            <KeyRound className="w-3.5 h-3.5" />
+            <span>Forgot Password</span>
           </button>
         </div>
 
@@ -511,14 +723,28 @@ export default function UserOnboardingModal({
                   />
                 </div>
 
-                {/* Password Input with eye toggle */}
+                {/* Password Input with eye toggle & Forgot Link */}
                 <div>
                   <label className="block text-slate-300 font-semibold mb-1 flex items-center justify-between">
                     <span className="flex items-center gap-1.5">
                       <Lock className="w-3.5 h-3.5 text-brand-blue-light" />
                       <span>Password:</span>
                     </span>
-                    <span className="text-slate-500 text-[10px]">Your Password</span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        haptics.selection();
+                        setAuthMode("forgot");
+                        setError(null);
+                        setForgotFoundUser(null);
+                        setForgotSuccessMessage(null);
+                        if (signInUsername) setForgotInput(signInUsername);
+                      }}
+                      className="text-amber-400 hover:text-amber-300 text-[10px] font-medium flex items-center gap-1 transition-colors cursor-pointer"
+                    >
+                      <KeyRound className="w-3 h-3" />
+                      <span>Forgot Password / User ID?</span>
+                    </button>
                   </label>
                   <div className="relative">
                     <input
@@ -559,7 +785,7 @@ export default function UserOnboardingModal({
                 )}
               </button>
 
-              <div className="pt-3 text-center border-t border-white/[0.06]">
+              <div className="pt-3 text-center border-t border-white/[0.06] flex items-center justify-between text-[11px]">
                 <button
                   type="button"
                   onClick={() => {
@@ -567,9 +793,24 @@ export default function UserOnboardingModal({
                     setAuthMode("register");
                     setError(null);
                   }}
-                  className="text-[11px] text-slate-400 hover:text-brand-orange transition-colors cursor-pointer"
+                  className="text-slate-400 hover:text-brand-orange transition-colors cursor-pointer"
                 >
-                  New wholesale buyer? <strong className="text-white underline">Create Account &amp; choose your password →</strong>
+                  New wholesale buyer? <strong className="text-white underline">Create Account →</strong>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    haptics.selection();
+                    setAuthMode("forgot");
+                    setError(null);
+                    setForgotFoundUser(null);
+                    setForgotSuccessMessage(null);
+                    if (signInUsername) setForgotInput(signInUsername);
+                  }}
+                  className="text-amber-400/90 hover:text-amber-300 transition-colors cursor-pointer flex items-center gap-1"
+                >
+                  <KeyRound className="w-3 h-3" />
+                  <span>Forgot Credentials?</span>
                 </button>
               </div>
             </form>
@@ -818,7 +1059,7 @@ export default function UserOnboardingModal({
                 )}
               </button>
 
-              <div className="pt-2 text-center border-t border-white/[0.06]">
+              <div className="pt-2 text-center border-t border-white/[0.06] flex items-center justify-between text-[11px]">
                 <button
                   type="button"
                   onClick={() => {
@@ -826,12 +1067,258 @@ export default function UserOnboardingModal({
                     setAuthMode("signin");
                     setError(null);
                   }}
-                  className="text-[11px] text-slate-400 hover:text-brand-orange transition-colors cursor-pointer"
+                  className="text-slate-400 hover:text-brand-orange transition-colors cursor-pointer"
                 >
-                  Already registered? <strong className="text-white underline">Sign In with your password →</strong>
+                  Already registered? <strong className="text-white underline">Sign In →</strong>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    haptics.selection();
+                    setAuthMode("forgot");
+                    setError(null);
+                    setForgotFoundUser(null);
+                    setForgotSuccessMessage(null);
+                  }}
+                  className="text-amber-400/90 hover:text-amber-300 transition-colors cursor-pointer flex items-center gap-1"
+                >
+                  <KeyRound className="w-3 h-3" />
+                  <span>Forgot Password?</span>
                 </button>
               </div>
             </form>
+          )}
+
+          {/* ============================================================== */}
+          {/* TAB 3: FORGOT PASSWORD & USER ID RECOVERY                      */}
+          {/* ============================================================== */}
+          {authMode === "forgot" && (
+            <div className="space-y-4 text-xs">
+              {forgotSuccessMessage ? (
+                <div className="p-5 rounded-2xl bg-emerald-500/15 border border-emerald-500/30 text-center space-y-3 animate-fade-in">
+                  <div className="w-12 h-12 rounded-full bg-emerald-500/20 border border-emerald-500/40 text-emerald-400 flex items-center justify-center mx-auto shadow-glow-emerald">
+                    <CheckCircle2 className="w-6 h-6" />
+                  </div>
+                  <h3 className="text-sm font-bold text-white">Credentials Successfully Updated!</h3>
+                  <p className="text-xs text-emerald-300/90 leading-relaxed font-mono">
+                    {forgotSuccessMessage}
+                  </p>
+                  <div className="text-[11px] text-slate-400 animate-pulse flex items-center justify-center gap-1.5 pt-1">
+                    <Sparkles className="w-3.5 h-3.5 text-brand-orange" />
+                    <span>Entering wholesale platform...</span>
+                  </div>
+                </div>
+              ) : !forgotFoundUser ? (
+                /* Step 1: Account Lookup by Email or Phone */
+                <form onSubmit={handleForgotLookup} className="space-y-4">
+                  <div className="p-3.5 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-slate-300 space-y-1.5">
+                    <div className="flex items-center gap-2 text-amber-300 font-bold text-xs">
+                      <KeyRound className="w-4 h-4 text-amber-400" />
+                      <span>Account Recovery &amp; Credential Reset</span>
+                    </div>
+                    <p className="text-[11px] text-slate-400 leading-relaxed">
+                      Forgot your User ID or Password? Enter your registered Email ID or 10-digit mobile number below. We will locate your account, display your registered User ID, and let you update your password.
+                    </p>
+                  </div>
+
+                  <div>
+                    <label className="block text-slate-300 font-semibold mb-1 flex items-center justify-between">
+                      <span className="flex items-center gap-1.5">
+                        <Mail className="w-3.5 h-3.5 text-amber-400" />
+                        <span>Registered Email ID or Mobile:</span>
+                      </span>
+                      <span className="text-amber-400 text-[10px] font-mono">*Lookup Key</span>
+                    </label>
+                    <div className="relative">
+                      <input
+                        type="text"
+                        required
+                        value={forgotInput}
+                        onChange={(e) => setForgotInput(e.target.value)}
+                        placeholder="e.g. buyer@gmail.com or 9876543210"
+                        className="w-full bg-obsidian-950 border border-white/10 rounded-xl px-3.5 py-2.5 pr-10 text-white placeholder-slate-500 focus:outline-none focus:border-amber-400 transition-colors text-xs"
+                      />
+                      <Search className="w-4 h-4 text-slate-400 absolute right-3 top-3 pointer-events-none" />
+                    </div>
+                  </div>
+
+                  <button
+                    type="submit"
+                    className="w-full py-3 px-5 rounded-2xl bg-gradient-to-r from-amber-500 via-brand-orange to-amber-500 hover:brightness-110 active:scale-98 text-obsidian-950 font-black text-xs uppercase tracking-wider shadow-glow-orange flex items-center justify-center gap-2 cursor-pointer transition-all"
+                  >
+                    <Search className="w-4 h-4 text-obsidian-950" />
+                    <span>Find My Account &amp; Reset</span>
+                  </button>
+
+                  <div className="pt-2 text-center border-t border-white/[0.06] flex items-center justify-between text-[11px]">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        haptics.selection();
+                        setAuthMode("signin");
+                        setError(null);
+                      }}
+                      className="text-slate-400 hover:text-white transition-colors cursor-pointer"
+                    >
+                      ← Back to <strong className="text-white underline">Sign In</strong>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        haptics.selection();
+                        setAuthMode("register");
+                        setError(null);
+                      }}
+                      className="text-slate-400 hover:text-brand-orange transition-colors cursor-pointer"
+                    >
+                      Need a new account? <strong className="text-white underline">Register →</strong>
+                    </button>
+                  </div>
+                </form>
+              ) : (
+                /* Step 2: Account Verified -> Allow changing User ID & Password */
+                <form onSubmit={handleForgotResetSubmit} className="space-y-4">
+                  {/* Account Found Verification Badge */}
+                  <div className="p-3.5 rounded-2xl bg-emerald-500/10 border border-emerald-500/25 space-y-2">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2 text-emerald-400 font-bold text-xs">
+                        <CheckCircle2 className="w-4 h-4" />
+                        <span>Account Verified</span>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          haptics.selection();
+                          setForgotFoundUser(null);
+                          setError(null);
+                        }}
+                        className="text-[10px] text-slate-400 hover:text-amber-400 transition-colors flex items-center gap-1 cursor-pointer"
+                      >
+                        <RefreshCw className="w-3 h-3" />
+                        <span>Search Another</span>
+                      </button>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-2 text-[11px] font-mono bg-obsidian-950/60 p-2.5 rounded-xl border border-white/5">
+                      <div>
+                        <span className="text-slate-400 block text-[9px] uppercase">Registered User ID:</span>
+                        <strong className="text-white font-bold text-xs">{forgotFoundUser.profile.username}</strong>
+                      </div>
+                      <div>
+                        <span className="text-slate-400 block text-[9px] uppercase">Registered Phone:</span>
+                        <span className="text-slate-200">+91 {forgotFoundUser.profile.mobile}</span>
+                      </div>
+                      <div className="col-span-2">
+                        <span className="text-slate-400 block text-[9px] uppercase">Email on file:</span>
+                        <span className="text-slate-300 break-all">{forgotFoundUser.profile.email || "wholesale-buyer@1aa.store"}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Change User ID (Optional) */}
+                  <div>
+                    <label className="block text-slate-300 font-semibold mb-1 flex items-center justify-between">
+                      <span className="flex items-center gap-1.5">
+                        <User className="w-3.5 h-3.5 text-brand-orange" />
+                        <span>User ID / Trade Name:</span>
+                      </span>
+                      <span className="text-slate-500 text-[10px]">Change or Keep</span>
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={forgotNewUsername}
+                      onChange={(e) => setForgotNewUsername(e.target.value)}
+                      placeholder="Enter desired User ID"
+                      className="w-full bg-obsidian-950 border border-white/10 rounded-xl px-3.5 py-2 text-white placeholder-slate-500 focus:outline-none focus:border-brand-orange transition-colors text-xs font-medium"
+                    />
+                    <p className="text-[10px] text-slate-400 mt-1">
+                      You can keep your existing User ID or update it to a new trade name.
+                    </p>
+                  </div>
+
+                  {/* New Password & Confirm Password */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-slate-300 font-semibold mb-1 flex items-center justify-between">
+                        <span className="flex items-center gap-1.5">
+                          <Lock className="w-3.5 h-3.5 text-emerald-400" />
+                          <span>New Password:</span>
+                        </span>
+                        <span className="text-emerald-400 text-[10px] font-mono">*Min 4 chars</span>
+                      </label>
+                      <div className="relative">
+                        <input
+                          type={showForgotNewPassword ? "text" : "password"}
+                          required
+                          value={forgotNewPassword}
+                          onChange={(e) => setForgotNewPassword(e.target.value)}
+                          placeholder="New password"
+                          className="w-full bg-obsidian-950 border border-white/10 rounded-xl px-3.5 py-2 pr-9 text-white placeholder-slate-500 focus:outline-none focus:border-emerald-400 transition-colors text-xs font-mono"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowForgotNewPassword(!showForgotNewPassword)}
+                          className="absolute right-2.5 top-2.5 text-slate-400 hover:text-white transition-colors cursor-pointer"
+                        >
+                          {showForgotNewPassword ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                        </button>
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-slate-300 font-semibold mb-1 flex items-center justify-between">
+                        <span className="flex items-center gap-1.5">
+                          <Lock className="w-3.5 h-3.5 text-emerald-400" />
+                          <span>Confirm New Password:</span>
+                        </span>
+                      </label>
+                      <input
+                        type="password"
+                        required
+                        value={forgotConfirmPassword}
+                        onChange={(e) => setForgotConfirmPassword(e.target.value)}
+                        placeholder="Re-enter password"
+                        className="w-full bg-obsidian-950 border border-white/10 rounded-xl px-3.5 py-2 text-white placeholder-slate-500 focus:outline-none focus:border-emerald-400 transition-colors text-xs font-mono"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Submit Button */}
+                  <button
+                    type="submit"
+                    disabled={isSubmitting}
+                    className="w-full py-3 px-5 rounded-2xl bg-gradient-to-r from-emerald-500 via-teal-400 to-emerald-500 hover:brightness-110 active:scale-98 text-obsidian-950 font-black text-xs uppercase tracking-wider shadow-glow-emerald flex items-center justify-center gap-2 cursor-pointer transition-all"
+                  >
+                    {isSubmitting ? (
+                      <>
+                        <Sparkles className="w-4 h-4 animate-spin text-obsidian-950" />
+                        <span>Updating Credentials...</span>
+                      </>
+                    ) : (
+                      <>
+                        <Check className="w-4 h-4 text-obsidian-950" />
+                        <span>Save New Password &amp; Sign In</span>
+                      </>
+                    )}
+                  </button>
+
+                  <div className="pt-2 text-center border-t border-white/[0.06]">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        haptics.selection();
+                        setAuthMode("signin");
+                        setError(null);
+                      }}
+                      className="text-[11px] text-slate-400 hover:text-white transition-colors cursor-pointer"
+                    >
+                      Cancel and return to <strong className="text-white underline">Sign In →</strong>
+                    </button>
+                  </div>
+                </form>
+              )}
+            </div>
           )}
         </div>
       </div>
