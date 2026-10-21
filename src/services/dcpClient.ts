@@ -25,6 +25,7 @@ export const DCP_STORAGE_BUCKET = "1aa-store";
 
 class DcpClient {
   private endpoint: string;
+  private isAutoDiscovering: boolean = false;
 
   constructor() {
     if (typeof window !== "undefined") {
@@ -47,15 +48,16 @@ class DcpClient {
   }
 
   /**
-   * Health ping to Darvesh Cloud Platform
+   * Health ping to Darvesh Cloud Platform with auto-discovery fallback
    */
-  public async checkHealth(): Promise<DcpHealthStatus> {
+  public async checkHealth(targetUrl?: string): Promise<DcpHealthStatus> {
+    const urlToTest = targetUrl || this.endpoint;
     const start = Date.now();
     try {
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 6000);
+      const timeoutId = setTimeout(() => controller.abort(), 5000);
 
-      const res = await fetch(`${this.endpoint}/api/public-info`, {
+      const res = await fetch(`${urlToTest}/api/public-info`, {
         signal: controller.signal,
         headers: { "Accept": "application/json" }
       });
@@ -65,9 +67,12 @@ class DcpClient {
 
       if (res.ok) {
         const data = await res.json();
+        if (!targetUrl && urlToTest !== this.endpoint) {
+          this.setEndpoint(urlToTest);
+        }
         return {
           connected: true,
-          endpoint: this.endpoint,
+          endpoint: urlToTest,
           domain: data.domain || "darvesh.cloud",
           latencyMs,
           status: data.status || "LIVE_PUBLIC_OPERATIONAL"
@@ -75,28 +80,75 @@ class DcpClient {
       }
 
       // Try fallback to S3 bucket list
-      const s3Res = await fetch(`${this.endpoint}/api/s3/buckets`);
+      const s3Res = await fetch(`${urlToTest}/api/s3/buckets`);
       if (s3Res.ok) {
+        if (!targetUrl && urlToTest !== this.endpoint) {
+          this.setEndpoint(urlToTest);
+        }
         return {
           connected: true,
-          endpoint: this.endpoint,
+          endpoint: urlToTest,
           domain: "darvesh.cloud",
           latencyMs,
           status: "S3_STORAGE_OPERATIONAL"
         };
       }
 
+      // If primary endpoint failed and we aren't testing a specific target, attempt auto-discovery
+      if (!targetUrl && !this.isAutoDiscovering) {
+        const discovered = await this.discoverWorkingEndpoint();
+        if (discovered) {
+          return discovered;
+        }
+      }
+
       return {
         connected: false,
-        endpoint: this.endpoint,
+        endpoint: urlToTest,
         error: `HTTP ${res.status}: ${res.statusText}`
       };
     } catch (err: any) {
+      if (!targetUrl && !this.isAutoDiscovering) {
+        const discovered = await this.discoverWorkingEndpoint();
+        if (discovered) {
+          return discovered;
+        }
+      }
+
       return {
         connected: false,
-        endpoint: this.endpoint,
+        endpoint: urlToTest,
         error: err.name === "AbortError" ? "Connection timed out" : (err.message || "Failed to reach DCP")
       };
+    }
+  }
+
+  /**
+   * Self-healing discovery: checks candidate endpoints when current endpoint is unreachable
+   */
+  private async discoverWorkingEndpoint(): Promise<DcpHealthStatus | null> {
+    this.isAutoDiscovering = true;
+    try {
+      const candidates = [
+        DCP_DEFAULT_URL,
+        DCP_LOCAL_URL,
+        "http://127.0.0.1:8088",
+        "http://darvesh.cloud:8088"
+      ].filter(c => c !== this.endpoint);
+
+      for (const candidate of candidates) {
+        try {
+          const health = await this.checkHealth(candidate);
+          if (health.connected) {
+            console.log(`[DCP] Self-healing endpoint switch: ${this.endpoint} -> ${candidate}`);
+            this.setEndpoint(candidate);
+            return health;
+          }
+        } catch {}
+      }
+      return null;
+    } finally {
+      this.isAutoDiscovering = false;
     }
   }
 

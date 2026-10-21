@@ -88,8 +88,12 @@ import {
   Sun,
   Moon,
   Trash2,
-  ChevronDown
+  ChevronDown,
+  CloudOff,
+  RefreshCw
 } from "lucide-react";
+import { offlineSyncManager, SyncState } from "./services/offlineSyncManager";
+import { getWhatsAppProductInquiryUrl, getWhatsAppCartOrderUrl, openWhatsAppChat } from "./utils/whatsappB2B";
 
 export const CATEGORY_ICONS: Record<string, string> = {
   "All": "🌐",
@@ -433,6 +437,21 @@ export default function OneAAStore() {
     return () => {
       window.removeEventListener("1aa:catalog_updated", handleCatalogUpdate);
       window.removeEventListener("storage", handleCatalogUpdate);
+    };
+  }, []);
+
+  // Sovereign Offline Sync & DCP Outbox State
+  const [syncState, setSyncState] = useState<SyncState>(() => offlineSyncManager.getState());
+
+  useEffect(() => {
+    const handleSyncChange = (e: any) => {
+      setSyncState(e.detail || offlineSyncManager.getState());
+    };
+    window.addEventListener("1aa:sync_state_changed", handleSyncChange);
+    window.addEventListener("1aa:outbox_synced", handleSyncChange);
+    return () => {
+      window.removeEventListener("1aa:sync_state_changed", handleSyncChange);
+      window.removeEventListener("1aa:outbox_synced", handleSyncChange);
     };
   }, []);
 
@@ -969,6 +988,68 @@ export default function OneAAStore() {
                 <Mail className="w-3 h-3 text-brand-orange" />
                 1aaavailablealways@gmail.com
               </a>
+
+              <span className="text-slate-300 dark:text-white/20 hidden sm:inline">•</span>
+
+              {/* Sovereign DCP Cloud Sync & Offline Outbox Pill */}
+              <button
+                onClick={async () => {
+                  haptics.selection();
+                  if (syncState.pendingCount > 0) {
+                    await offlineSyncManager.flushOutbox();
+                  } else {
+                    await offlineSyncManager.checkDcpConnection();
+                  }
+                }}
+                className={`flex items-center gap-1.5 px-2.5 py-0.5 rounded-full border text-[10px] font-mono font-semibold transition-all cursor-pointer ${
+                  !syncState.isOnline
+                    ? "bg-amber-500/15 border-amber-500/40 text-amber-300 shadow-sm"
+                    : syncState.isSyncing
+                    ? "bg-sky-500/15 border-sky-500/40 text-sky-300 animate-pulse"
+                    : syncState.pendingCount > 0
+                    ? "bg-amber-500/15 border-amber-500/40 text-amber-300"
+                    : syncState.dcpConnected
+                    ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-400"
+                    : "bg-slate-200 dark:bg-white/[0.04] border-slate-300 dark:border-white/10 text-slate-400"
+                }`}
+                title={
+                  !syncState.isOnline
+                    ? "Offline mode active. Orders staged in device outbox will auto-sync to DCP cloud when reconnected."
+                    : syncState.isSyncing
+                    ? "Flushing pending outbox records to Darvesh Cloud Platform..."
+                    : syncState.pendingCount > 0
+                    ? `${syncState.pendingCount} pending items in offline outbox. Tap to sync now.`
+                    : "DCP Cloud Storage & Sovereign Ledger Connected (Tap to probe health)"
+                }
+              >
+                {!syncState.isOnline ? (
+                  <>
+                    <span className="w-1.5 h-1.5 rounded-full bg-amber-400" />
+                    <span>Offline Mode</span>
+                  </>
+                ) : syncState.isSyncing ? (
+                  <>
+                    <RefreshCw className="w-3 h-3 text-sky-400 animate-spin" />
+                    <span>Syncing...</span>
+                  </>
+                ) : syncState.pendingCount > 0 ? (
+                  <>
+                    <CloudOff className="w-3 h-3 text-amber-400" />
+                    <span>Outbox ({syncState.pendingCount})</span>
+                  </>
+                ) : syncState.dcpConnected ? (
+                  <>
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 shadow-glow-emerald" />
+                    <span className="hidden sm:inline">DCP Cloud: Online</span>
+                    <span className="sm:hidden">DCP Cloud</span>
+                  </>
+                ) : (
+                  <>
+                    <span className="w-1.5 h-1.5 rounded-full bg-slate-400" />
+                    <span>DCP Standby</span>
+                  </>
+                )}
+              </button>
             </div>
 
             {/* Right: Personalization, Currency, Sound FX, Dark Mode, Delivery SLA */}
@@ -1862,6 +1943,22 @@ export default function OneAAStore() {
                           </span>
                         </div>
                       )}
+
+                      {/* 1-Click WhatsApp Instant Wholesale Order / Inquiry */}
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          haptics.selection();
+                          const waUrl = getWhatsAppProductInquiryUrl(product, qty > 0 ? qty : 1, currentUser);
+                          openWhatsAppChat(waUrl);
+                        }}
+                        className="w-full py-1.5 px-2 rounded-xl bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/25 text-emerald-600 dark:text-emerald-400 text-[11px] font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer group active:scale-98 shadow-sm"
+                        title="Chat directly with Abdul Darvesh on WhatsApp for bulk order & dispatch"
+                      >
+                        <Phone className="w-3.5 h-3.5 text-emerald-500 group-hover:scale-110 transition-transform" />
+                        <span>Order via WhatsApp {qty > 0 ? `(${qty} pcs)` : ""}</span>
+                      </button>
                     </div>
                   </div>
                 );
@@ -2636,6 +2733,19 @@ export default function OneAAStore() {
                     <FileText className="w-3.5 h-3.5 text-brand-orange" />
                     <span>Pro-Forma</span>
                   </button>
+
+                  {/* 1-Click Direct WhatsApp PO to Abdul Darvesh */}
+                  <a
+                    href={getWhatsAppCartOrderUrl(activeItems, metrics, currentUser)}
+                    target="_blank"
+                    rel="noreferrer"
+                    onClick={() => haptics.selection()}
+                    className="py-2 px-3 rounded-full bg-emerald-500 hover:bg-emerald-400 text-obsidian-950 font-black text-xs transition-all flex items-center justify-center gap-1.5 shadow-glow-emerald cursor-pointer active:scale-95"
+                    title="Send Purchase Order directly to Abdul Darvesh on WhatsApp"
+                  >
+                    <Phone className="w-3.5 h-3.5 fill-obsidian-950" />
+                    <span>Order via WhatsApp</span>
+                  </a>
 
                   <a
                     href={`https://wa.me/?text=${encodeURIComponent(

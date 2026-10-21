@@ -16,7 +16,9 @@ import {
   Sparkles,
   Printer,
   Layers,
-  Phone
+  Phone,
+  Cloud,
+  CloudOff
 } from "lucide-react";
 import { ActiveOrderItem, SavedOrder } from "../types";
 import { haptics } from "../utils/haptics";
@@ -34,6 +36,7 @@ import {
   OWNER_NAME
 } from "../utils/notificationMatrix";
 import { dcpClient } from "../services/dcpClient";
+import { offlineSyncManager } from "../services/offlineSyncManager";
 import { OrderFsmState } from "../types/orderFsm";
 
 interface UpiPaymentModalProps {
@@ -78,6 +81,7 @@ export default function UpiPaymentModal({
   const [confirmedFsmState, setConfirmedFsmState] = useState<OrderFsmState>("PENDING_PAYMENT");
   const [idempotencyInfo, setIdempotencyInfo] = useState<string | null>(null);
   const [invoiceSentStatus, setInvoiceSentStatus] = useState<string | null>(null);
+  const [dcpSyncState, setDcpSyncState] = useState<"synced" | "queued_offline" | "syncing">("syncing");
 
   // Stable Order Reference for this checkout session
   const orderRef = useMemo(() => {
@@ -213,13 +217,45 @@ export default function UpiPaymentModal({
       // Broadcast real-time order update event to Admin Portal
       window.dispatchEvent(new Event("1aa:orders_updated"));
 
-      // Asynchronously backup order and invoice to Darvesh Cloud Platform (DCP)
-      const updatedList = [newOrder, ...filtered].slice(0, 50);
-      dcpClient.syncOrders(updatedList).catch(() => {});
-      dcpClient.uploadObject(`orders/${orderRef}.json`, newOrder).catch(() => {});
+      // 4. Backend Dispatches: 1AA sends official invoice and receipt to customer
+      const taxableValue = Math.round(finalAmount / 1.18);
+      const gstValue = finalAmount - taxableValue;
+
+      const invoiceData = {
+        orderRef,
+        customerName,
+        customerPhone: currentUser?.mobile,
+        customerEmail: emailToUse,
+        finalAmount,
+        taxableValue,
+        gstValue,
+        items: items.map(i => ({ sku: i.product.sku, name: i.product.name, qty: i.quantity, price: i.product.fairPrice, total: i.total })),
+        utr: cleanUtr,
+        timestamp: new Date().toISOString()
+      };
+
+      // Queue into Sovereign Offline Outbox (guarantees zero data loss even if offline)
+      offlineSyncManager.queueOrder(newOrder, invoiceData);
+
+      // Probe live DCP upload
+      if (offlineSyncManager.isOnline()) {
+        const updatedList = [newOrder, ...filtered].slice(0, 50);
+        dcpClient.syncOrders(updatedList).catch(() => {});
+        dcpClient.uploadObject(`orders/${orderRef}.json`, newOrder).then((ok) => {
+          if (ok) {
+            setDcpSyncState("synced");
+            dcpClient.archiveInvoice(orderRef, invoiceData).catch(() => {});
+          } else {
+            setDcpSyncState("queued_offline");
+          }
+        }).catch(() => {
+          setDcpSyncState("queued_offline");
+        });
+      } else {
+        setDcpSyncState("queued_offline");
+      }
     } catch {}
 
-    // 4. Backend Dispatches: 1AA sends official invoice and receipt to customer
     const taxableValue = Math.round(finalAmount / 1.18);
     const gstValue = finalAmount - taxableValue;
 
@@ -478,6 +514,38 @@ export default function UpiPaymentModal({
                   </div>
                   <p className="text-[11px] text-slate-400 mt-0.5">
                     Outgoing message from 1AA Central Desk (Abdul Darvesh) queued to customer mobile (+91 {customerPhone || "registered"}).
+                  </p>
+                </div>
+              </div>
+
+              {/* Sovereign DCP Cloud Ledger & Outbox Status Card */}
+              <div className={`p-3.5 rounded-xl border flex items-start gap-3 text-xs transition-all ${
+                dcpSyncState === "synced"
+                  ? "bg-emerald-500/10 border-emerald-500/30"
+                  : "bg-amber-500/10 border-amber-500/30"
+              }`}>
+                <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 border ${
+                  dcpSyncState === "synced"
+                    ? "bg-emerald-500/20 border-emerald-500/40 text-emerald-400"
+                    : "bg-amber-500/20 border-amber-500/40 text-amber-300"
+                }`}>
+                  {dcpSyncState === "synced" ? <Cloud className="w-4 h-4" /> : <CloudOff className="w-4 h-4" />}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="font-bold text-white flex items-center justify-between">
+                    <span>Sovereign Cloud Ledger (DCP)</span>
+                    <span className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded-full ${
+                      dcpSyncState === "synced"
+                        ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30"
+                        : "bg-amber-500/20 text-amber-300 border border-amber-500/30"
+                    }`}>
+                      {dcpSyncState === "synced" ? "SYNCED TO DCP S3" : "QUEUED IN OFFLINE OUTBOX"}
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-slate-300 mt-0.5 leading-relaxed">
+                    {dcpSyncState === "synced"
+                      ? `Order #${orderRef} & formal GST tax invoice archived in real-time to s3://1aa-store/orders/ on Darvesh Cloud Platform.`
+                      : `Offline mode active: Order stored safely in device outbox. Will auto-sync to Darvesh Cloud Platform the moment internet is reconnected.`}
                   </p>
                 </div>
               </div>

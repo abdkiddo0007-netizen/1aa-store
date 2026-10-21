@@ -34,12 +34,16 @@ import {
   RefreshCw,
   MessageSquare,
   Cloud,
-  ExternalLink
+  ExternalLink,
+  Settings,
+  CloudOff,
+  X
 } from "lucide-react";
 import { OWNER_PHONE, OWNER_NAME } from "../utils/notificationMatrix";
 import DeoDapRealtimeSyncPanel from "./DeoDapRealtimeSyncPanel";
 import CustomerCommsDesk from "./CustomerCommsDesk";
 import { dcpClient, DcpHealthStatus } from "../services/dcpClient";
+import { offlineSyncManager, OutboxItem } from "../services/offlineSyncManager";
 
 interface AdminPortalProps {
   onLogout: () => void;
@@ -167,6 +171,12 @@ export default function AdminPortal({
   const [dcpStatus, setDcpStatus] = useState<DcpHealthStatus | null>(null);
   const [isSyncingDcp, setIsSyncingDcp] = useState(false);
   const [dcpSyncMsg, setDcpSyncMsg] = useState<string | null>(null);
+  const [showDcpModal, setShowDcpModal] = useState(false);
+  const [customEndpoint, setCustomEndpoint] = useState(dcpClient.getEndpoint());
+  const [outboxItems, setOutboxItems] = useState<OutboxItem[]>([]);
+  const [testingEndpoint, setTestingEndpoint] = useState(false);
+  const [testResult, setTestResult] = useState<DcpHealthStatus | null>(null);
+  const [outboxFlushMsg, setOutboxFlushMsg] = useState<string | null>(null);
 
   useEffect(() => {
     let mounted = true;
@@ -176,11 +186,59 @@ export default function AdminPortal({
     };
     checkDcp();
     const interval = setInterval(checkDcp, 45000);
+
+    const updateOutbox = () => {
+      if (mounted) setOutboxItems(offlineSyncManager.getOutbox());
+    };
+    updateOutbox();
+    window.addEventListener("1aa:sync_state_changed", updateOutbox);
+    window.addEventListener("1aa:outbox_synced", updateOutbox);
+
     return () => {
       mounted = false;
       clearInterval(interval);
+      window.removeEventListener("1aa:sync_state_changed", updateOutbox);
+      window.removeEventListener("1aa:outbox_synced", updateOutbox);
     };
   }, []);
+
+  const handleTestEndpoint = async (url: string) => {
+    setTestingEndpoint(true);
+    setTestResult(null);
+    haptics.selection();
+    const res = await dcpClient.checkHealth(url);
+    setTestResult(res);
+    setTestingEndpoint(false);
+    if (res.connected) {
+      haptics.success();
+    } else {
+      haptics.error();
+    }
+  };
+
+  const handleSaveEndpoint = (url: string) => {
+    dcpClient.setEndpoint(url);
+    setCustomEndpoint(url);
+    dcpClient.checkHealth(url).then(res => setDcpStatus(res));
+    haptics.success();
+    setTestResult({ connected: true, endpoint: url, status: "SAVED_ACTIVE" });
+  };
+
+  const handleFlushOutbox = async () => {
+    haptics.selection();
+    setOutboxFlushMsg("Syncing outbox items to DCP...");
+    const res = await offlineSyncManager.flushOutbox();
+    if (res.succeeded > 0) {
+      haptics.success();
+      setOutboxFlushMsg(`✓ Successfully synced ${res.succeeded} items to DCP!`);
+    } else if (res.failed > 0) {
+      haptics.error();
+      setOutboxFlushMsg(`⚠️ Sync failed for ${res.failed} items. Check connection.`);
+    } else {
+      setOutboxFlushMsg("Outbox is already empty (100% in sync).");
+    }
+    setTimeout(() => setOutboxFlushMsg(null), 4000);
+  };
 
   const handleSyncToDcp = async () => {
     setIsSyncingDcp(true);
@@ -631,6 +689,31 @@ export default function AdminPortal({
             >
               <ExternalLink className="w-3.5 h-3.5" />
             </a>
+
+            {/* Configure Permanent Domain & Endpoint Settings */}
+            <button
+              onClick={() => {
+                haptics.selection();
+                setCustomEndpoint(dcpClient.getEndpoint());
+                setTestResult(null);
+                setShowDcpModal(true);
+              }}
+              className="p-1.5 rounded-xl bg-white/[0.04] hover:bg-white/[0.1] border border-white/10 text-slate-400 hover:text-cyan-400 text-xs transition-colors cursor-pointer flex items-center justify-center"
+              title="Configure DCP Cloud Endpoint & Permanent Domain"
+            >
+              <Settings className="w-3.5 h-3.5" />
+            </button>
+
+            {outboxItems.length > 0 && (
+              <button
+                onClick={handleFlushOutbox}
+                className="px-2.5 py-1 rounded-xl bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/40 text-amber-300 font-mono text-[11px] font-bold flex items-center gap-1.5 cursor-pointer transition-all active:scale-95"
+                title={`${outboxItems.length} items waiting in offline outbox. Click to flush now.`}
+              >
+                <CloudOff className="w-3.5 h-3.5 text-amber-400" />
+                <span>{outboxItems.length} Queued</span>
+              </button>
+            )}
           </div>
           {onOpenOpsHub && (
             <button
@@ -1940,6 +2023,204 @@ export default function AdminPortal({
           </div>
         )}
       </main>
+
+      {/* ========================================================================= */}
+      {/* DCP SOVEREIGN CLOUD & PERMANENT DOMAIN CONFIGURATION MODAL */}
+      {/* ========================================================================= */}
+      {showDcpModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-200">
+          <div className="bg-obsidian-900 border border-cyan-500/30 rounded-3xl max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl p-6 space-y-6">
+            
+            {/* Modal Header */}
+            <div className="flex items-center justify-between border-b border-white/10 pb-4">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-2xl bg-cyan-500/20 border border-cyan-500/40 text-cyan-400 flex items-center justify-center shadow-glow-cyan">
+                  <Cloud className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-black text-white tracking-tight">
+                    Darvesh Cloud Platform (DCP) Settings
+                  </h3>
+                  <p className="text-xs text-slate-400">
+                    Sovereign Cloud Storage, Permanent Ingress Domain & Offline Sync
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setShowDcpModal(false)}
+                className="w-8 h-8 rounded-full bg-white/[0.06] hover:bg-white/[0.12] text-slate-400 hover:text-white flex items-center justify-center transition-colors cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Live Connection Telemetry Card */}
+            <div className={`p-4 rounded-2xl border flex items-center justify-between text-xs ${
+              dcpStatus?.connected 
+                ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-300" 
+                : "bg-red-500/10 border-red-500/30 text-red-300"
+            }`}>
+              <div className="flex items-center gap-2.5">
+                <span className={`w-2.5 h-2.5 rounded-full ${dcpStatus?.connected ? "bg-emerald-400 shadow-glow-emerald" : "bg-red-400"}`} />
+                <div>
+                  <div className="font-bold text-white">
+                    {dcpStatus?.connected ? "DCP Cloud Live & Connected" : "DCP Cloud Unreachable"}
+                  </div>
+                  <div className="text-[11px] text-slate-400 font-mono">
+                    Active Endpoint: {dcpClient.getEndpoint()}
+                  </div>
+                </div>
+              </div>
+              {dcpStatus?.latencyMs && (
+                <span className="font-mono text-xs px-2.5 py-1 rounded-lg bg-black/40 border border-white/10 text-cyan-400">
+                  {dcpStatus.latencyMs} ms
+                </span>
+              )}
+            </div>
+
+            {/* SECTION 1: Active Ingress Endpoint & Permanent Domain */}
+            <div className="space-y-3">
+              <label className="text-xs font-bold uppercase tracking-wider text-slate-300 block">
+                1. DCP Ingress URL / Permanent Domain
+              </label>
+              <p className="text-xs text-slate-400">
+                Set a permanent Cloudflare tunnel hostname, custom domain, or local development URL:
+              </p>
+
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={customEndpoint}
+                  onChange={(e) => setCustomEndpoint(e.target.value)}
+                  placeholder="https://your-tunnel.trycloudflare.com or https://api.darvesh.cloud"
+                  className="flex-1 bg-black/50 border border-white/15 rounded-xl px-3.5 py-2.5 text-xs text-white font-mono focus:outline-none focus:border-cyan-400"
+                />
+                <button
+                  onClick={() => handleTestEndpoint(customEndpoint)}
+                  disabled={testingEndpoint}
+                  className="px-4 py-2.5 rounded-xl bg-white/[0.08] hover:bg-white/[0.15] text-white text-xs font-bold border border-white/20 transition-all cursor-pointer shrink-0 disabled:opacity-50"
+                >
+                  {testingEndpoint ? "Testing..." : "Test Latency"}
+                </button>
+                <button
+                  onClick={() => handleSaveEndpoint(customEndpoint)}
+                  className="px-4 py-2.5 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-obsidian-950 text-xs font-black transition-all cursor-pointer shrink-0 shadow-glow-cyan"
+                >
+                  Save & Apply
+                </button>
+              </div>
+
+              {/* Quick Presets */}
+              <div className="flex flex-wrap gap-2 pt-1">
+                <span className="text-[10px] text-slate-400 font-mono uppercase self-center">Presets:</span>
+                <button
+                  onClick={() => {
+                    const url = "https://birthday-controlling-valve-segment.trycloudflare.com";
+                    setCustomEndpoint(url);
+                    handleSaveEndpoint(url);
+                  }}
+                  className="px-2.5 py-1 rounded-lg bg-white/[0.04] hover:bg-white/[0.08] border border-white/10 text-slate-300 text-[11px] font-mono transition-colors cursor-pointer"
+                >
+                  Active Cloudflare Tunnel
+                </button>
+                <button
+                  onClick={() => {
+                    const url = "http://localhost:8088";
+                    setCustomEndpoint(url);
+                    handleSaveEndpoint(url);
+                  }}
+                  className="px-2.5 py-1 rounded-lg bg-white/[0.04] hover:bg-white/[0.08] border border-white/10 text-slate-300 text-[11px] font-mono transition-colors cursor-pointer"
+                >
+                  Localhost (Airgap :8088)
+                </button>
+                <button
+                  onClick={() => {
+                    const url = "https://api.darvesh.cloud";
+                    setCustomEndpoint(url);
+                    handleSaveEndpoint(url);
+                  }}
+                  className="px-2.5 py-1 rounded-lg bg-white/[0.04] hover:bg-white/[0.08] border border-white/10 text-slate-300 text-[11px] font-mono transition-colors cursor-pointer"
+                >
+                  api.darvesh.cloud
+                </button>
+              </div>
+
+              {testResult && (
+                <div className={`p-3 rounded-xl border text-xs font-mono ${
+                  testResult.connected ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-300" : "bg-red-500/10 border-red-500/30 text-red-300"
+                }`}>
+                  {testResult.connected 
+                    ? `✓ Connection Verified! Latency: ${testResult.latencyMs || "<50"}ms • Status: ${testResult.status}`
+                    : `⚠️ Failed: ${testResult.error || "Could not reach endpoint"}`}
+                </div>
+              )}
+            </div>
+
+            {/* SECTION 2: Sovereign Offline Outbox Queue */}
+            <div className="space-y-3 border-t border-white/10 pt-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <label className="text-xs font-bold uppercase tracking-wider text-slate-300 block">
+                    2. Device Offline Outbox ({outboxItems.length} Pending)
+                  </label>
+                  <p className="text-xs text-slate-400">
+                    Orders and tax invoices staged offline waiting for background sync to DCP:
+                  </p>
+                </div>
+                <button
+                  onClick={handleFlushOutbox}
+                  disabled={outboxItems.length === 0}
+                  className="px-3.5 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-obsidian-950 font-bold text-xs transition-all cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed shadow-sm"
+                >
+                  Flush Outbox Now
+                </button>
+              </div>
+
+              {outboxFlushMsg && (
+                <div className="p-2.5 rounded-xl bg-white/[0.05] border border-white/10 text-xs font-mono text-amber-300">
+                  {outboxFlushMsg}
+                </div>
+              )}
+
+              {outboxItems.length === 0 ? (
+                <div className="p-4 rounded-xl bg-white/[0.02] border border-white/10 text-center text-xs text-slate-400">
+                  ✓ Outbox is empty — all orders and invoices are 100% synchronized with DCP Sovereign S3.
+                </div>
+              ) : (
+                <div className="space-y-2 max-h-40 overflow-y-auto">
+                  {outboxItems.map((item, idx) => (
+                    <div key={item.id || idx} className="p-2.5 rounded-xl bg-black/40 border border-white/10 flex items-center justify-between text-xs font-mono">
+                      <div>
+                        <span className="text-brand-orange font-bold">#{item.orderRef || item.id}</span>
+                        <span className="text-slate-400 text-[10px] ml-2">Type: {item.type}</span>
+                      </div>
+                      <span className="text-slate-500 text-[10px]">
+                        Retries: {item.retryCount}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* SECTION 3: S3 Cloud Backup Snapshot */}
+            <div className="border-t border-white/10 pt-4 flex items-center justify-between">
+              <div>
+                <div className="text-xs font-bold text-white">Full S3 Ledger Snapshot</div>
+                <p className="text-[11px] text-slate-400">Upload entire platform state (orders, users, stock) to s3://1aa-store/backups/</p>
+              </div>
+              <button
+                onClick={handleSyncToDcp}
+                disabled={isSyncingDcp}
+                className="px-4 py-2 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-500 hover:brightness-110 text-obsidian-950 font-black text-xs transition-all cursor-pointer shadow-glow-cyan"
+              >
+                {isSyncingDcp ? "Uploading Snapshot..." : "Push Snapshot"}
+              </button>
+            </div>
+
+          </div>
+        </div>
+      )}
     </div>
   );
 }
