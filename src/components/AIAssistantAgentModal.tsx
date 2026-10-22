@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import { CATALOG_PRODUCTS } from "../data/catalog";
 import { Product } from "../types";
 import { haptics } from "../utils/haptics";
+import { dcpClient } from "../services/dcpClient";
 import { 
   X, 
   Send, 
@@ -114,7 +115,7 @@ export default function AIAssistantAgentModal({
   const [speakingId, setSpeakingId] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<"modal" | "docked">("modal");
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [selectedModel, setSelectedModel] = useState<"gpt-4.5" | "deepseek-r1" | "gemini-flash">("gpt-4.5");
+  const [selectedModel, setSelectedModel] = useState<"dcp-darvesh-3.8" | "gpt-4.5" | "deepseek-r1" | "gemini-flash">("dcp-darvesh-3.8");
   const [isMicListening, setIsMicListening] = useState(false);
 
   const getWelcomeText = () => {
@@ -566,7 +567,7 @@ export default function AIAssistantAgentModal({
     return { text: replyText, suggestedProducts: suggested, actionType: action, transitInfo, calcResult };
   };
 
-  const handleSend = (textToSend?: string) => {
+  const handleSend = async (textToSend?: string) => {
     const query = textToSend || input;
     if (!query.trim()) return;
 
@@ -583,22 +584,43 @@ export default function AIAssistantAgentModal({
     setInput("");
     setIsTyping(true);
 
+    const localResult = processQuery(query);
+    let replyText = localResult.text || "";
+    let isDcp = false;
+
+    if (selectedModel === "dcp-darvesh-3.8") {
+      try {
+        const dcpResponse = await dcpClient.queryDcpAi(query);
+        if (dcpResponse && dcpResponse.text) {
+          replyText = `${dcpResponse.text}\n\n*🧠 Powered by Darvesh Cloud Platform (DCP) Sovereign AI • darvesh-3.8-flash*`;
+          isDcp = true;
+        }
+      } catch (err) {
+        console.warn("DCP AI Query error, falling back to local sourcing rules:", err);
+      }
+    }
+
+    if (!isDcp && !replyText) {
+      replyText = `Thank you for your inquiry regarding "${query}". Connect directly with Abdul Darvesh on WhatsApp at +91 74062 31167 for instant quotation and sample verification.`;
+    }
+
+    // Add brief delay for smooth UI feel
     setTimeout(() => {
-      const result = processQuery(query);
       const agentMsg: ChatMessage = {
         id: `agent-${Date.now()}`,
         sender: "agent",
-        text: result.text || "",
+        text: replyText,
         time: new Date().toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" }),
-        suggestedProducts: result.suggestedProducts,
-        actionType: result.actionType,
-        transitInfo: result.transitInfo,
-        calcResult: result.calcResult,
+        suggestedProducts: localResult.suggestedProducts,
+        actionType: localResult.actionType,
+        transitInfo: localResult.transitInfo,
+        calcResult: localResult.calcResult,
+        trackingRef: localResult.trackingRef,
       };
       setMessages((prev) => [...prev, agentMsg]);
       setIsTyping(false);
       haptics.medium();
-    }, 380);
+    }, isDcp ? 100 : 380);
   };
 
   const getEscalationWhatsAppUrl = () => {
@@ -784,9 +806,10 @@ export default function AIAssistantAgentModal({
                     className="bg-white/[0.06] hover:bg-white/[0.1] text-emerald-400 font-mono font-bold text-[10px] px-2 py-0.5 rounded-full border border-emerald-500/30 outline-none cursor-pointer"
                     title="Select AI Model"
                   >
+                    <option value="dcp-darvesh-3.8" className="bg-obsidian-900 text-brand-orange font-bold">👑 DCP Darvesh 3.8 Flash (Sovereign Cloud)</option>
                     <option value="gpt-4.5" className="bg-obsidian-900 text-emerald-300">⚡ 1AA Omni-4.5 (Factory Engine)</option>
                     <option value="deepseek-r1" className="bg-obsidian-900 text-indigo-300">🧠 DeepSeek R1 Wholesale Reasoner</option>
-                    <option value="gemini-flash" className="bg-obsidian-900 text-brand-orange">🌐 Gemini 2.5 Flash Telemetry</option>
+                    <option value="gemini-flash" className="bg-obsidian-900 text-emerald-400">🌐 Gemini 2.5 Flash Telemetry</option>
                   </select>
                 </div>
                 <p className="text-[10px] text-slate-400 hidden sm:block">Mysore Central Facility • Live Inventory • Human Escalation</p>

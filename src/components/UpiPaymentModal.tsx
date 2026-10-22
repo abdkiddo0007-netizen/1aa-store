@@ -8,17 +8,21 @@ import {
   ShieldCheck, 
   ExternalLink, 
   Building2, 
-  CheckCircle2,
-  ArrowRight,
-  Mail,
-  FileText,
-  Navigation,
-  Sparkles,
-  Printer,
-  Layers,
-  Phone,
-  Cloud,
-  CloudOff
+  CheckCircle2, 
+  ArrowRight, 
+  Mail, 
+  FileText, 
+  Navigation, 
+  Sparkles, 
+  Printer, 
+  Layers, 
+  Phone, 
+  Cloud, 
+  CloudOff,
+  Clock,
+  Zap,
+  MessageSquare,
+  AlertCircle
 } from "lucide-react";
 import { ActiveOrderItem, SavedOrder } from "../types";
 import { haptics } from "../utils/haptics";
@@ -75,6 +79,9 @@ export default function UpiPaymentModal({
   const [copiedUpi, setCopiedUpi] = useState(false);
   const [copiedBank, setCopiedBank] = useState(false);
   const [tab, setTab] = useState<"qr" | "mobile" | "bank">("qr");
+  const [qrType, setQrType] = useState<"dynamic" | "standee">("dynamic");
+  const [timeLeft, setTimeLeft] = useState<number>(15 * 60); // 15 mins checkout reservation timer
+  const [qrImgError, setQrImgError] = useState(false);
 
   // Payment State Machine
   const [paymentStatus, setPaymentStatus] = useState<"idle" | "processing" | "success">("idle");
@@ -94,6 +101,8 @@ export default function UpiPaymentModal({
       setPaymentStatus("idle");
       setConfirmedFsmState("PENDING_PAYMENT");
       setInvoiceSentStatus(null);
+      setTimeLeft(15 * 60);
+      setQrImgError(false);
 
       const savedEmail = currentUser?.email || localStorage.getItem("1aa_buyer_email") || "";
       const savedPhone = currentUser?.mobile || "";
@@ -104,6 +113,15 @@ export default function UpiPaymentModal({
       setCustomerName(savedName);
     }
   }, [isOpen, currentUser]);
+
+  // Countdown timer for 15-minute secure checkout window
+  useEffect(() => {
+    if (!isOpen || paymentStatus === "success") return;
+    const timer = setInterval(() => {
+      setTimeLeft((prev) => (prev > 0 ? prev - 1 : 0));
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [isOpen, paymentStatus]);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -117,11 +135,14 @@ export default function UpiPaymentModal({
 
   if (!isOpen) return null;
 
-  // NPCI Universal UPI URI
+  // NPCI Universal UPI URI (Standard specifications for GPay, PhonePe, Paytm, Cred, BHIM)
   const note = `1AA Order ${orderRef}`;
-  const upiUri = `upi://pay?pa=${encodeURIComponent(officialUpiId)}&pn=${encodeURIComponent(primaryAccountHolder)}&am=${finalAmount}&cu=INR&tn=${encodeURIComponent(note)}`;
+  const upiUri = `upi://pay?pa=${encodeURIComponent(officialUpiId)}&pn=${encodeURIComponent(primaryAccountHolder)}&am=${finalAmount}&cu=INR&tn=${encodeURIComponent(note)}&tr=${encodeURIComponent(orderRef)}`;
+  
+  // High-Resolution Dynamic NPCI QR Code Generator with exact amount pre-filled
+  const dynamicQrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=320x320&margin=12&data=${encodeURIComponent(upiUri)}`;
 
-  // Mobile App Deeplinks
+  // Mobile App Deeplinks with universal NPCI fallback
   const gpayUri = `tez://upi/pay?pa=${encodeURIComponent(officialUpiId)}&pn=${encodeURIComponent(primaryAccountHolder)}&am=${finalAmount}&cu=INR&tn=${encodeURIComponent(note)}`;
   const phonepeUri = `phonepe://pay?pa=${encodeURIComponent(officialUpiId)}&pn=${encodeURIComponent(primaryAccountHolder)}&am=${finalAmount}&cu=INR&tn=${encodeURIComponent(note)}`;
   const paytmUri = `paytmmp://pay?pa=${encodeURIComponent(officialUpiId)}&pn=${encodeURIComponent(primaryAccountHolder)}&am=${finalAmount}&cu=INR&tn=${encodeURIComponent(note)}`;
@@ -129,6 +150,12 @@ export default function UpiPaymentModal({
   const totalUnits = items.reduce((sum, item) => sum + item.quantity, 0);
   const totalMarket = items.reduce((sum, item) => sum + item.product.marketPrice * item.quantity, 0);
   const totalSavings = totalMarket - finalAmount;
+
+  const formatCountdown = (totalSec: number) => {
+    const mins = Math.floor(totalSec / 60);
+    const secs = totalSec % 60;
+    return `${String(mins).padStart(2, "0")}:${String(secs).padStart(2, "0")}`;
+  };
 
   const copyToClipboard = (text: string, isUpi: boolean) => {
     haptics.selection();
@@ -142,17 +169,21 @@ export default function UpiPaymentModal({
     }
   };
 
-  /**
-   * Handle Payment Confirmation with Strict Idempotency & Backend Notifications
-   */
-  const handleConfirmPayment = () => {
-    const cleanUtr = utrNumber.trim();
-    if (!cleanUtr || cleanUtr.length < 6) {
-      alert("Please enter the 12-digit UPI Transaction Reference (UTR) number or payment ref from your payment app.");
-      haptics.error();
-      return;
-    }
+  const pasteUtr = async () => {
+    try {
+      const text = await navigator.clipboard.readText();
+      if (text) {
+        setUtrNumber(text.trim());
+        haptics.selection();
+      }
+    } catch {}
+  };
 
+  /**
+   * Universal Order Confirmation Pipeline: Idempotency, Local DB, Stock, Outbox, DCP & Transactional Notifications
+   */
+  const executeOrderConfirmation = (referenceCode: string, isWhatsAppVerification = false) => {
+    const cleanRef = referenceCode.trim() || `UPI-${orderRef}`;
     const emailToUse = customerEmail.trim() || "customer@1aa.store";
     const phoneToUse = customerPhone.replace(/\D/g, "") || OWNER_PHONE;
 
@@ -172,7 +203,7 @@ export default function UpiPaymentModal({
     // 2. Commit idempotency record
     recordIdempotency(idempKey, orderRef, {
       amount: finalAmount,
-      utr: cleanUtr,
+      utr: cleanRef,
       timestamp: Date.now(),
     });
 
@@ -194,7 +225,7 @@ export default function UpiPaymentModal({
         totalAmount: finalAmount,
         totalUnits,
         deliverySpeed: "standard",
-        utrNumber: cleanUtr,
+        utrNumber: cleanRef,
         customerName: currentUser?.username || "Verified Buyer",
         customerMobile: currentUser?.mobile || "",
         customerEmail: currentUser?.email || "",
@@ -230,7 +261,8 @@ export default function UpiPaymentModal({
         taxableValue,
         gstValue,
         items: items.map(i => ({ sku: i.product.sku, name: i.product.name, qty: i.quantity, price: i.product.fairPrice, total: i.total })),
-        utr: cleanUtr,
+        utr: cleanRef,
+        verificationMethod: isWhatsAppVerification ? "WhatsApp Screenshot Verification" : "Axis Bank UPI Reference",
         timestamp: new Date().toISOString()
       };
 
@@ -269,7 +301,7 @@ export default function UpiPaymentModal({
       taxableValue,
       gstValue,
       items: items.map(i => ({ sku: i.product.sku, name: i.product.name, qty: i.quantity, price: i.product.fairPrice, total: i.total })),
-      utr: cleanUtr,
+      utr: cleanRef,
       timestamp: new Date().toISOString()
     }).catch(() => {});
 
@@ -313,7 +345,7 @@ export default function UpiPaymentModal({
       orderRef,
     });
 
-    // 5. Backend Dispatches: WhatsApp confirmation FROM 1AA (+91 74062 31167) TO the customer
+    // 5. Outgoing WhatsApp notification to customer
     const waText = generateOrderPlacedWhatsApp({
       orderRef,
       customerName,
@@ -334,7 +366,7 @@ export default function UpiPaymentModal({
       customerName,
       customerPhone: phoneToUse,
       amount: finalAmount,
-      utrNumber: cleanUtr,
+      utrNumber: cleanRef,
       paymentMethod: `Axis Bank UPI (A/C ${accountNumber})`,
     });
 
@@ -359,7 +391,42 @@ export default function UpiPaymentModal({
       setPaymentStatus("success");
       setConfirmedFsmState("ORDER_CONFIRMED");
       haptics.success();
-    }, 700);
+    }, 600);
+  };
+
+  /**
+   * Handle Payment Confirmation via UTR Reference
+   */
+  const handleConfirmPayment = () => {
+    const cleanUtr = utrNumber.trim() || `UPI-ORD-${orderRef}`;
+    executeOrderConfirmation(cleanUtr, false);
+  };
+
+  /**
+   * Handle Instant Payment Confirmation via WhatsApp Screenshot Fast-Track
+   */
+  const handleConfirmViaWhatsApp = () => {
+    const cleanUtr = utrNumber.trim() || `WA-VERIFY-${orderRef}`;
+    
+    // Execute full order booking & invoice generation first
+    executeOrderConfirmation(cleanUtr, true);
+
+    // Open WhatsApp to Abdul Darvesh (+91 74062 31167)
+    const waConfirmationText = 
+      `*1AA WHOLESALE PAYMENT CONFIRMATION*\n` +
+      `--------------------------------\n` +
+      `*Order Ref:* #${orderRef}\n` +
+      `*Amount Paid:* Rs. ${finalAmount.toLocaleString('en-IN')}\n` +
+      `*Payee:* ${primaryAccountHolder} (${officialUpiId})\n` +
+      `*Merchant Name:* ${customerName}\n` +
+      `*Merchant Mobile:* +91 ${customerPhone || 'registered'}\n` +
+      `*Total Items:* ${items.length} SKUs (${totalUnits} pcs)\n` +
+      `*Axis Bank Reference:* ${utrNumber || 'Screenshot Attached'}\n` +
+      `--------------------------------\n` +
+      `Hi Abdul Darvesh! I have completed the UPI payment on my mobile app for order #${orderRef}. Please find attached my payment screenshot for instant verification.\n`;
+    
+    const waUrl = `https://wa.me/917406231167?text=${encodeURIComponent(waConfirmationText)}`;
+    window.open(waUrl, "_blank");
   };
 
   return (
@@ -667,31 +734,35 @@ export default function UpiPaymentModal({
           </div>
         ) : (
           /* ========================================================================= */
-          /* STANDARD PAYMENT SCREEN (TABS + QR + UTR VERIFICATION)                    */
+          /* STANDARD PAYMENT SCREEN (TABS + DYNAMIC QR + MOBILE + UTR / WHATSAPP)    */
           /* ========================================================================= */
           <div className="overflow-y-auto flex-1 pb-4">
-            {/* Amount & Order Ref Banner */}
-            <div className="mx-4 sm:mx-6 mt-4 sm:mt-5 p-4 rounded-2xl bg-white/[0.03] border border-white/10 flex items-center justify-between">
+            {/* Amount & Order Ref Banner with 15-Minute Countdown Timer */}
+            <div className="mx-4 sm:mx-6 mt-4 sm:mt-5 p-4 rounded-2xl bg-white/[0.03] border border-white/10 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <div>
-                <div className="text-[11px] text-slate-400">
-                  Invoice Ref: <span className="font-mono text-slate-300 font-bold">#{orderRef}</span>
+                <div className="text-[11px] text-slate-400 flex items-center gap-2 flex-wrap">
+                  <span>Invoice Ref: <strong className="font-mono text-slate-200 font-bold">#{orderRef}</strong></span>
                   {totalSavings > 0 && (
-                    <span className="text-emerald-400 font-semibold ml-2">
+                    <span className="text-emerald-400 font-semibold">
                       • MRP Savings: ₹{totalSavings.toLocaleString("en-IN")}
                     </span>
                   )}
                 </div>
-                <div className="text-2xl font-bold font-mono text-white mt-0.5">
-                  ₹{finalAmount.toLocaleString("en-IN")}
+                <div className="text-3xl font-extrabold font-mono text-white mt-0.5 flex items-baseline gap-2">
+                  <span>₹{finalAmount.toLocaleString("en-IN")}</span>
+                  <span className="text-xs font-sans font-normal text-slate-400">All-Inclusive Landed</span>
                 </div>
               </div>
 
-              <div className="text-right">
+              <div className="flex sm:flex-col items-center sm:items-end justify-between gap-1.5 shrink-0">
                 <span className="text-[10px] uppercase font-mono px-2.5 py-1 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 font-bold inline-flex items-center gap-1">
-                  <CheckCircle2 className="w-3 h-3" />
+                  <CheckCircle2 className="w-3 h-3 text-emerald-400" />
                   {primaryAccountHolder}
                 </span>
-                <div className="text-[10px] text-slate-400 mt-1">Axis Bank Direct Settlement</div>
+                <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-amber-500/15 border border-amber-500/30 text-amber-300 font-mono text-[10px] font-bold">
+                  <Clock className="w-3 h-3 text-amber-400 animate-pulse" />
+                  <span>Reserved: {formatCountdown(timeLeft)}</span>
+                </div>
               </div>
             </div>
 
@@ -699,17 +770,17 @@ export default function UpiPaymentModal({
             <div className="mx-4 sm:mx-6 mt-4 flex rounded-xl bg-white/[0.04] p-1 border border-white/[0.08]">
               <button
                 onClick={() => setTab("qr")}
-                className={`flex-1 py-2 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 transition-all ${
-                  tab === "qr" ? "bg-brand-orange text-obsidian-950 shadow-md font-bold" : "text-slate-400 hover:text-white"
+                className={`flex-1 py-2 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
+                  tab === "qr" ? "bg-emerald-500 text-obsidian-950 shadow-md font-bold" : "text-slate-400 hover:text-white"
                 }`}
               >
                 <QrCode className="w-3.5 h-3.5" />
-                <span>PhonePe QR</span>
+                <span>Instant QR</span>
               </button>
 
               <button
                 onClick={() => setTab("mobile")}
-                className={`flex-1 py-2 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 transition-all ${
+                className={`flex-1 py-2 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
                   tab === "mobile" ? "bg-brand-orange text-obsidian-950 shadow-md font-bold" : "text-slate-400 hover:text-white"
                 }`}
               >
@@ -719,7 +790,7 @@ export default function UpiPaymentModal({
 
               <button
                 onClick={() => setTab("bank")}
-                className={`flex-1 py-2 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 transition-all ${
+                className={`flex-1 py-2 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
                   tab === "bank" ? "bg-brand-orange text-obsidian-950 shadow-md font-bold" : "text-slate-400 hover:text-white"
                 }`}
               >
@@ -731,37 +802,103 @@ export default function UpiPaymentModal({
             {/* Tab Content */}
             <div className="p-4 sm:p-6 pt-3 space-y-4">
               
-              {/* TAB 1: OFFICIAL PHONEPE QR CODE */}
+              {/* TAB 1: DYNAMIC & STANDEE QR CODE */}
               {tab === "qr" && (
-                <div className="space-y-4">
-                  <div className="flex flex-col items-center justify-center p-3 bg-black rounded-2xl border-2 border-emerald-500/40 shadow-2xl">
-                    <div className="relative max-w-[260px] overflow-hidden rounded-xl bg-black">
-                      <img
-                        src="./1AA-Official-UPI-QR.jpg"
-                        alt="Official PhonePe QR Code - Abdul Darvesh"
-                        className="w-full h-auto object-contain rounded-lg"
-                        loading="eager"
-                      />
+                <div className="space-y-3.5">
+                  {/* QR Mode Switcher: Dynamic vs Physical Standee */}
+                  <div className="flex rounded-xl bg-white/[0.04] p-1 border border-white/10 text-xs">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        haptics.selection();
+                        setQrType("dynamic");
+                      }}
+                      className={`flex-1 py-1.5 rounded-lg text-[11px] font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
+                        qrType === "dynamic" 
+                          ? "bg-emerald-500 text-obsidian-950 shadow-md" 
+                          : "text-slate-400 hover:text-white"
+                      }`}
+                    >
+                      <Zap className="w-3 h-3" />
+                      <span>⚡ Dynamic QR (Amount Pre-filled)</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        haptics.selection();
+                        setQrType("standee");
+                      }}
+                      className={`flex-1 py-1.5 rounded-lg text-[11px] font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
+                        qrType === "standee" 
+                          ? "bg-brand-orange text-obsidian-950 shadow-md" 
+                          : "text-slate-400 hover:text-white"
+                      }`}
+                    >
+                      <QrCode className="w-3 h-3" />
+                      <span>📸 Physical Standee QR</span>
+                    </button>
+                  </div>
+
+                  {/* QR Display Stage */}
+                  <div className="flex flex-col items-center justify-center p-4 bg-black/90 rounded-2xl border-2 border-emerald-500/40 shadow-2xl relative overflow-hidden">
+                    <div className="relative max-w-[240px] sm:max-w-[260px] aspect-square overflow-hidden rounded-xl bg-white p-2.5 shadow-xl">
+                      {qrType === "dynamic" ? (
+                        <img
+                          src={qrImgError ? "./1AA-Official-UPI-QR.jpg" : dynamicQrUrl}
+                          alt={`Official Dynamic NPCI UPI QR for ₹${finalAmount}`}
+                          className="w-full h-full object-contain"
+                          loading="eager"
+                          onError={() => setQrImgError(true)}
+                        />
+                      ) : (
+                        <img
+                          src="./1AA-Official-UPI-QR.jpg"
+                          alt="Official PhonePe QR Code - Abdul Darvesh"
+                          className="w-full h-full object-contain"
+                          loading="eager"
+                        />
+                      )}
                     </div>
 
-                    <div className="text-center mt-2.5 text-white">
-                      <div className="font-bold text-xs tracking-wide text-emerald-400">SCAN & PAY WITH ANY UPI APP</div>
-                      <div className="text-[11px] text-slate-300 font-mono mt-0.5">Payee: {primaryAccountHolder}</div>
-                      <div className="text-[10px] text-slate-400 font-sans">PhonePe • Google Pay • Paytm • BHIM • Cred • Banking Apps</div>
+                    <div className="text-center mt-3 text-white max-w-sm space-y-1">
+                      <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-400 text-xs font-black tracking-wide font-mono">
+                        <CheckCircle2 className="w-3.5 h-3.5" />
+                        <span>{qrType === "dynamic" ? `EXACT ₹${finalAmount.toLocaleString("en-IN")} PRE-FILLED` : "OFFICIAL AXIS BANK STANDEE"}</span>
+                      </div>
+                      <div className="text-xs text-slate-200 font-semibold">
+                        Payee: <strong className="text-brand-orange">{primaryAccountHolder}</strong> ({bankName})
+                      </div>
+                      <div className="text-[10px] text-slate-400 font-sans">
+                        Scan with Google Pay • PhonePe • Paytm • BHIM • Cred • Tata Neu • Any Banking App
+                      </div>
                     </div>
                   </div>
 
-                  {/* UPI ID Row with Copy */}
+                  {/* Mobile 1-Tap Trigger for customers on smartphones */}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      haptics.selection();
+                      window.location.href = upiUri;
+                    }}
+                    className="w-full py-2.5 px-3 rounded-xl bg-emerald-500/20 hover:bg-emerald-500/30 border border-emerald-500/40 text-emerald-300 font-bold text-xs flex items-center justify-center gap-2 transition-all cursor-pointer"
+                  >
+                    <Smartphone className="w-4 h-4 text-emerald-400" />
+                    <span>On Mobile? Tap to Open Any UPI App Directly</span>
+                  </button>
+
+                  {/* Official UPI ID Row with Copy */}
                   <div className="flex items-center justify-between p-3.5 rounded-xl bg-white/[0.04] border border-white/10 text-xs">
                     <div className="space-y-0.5">
-                      <div className="text-[10px] text-slate-400 uppercase font-mono">Official UPI ID</div>
-                      <div className="font-mono font-bold text-white text-sm text-brand-orange">{officialUpiId}</div>
+                      <div className="text-[10px] text-slate-400 uppercase font-mono">Official Axis Bank UPI ID</div>
+                      <div className="font-mono font-bold text-brand-orange text-sm select-all">{officialUpiId}</div>
                       <div className="text-[10px] text-emerald-400">Account Holder: {primaryAccountHolder}</div>
                     </div>
 
                     <button
+                      type="button"
                       onClick={() => copyToClipboard(officialUpiId, true)}
-                      className="py-2 px-3.5 rounded-xl bg-white/[0.08] hover:bg-white/[0.15] text-slate-200 text-xs font-semibold flex items-center gap-1.5 transition-colors border border-white/10 cursor-pointer"
+                      className="py-2 px-3.5 rounded-xl bg-white/[0.08] hover:bg-white/[0.15] text-slate-200 text-xs font-semibold flex items-center gap-1.5 transition-colors border border-white/10 cursor-pointer active:scale-95"
                     >
                       {copiedUpi ? (
                         <>
@@ -783,12 +920,26 @@ export default function UpiPaymentModal({
               {tab === "mobile" && (
                 <div className="space-y-3">
                   <p className="text-xs text-slate-300">
-                    Tap your preferred UPI app below to open it with amount <strong className="text-white">₹{finalAmount.toLocaleString("en-IN")}</strong> and payee <strong className="text-brand-orange">{primaryAccountHolder}</strong> pre-filled:
+                    Tap below to open your installed UPI app with payable amount <strong className="text-white">₹{finalAmount.toLocaleString("en-IN")}</strong> and payee <strong className="text-brand-orange">{primaryAccountHolder}</strong> pre-filled:
                   </p>
 
-                  <div className="grid grid-cols-1 gap-2.5">
+                  {/* Universal 1-Tap Chooser */}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      haptics.selection();
+                      window.location.href = upiUri;
+                    }}
+                    className="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-emerald-500 via-teal-500 to-emerald-600 hover:brightness-110 active:scale-98 text-obsidian-950 font-black text-xs uppercase tracking-wider flex items-center justify-center gap-2 shadow-glow-emerald cursor-pointer"
+                  >
+                    <Zap className="w-4 h-4 fill-obsidian-950" />
+                    <span>⚡ 1-Tap Universal UPI Pay (All Apps)</span>
+                  </button>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-1">
                     <a
                       href={phonepeUri}
+                      onClick={() => haptics.selection()}
                       className="p-3.5 rounded-xl bg-white/[0.04] hover:bg-white/[0.08] border border-white/10 flex items-center justify-between transition-all group"
                     >
                       <div className="flex items-center gap-3">
@@ -796,8 +947,8 @@ export default function UpiPaymentModal({
                           Pe
                         </div>
                         <div>
-                          <div className="font-bold text-white text-xs group-hover:text-brand-orange transition-colors">PhonePe (Official)</div>
-                          <div className="text-[10px] text-slate-400">Direct PhonePe UPI intent</div>
+                          <div className="font-bold text-white text-xs group-hover:text-brand-orange transition-colors">PhonePe</div>
+                          <div className="text-[10px] text-slate-400">Direct PhonePe intent</div>
                         </div>
                       </div>
                       <ExternalLink className="w-4 h-4 text-slate-400 group-hover:text-white" />
@@ -805,6 +956,7 @@ export default function UpiPaymentModal({
 
                     <a
                       href={gpayUri}
+                      onClick={() => haptics.selection()}
                       className="p-3.5 rounded-xl bg-white/[0.04] hover:bg-white/[0.08] border border-white/10 flex items-center justify-between transition-all group"
                     >
                       <div className="flex items-center gap-3">
@@ -812,8 +964,8 @@ export default function UpiPaymentModal({
                           G
                         </div>
                         <div>
-                          <div className="font-bold text-white text-xs group-hover:text-brand-orange transition-colors">Google Pay (Tez)</div>
-                          <div className="text-[10px] text-slate-400">Direct Google Pay intent</div>
+                          <div className="font-bold text-white text-xs group-hover:text-brand-orange transition-colors">Google Pay</div>
+                          <div className="text-[10px] text-slate-400">Direct GPay intent</div>
                         </div>
                       </div>
                       <ExternalLink className="w-4 h-4 text-slate-400 group-hover:text-white" />
@@ -821,6 +973,7 @@ export default function UpiPaymentModal({
 
                     <a
                       href={paytmUri}
+                      onClick={() => haptics.selection()}
                       className="p-3.5 rounded-xl bg-white/[0.04] hover:bg-white/[0.08] border border-white/10 flex items-center justify-between transition-all group"
                     >
                       <div className="flex items-center gap-3">
@@ -837,19 +990,27 @@ export default function UpiPaymentModal({
 
                     <a
                       href={upiUri}
-                      className="p-3.5 rounded-xl bg-gradient-to-r from-emerald-500/20 to-teal-500/20 hover:from-emerald-500/30 hover:to-teal-500/30 border border-emerald-500/30 flex items-center justify-between transition-all group"
+                      onClick={() => haptics.selection()}
+                      className="p-3.5 rounded-xl bg-white/[0.04] hover:bg-white/[0.08] border border-white/10 flex items-center justify-between transition-all group"
                     >
                       <div className="flex items-center gap-3">
                         <div className="w-8 h-8 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center font-bold text-xs">
                           UPI
                         </div>
                         <div>
-                          <div className="font-bold text-white text-xs">Any NPCI UPI App (BHIM, Cred, Banking)</div>
-                          <div className="text-[10px] text-emerald-300">Opens native Android / iOS chooser</div>
+                          <div className="font-bold text-white text-xs group-hover:text-brand-orange transition-colors">Cred / BHIM / Banking</div>
+                          <div className="text-[10px] text-slate-400">Native device chooser</div>
                         </div>
                       </div>
-                      <ExternalLink className="w-4 h-4 text-emerald-400" />
+                      <ExternalLink className="w-4 h-4 text-slate-400 group-hover:text-white" />
                     </a>
+                  </div>
+
+                  <div className="p-3 rounded-xl bg-white/[0.03] border border-white/10 text-[11px] text-slate-400 flex items-start gap-2">
+                    <AlertCircle className="w-4 h-4 text-brand-orange shrink-0 mt-0.5" />
+                    <span>
+                      Desktop / Laptop users: Switch to the <strong>Instant QR</strong> tab to scan with your phone, or copy the Axis Bank account details directly.
+                    </span>
                   </div>
                 </div>
               )}
@@ -858,112 +1019,141 @@ export default function UpiPaymentModal({
               {tab === "bank" && (
                 <div className="space-y-3">
                   <p className="text-xs text-slate-300">
-                    Official verified commercial bank account for wholesale and master carton orders:
+                    Official verified Axis Bank commercial account for IMPS, NEFT, RTGS & wholesale settlements:
                   </p>
 
                   <div className="p-4 rounded-2xl bg-white/[0.03] border border-white/10 space-y-2.5 font-mono text-xs">
                     <div className="flex justify-between">
-                      <span className="text-slate-400">Primary Account Holder:</span>
+                      <span className="text-slate-400 font-sans">Primary Account Holder:</span>
                       <span className="text-white font-bold font-sans">{primaryAccountHolder}</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-slate-400">Bank Name:</span>
+                      <span className="text-slate-400 font-sans">Bank Name:</span>
                       <span className="text-white font-bold">{bankName}</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-slate-400">Account Number:</span>
-                      <span className="text-brand-orange font-bold text-sm">{accountNumber}</span>
+                      <span className="text-slate-400 font-sans">Account Number:</span>
+                      <span className="text-brand-orange font-bold text-sm select-all">{accountNumber}</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-slate-400">IFSC Code:</span>
-                      <span className="text-brand-blue-light font-bold text-sm">{ifscCode}</span>
+                      <span className="text-slate-400 font-sans">IFSC Code:</span>
+                      <span className="text-brand-blue-light font-bold text-sm select-all">{ifscCode}</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-slate-400">Account Type:</span>
+                      <span className="text-slate-400 font-sans">Account Type:</span>
                       <span className="text-emerald-400 font-bold">{accountType}</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-slate-400">Official UPI ID:</span>
-                      <span className="text-white">{officialUpiId}</span>
+                      <span className="text-slate-400 font-sans">Official UPI ID:</span>
+                      <span className="text-white select-all">{officialUpiId}</span>
                     </div>
                   </div>
 
                   <button
+                    type="button"
                     onClick={() => copyToClipboard(`Account Holder: ${primaryAccountHolder}\nBank Name: ${bankName}\nAccount Number: ${accountNumber}\nIFSC Code: ${ifscCode}\nAccount Type: ${accountType}\nUPI ID: ${officialUpiId}`, false)}
-                    className="w-full py-2.5 rounded-xl bg-white/[0.06] hover:bg-white/[0.12] text-slate-200 text-xs font-semibold flex items-center justify-center gap-2 transition-colors border border-white/10 cursor-pointer"
+                    className="w-full py-2.5 rounded-xl bg-white/[0.06] hover:bg-white/[0.12] text-slate-200 text-xs font-semibold flex items-center justify-center gap-2 transition-colors border border-white/10 cursor-pointer active:scale-95"
                   >
                     {copiedBank ? (
                       <>
                         <Check className="w-3.5 h-3.5 text-emerald-400" />
-                        <span className="text-emerald-400">Axis Bank Details Copied!</span>
+                        <span className="text-emerald-400 font-bold">Axis Bank Details Copied!</span>
                       </>
                     ) : (
                       <>
                         <Copy className="w-3.5 h-3.5 text-brand-orange" />
-                        <span>Copy Full Bank Details</span>
+                        <span>Copy Full Bank Account Details</span>
                       </>
                     )}
                   </button>
                 </div>
               )}
 
-              {/* PAYMENT VERIFICATION & UTR INPUT SECTION */}
+              {/* PAYMENT VERIFICATION & 1-TAP CONFIRMATION SECTION */}
               <div className="pt-4 border-t border-white/10 space-y-3">
                 <div>
-                  <label className="block text-[11px] font-medium text-slate-300 mb-1">
-                    Enter 12-Digit Axis Bank / UPI Reference (UTR):
-                  </label>
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="text-[11px] font-medium text-slate-300">
+                      Enter 12-Digit Axis Bank / UPI Reference (UTR) (Optional):
+                    </label>
+                    <button
+                      type="button"
+                      onClick={pasteUtr}
+                      className="text-[10px] text-brand-orange hover:underline flex items-center gap-1 cursor-pointer font-semibold"
+                    >
+                      <Copy className="w-3 h-3" />
+                      <span>Paste from Clipboard</span>
+                    </button>
+                  </div>
+                  
                   <div className="relative">
                     <input
                       type="text"
-                      placeholder="e.g. 428192837482"
+                      placeholder="e.g. 428192837482 (or leave blank to verify via WhatsApp)"
                       value={utrNumber}
                       onChange={(e) => setUtrNumber(e.target.value.trim())}
                       className="w-full py-2.5 px-3.5 bg-obsidian-950 border border-white/15 focus:border-brand-orange rounded-xl text-white font-mono text-xs outline-none placeholder:text-slate-600 transition-colors"
                     />
-                    {utrNumber.length >= 8 && (
+                    {utrNumber.length >= 6 && (
                       <CheckCircle2 className="w-4 h-4 text-emerald-400 absolute right-3 top-3" />
                     )}
                   </div>
-                  <p className="text-[10px] text-slate-400 mt-1">Found on your UPI transaction completed receipt.</p>
+                  <p className="text-[10px] text-slate-400 mt-1">
+                    Located on your payment confirmation screen. If you don't have it handy, use the WhatsApp verification button below.
+                  </p>
                 </div>
 
                 {/* Email Confirmation for Automated Invoice PDF */}
                 <div>
                   <label className="block text-[11px] font-medium text-slate-300 mb-1">
-                    Email for Invoice Dispatch (Automated by 1AA Server):
+                    Email for Automated GST Tax Invoice (PDF):
                   </label>
                   <input
                     type="email"
-                    placeholder="e.g. merchant@gmail.com"
+                    placeholder="e.g. yourstore@gmail.com"
                     value={customerEmail}
                     onChange={(e) => setCustomerEmail(e.target.value.trim())}
                     className="w-full py-2.5 px-3.5 bg-obsidian-950 border border-white/15 focus:border-brand-blue rounded-xl text-white text-xs outline-none placeholder:text-slate-600"
                   />
                   <p className="text-[10px] text-slate-500 mt-1">
-                    *Our system will automatically transmit the official GST Invoice to this address.
+                    *Our automated backend dispatches the official GST tax invoice directly to this inbox.
                   </p>
                 </div>
 
-                {/* CONFIRM PAYMENT ON OUR PLATFORM BUTTON */}
-                <button
-                  type="button"
-                  onClick={handleConfirmPayment}
-                  disabled={paymentStatus === "processing"}
-                  className="w-full py-3.5 px-4 rounded-2xl bg-gradient-to-r from-emerald-500 via-teal-500 to-emerald-600 hover:brightness-110 active:scale-98 text-obsidian-950 font-black text-xs uppercase tracking-wider text-center flex items-center justify-center gap-2 shadow-2xl transition-all cursor-pointer disabled:opacity-50"
-                >
-                  {paymentStatus === "processing" ? (
-                    <>
-                      <Sparkles className="w-4 h-4 animate-spin text-obsidian-950" />
-                      <span>Reconciling with Axis Bank...</span>
-                    </>
-                  ) : (
-                    <>
-                      <span>Confirm Payment & Verify on 1AA</span>
-                      <ArrowRight className="w-4 h-4" />
-                    </>
-                  )}
-                </button>
+                {/* DUAL ZERO-FRICTION CONFIRMATION ACTIONS */}
+                <div className="space-y-2 pt-1">
+                  {/* Primary Method 1: Confirm Payment on 1AA */}
+                  <button
+                    type="button"
+                    onClick={handleConfirmPayment}
+                    disabled={paymentStatus === "processing"}
+                    className="w-full py-3.5 px-4 rounded-2xl bg-gradient-to-r from-emerald-500 via-teal-500 to-emerald-600 hover:brightness-110 active:scale-98 text-obsidian-950 font-black text-xs uppercase tracking-wider text-center flex items-center justify-center gap-2 shadow-2xl transition-all cursor-pointer disabled:opacity-50"
+                  >
+                    {paymentStatus === "processing" ? (
+                      <>
+                        <Sparkles className="w-4 h-4 animate-spin text-obsidian-950" />
+                        <span>Reconciling Order with Axis Bank...</span>
+                      </>
+                    ) : (
+                      <>
+                        <CheckCircle2 className="w-4 h-4 text-obsidian-950" />
+                        <span>Confirm Payment & Book Order #{orderRef}</span>
+                        <ArrowRight className="w-4 h-4" />
+                      </>
+                    )}
+                  </button>
+
+                  {/* Primary Method 2: Instant WhatsApp Screenshot Verification Fast-Track */}
+                  <button
+                    type="button"
+                    onClick={handleConfirmViaWhatsApp}
+                    disabled={paymentStatus === "processing"}
+                    className="w-full py-3 px-4 rounded-xl bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-500/40 text-emerald-300 hover:text-emerald-200 font-bold text-xs flex items-center justify-center gap-2 transition-all cursor-pointer active:scale-98"
+                  >
+                    <MessageSquare className="w-4 h-4 text-emerald-400" />
+                    <span>📲 Send Payment Screenshot on WhatsApp (Instant Verification)</span>
+                  </button>
+                </div>
 
                 <div className="flex items-center justify-center gap-3 text-[10px] text-slate-400 pt-1">
                   <span className="flex items-center gap-1">
@@ -974,6 +1164,11 @@ export default function UpiPaymentModal({
                   <span className="flex items-center gap-1">
                     <FileText className="w-3.5 h-3.5 text-brand-orange" />
                     Automatic Server Invoicing
+                  </span>
+                  <span>•</span>
+                  <span className="flex items-center gap-1">
+                    <CheckCircle2 className="w-3.5 h-3.5 text-brand-blue-light" />
+                    Mysore Hub Allocation
                   </span>
                 </div>
               </div>

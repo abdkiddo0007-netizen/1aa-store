@@ -492,19 +492,6 @@ export default function ProductDetailModal({
                   </button>
                 )}
 
-                {onOpenCalculator && (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      haptics.light();
-                      onOpenCalculator(product);
-                    }}
-                    className="py-2 px-3 rounded-xl bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 font-semibold text-[11px] border border-emerald-500/30 flex items-center justify-center gap-1.5 transition-all cursor-pointer"
-                  >
-                    <Calculator className="w-3.5 h-3.5 text-emerald-400" />
-                    <span>Reseller ROI Calc</span>
-                  </button>
-                )}
 
                 {onOpenResellerShare && (
                   <button

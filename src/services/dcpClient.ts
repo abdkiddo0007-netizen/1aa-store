@@ -19,6 +19,13 @@ export interface DcpHealthStatus {
   error?: string;
 }
 
+export interface DcpAiResponse {
+  text: string;
+  model: string;
+  source: "dcp-sovereign";
+  latencyMs?: number;
+}
+
 export const DCP_DEFAULT_URL = "https://evanescence-arabia-pro-itself.trycloudflare.com";
 export const DCP_FALLBACK_URL = "https://birthday-controlling-valve-segment.trycloudflare.com";
 export const DCP_LOCAL_URL = "http://localhost:8088";
@@ -401,6 +408,89 @@ class DcpClient {
       hub: "Mysore Central Hub (570007)",
       invoice: invoiceData
     });
+  }
+
+  /**
+   * Query Sovereign AI Engine on Darvesh Cloud Platform (DCP)
+   * Connects 1AA Storefront to darvesh-3.8-flash for zero-cost sovereign intelligence.
+   */
+  public async queryDcpAi(prompt: string, options?: { systemPrompt?: string }): Promise<DcpAiResponse | null> {
+    const currentEndpoint = this.getEndpoint();
+    const start = Date.now();
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 6000);
+
+    const systemInstruction = options?.systemPrompt || 
+      "You are the 1AA Wholesale Sourcing AI Assistant representing Abdul Darvesh in Mysore Central Hub, India. " +
+      "1AA is a direct factory wholesale sourcing platform with 1,148+ products, flat 20% transparent margin (or flat Rs 10 for sub-Rs 100), " +
+      "100% pre-dispatch bench inspection in Mysore (570007), delivery within 10-15 days standard (<7 days express), and zero bargaining guarantee. " +
+      "Be professional, accurate, concise, helpful to Indian retail merchants and resellers, and always encourage WhatsApp order confirmation (+91 74062 31167).";
+
+    try {
+      // 1. Try Native Darvesh Interactions API (/api/v1/interactions)
+      const res = await fetch(`${currentEndpoint}/api/v1/interactions`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Accept": "application/json"
+        },
+        signal: controller.signal,
+        body: JSON.stringify({
+          model: "darvesh-3.8-flash",
+          input: prompt,
+          system_instruction: systemInstruction,
+          enterprise: true,
+          project: "1aa-wholesale-store"
+        })
+      });
+      clearTimeout(timeoutId);
+
+      if (res.ok) {
+        const data = await res.json();
+        const text = data.output_text || (data.steps && data.steps.find((s: any) => s.type === "output")?.text);
+        if (text) {
+          return {
+            text: text.trim(),
+            model: data.model || "darvesh-3.8-flash",
+            source: "dcp-sovereign",
+            latencyMs: Date.now() - start
+          };
+        }
+      }
+    } catch {
+      // 2. Try OpenAI-compatible gateway route on DCP (/api/v1beta/openai/v1/chat/completions)
+      try {
+        const fallbackController = new AbortController();
+        const fbTimeout = setTimeout(() => fallbackController.abort(), 4000);
+        const openAiRes = await fetch(`${currentEndpoint}/api/v1beta/openai/v1/chat/completions`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          signal: fallbackController.signal,
+          body: JSON.stringify({
+            model: "darvesh-3.8-flash",
+            messages: [
+              { role: "system", content: systemInstruction },
+              { role: "user", content: prompt }
+            ]
+          })
+        });
+        clearTimeout(fbTimeout);
+        if (openAiRes.ok) {
+          const oaiData = await openAiRes.json();
+          const content = oaiData?.choices?.[0]?.message?.content;
+          if (content) {
+            return {
+              text: content.trim(),
+              model: "darvesh-3.8-flash",
+              source: "dcp-sovereign",
+              latencyMs: Date.now() - start
+            };
+          }
+        }
+      } catch {}
+    }
+
+    return null;
   }
 }
 
