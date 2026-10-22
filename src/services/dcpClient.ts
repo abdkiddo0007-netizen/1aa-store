@@ -26,6 +26,7 @@ export interface DcpAiResponse {
   latencyMs?: number;
 }
 
+export const DCP_SOVEREIGN_DOMAIN = "https://api.1aa-dcp.cloud";
 export const DCP_DEFAULT_URL = "https://evanescence-arabia-pro-itself.trycloudflare.com";
 export const DCP_FALLBACK_URL = "https://birthday-controlling-valve-segment.trycloudflare.com";
 export const DCP_LOCAL_URL = "http://localhost:8088";
